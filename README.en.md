@@ -14,6 +14,8 @@ The flashing and installation procedure is covered in detail in several articles
 - [🔪 Slicer settings](https://k3d.tech/vostok/manual/slicer_configuration/);
 - [🔄 Fast tool change script](https://k3d.tech/vostok/manual/fast_tool_swaps/).
 
+The flashing and software setup can be automated: [`installer/`](installer/README.en.md) is a first-time installer script (Klipper fork, Moonraker, Fluidd, katapult, flashing of all boards, configuration) plus a Fluidd button that updates Klipper and the firmware.
+
 Note that the articles are written in Russian. A lot of information on how to install and further tune this configuration is also provided directly in the `printer.cfg`, `printer_base.cfg` and `electronics_*.cfg` files.
 
 Electronics configurations for boards maintained by users themselves live in the [`user_configs/`](user_configs/README.md) folder.

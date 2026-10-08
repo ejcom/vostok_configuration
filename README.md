@@ -14,6 +14,8 @@
 - [🔪 Настройки слайсера](https://k3d.tech/vostok/manual/slicer_configuration/);
 - [🔄 Скрипт быстрой смены инструмента](https://k3d.tech/vostok/manual/fast_tool_swaps/).
 
+Прошивку электроники и установку ПО можно автоматизировать: [`installer/`](installer/README.md) — скрипт первоначальной установки (Klipper-форк, Moonraker, Fluidd, katapult, прошивка всех плат, конфигурация) и кнопка обновления Klipper и прошивок в Fluidd.
+
 Также большое количество информации о том, как установить и донастроить эту конфигурацию указано прямо в файлах `printer.cfg`, `printer_base.cfg` и `electronics_*.cfg`.
 
 Конфигурации электроники для плат, которые поддерживают сами пользователи, лежат в папке [`user_configs/`](user_configs/README.md).

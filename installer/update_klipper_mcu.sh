@@ -187,6 +187,7 @@ preflight() {
         python3 -c 'import serial' 2>/dev/null || die "для flashtool.py нужен pyserial (python3 -m pip install pyserial)"
         command -v arm-none-eabi-gcc >/dev/null || die "нет arm-none-eabi-gcc (sudo apt install gcc-arm-none-eabi)"
         command -v make >/dev/null || die "нет make"
+        command -v ip >/dev/null || warn "нет ip (пакет iproute2): MCU на CAN не будут найдены"
         if [[ ! -t 0 && $LIST_ONLY -eq 0 ]]; then
             can_manage_services \
                 || die "без терминала нет прав останавливать klipper (нужен polkit Moonraker или sudo NOPASSWD, см. install_fluidd_button.sh)"

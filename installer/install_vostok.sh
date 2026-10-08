@@ -203,7 +203,6 @@ trap cleanup EXIT
 stage_preflight() {
     step "Проверки"
     [[ $EUID -ne 0 ]] || die "не запускайте от root; sudo спросит пароль сам"
-    for c in curl git python3 tar; do command -v "$c" >/dev/null || warn "нет $c (будет установлен на этапе пакетов)"; done
     case $(uname -m) in aarch64|armv7l|armv6l|x86_64) ;; *) warn "необычная архитектура $(uname -m)" ;; esac
     if [[ -r /etc/os-release ]]; then
         # shellcheck disable=SC1091
@@ -217,6 +216,155 @@ stage_preflight() {
             || die "нет доступа к github.com (проверьте интернет)"
     fi
     ok "проверки пройдены"
+    check_bootstrap
+}
+
+# ---------------------------------------------------------------- проверки окружения
+
+ENV_PROBLEMS=(); ENV_WARNINGS=()
+KERNEL_CONFIG=${KERNEL_CONFIG:-}        # путь к конфигу ядра (иначе /proc/config.gz, /boot/config-*); нужен для тестов
+USER_GROUPS=${USER_GROUPS:-}            # группы текущей сессии (иначе id -nG); для тестов
+USER_GROUPS_DB=${USER_GROUPS_DB:-}      # группы пользователя в /etc/group (иначе id -nG USER); для тестов
+MIN_FREE_MB=${MIN_FREE_MB:-2048}
+MIN_MEM_MB=${MIN_MEM_MB:-1024}
+
+env_item() { # ok|warn|bad текст
+    case $1 in
+        ok)   info "  [ок]   $2" ;;
+        warn) info "  [!]    $2"; ENV_WARNINGS+=("$2") ;;
+        bad)  info "  [НЕТ]  $2"; ENV_PROBLEMS+=("$2") ;;
+    esac
+}
+
+# Итог блока проверок: при проблемах - остановка (в --dry-run/--only-detect только предупреждение)
+env_conclude() { # что проверяли
+    [[ ${#ENV_PROBLEMS[@]} -eq 0 ]] && return 0
+    if [[ $DRY_RUN -eq 1 || $ONLY_DETECT -eq 1 ]]; then
+        warn "$1: найдено проблем: ${#ENV_PROBLEMS[@]} (при реальной установке скрипт остановится)"
+        return 0
+    fi
+    die "$1: найдено проблем: ${#ENV_PROBLEMS[@]}. Устраните их (подсказки выше) и запустите установку снова"
+}
+
+hw_steps_planned() { [[ $SKIP_FLASH -eq 0 && $DRY_RUN -eq 0 && $ONLY_DETECT -eq 0 ]]; }
+
+check_dialout() {
+    local sess db
+    sess=${USER_GROUPS:-$(id -nG)}
+    db=${USER_GROUPS_DB:-$(id -nG "$(id -un)" 2>/dev/null || true)}
+    if [[ " $sess " == *" dialout "* ]]; then
+        env_item ok "доступ к последовательным портам (группа dialout)"
+    elif [[ " $db " == *" dialout "* ]]; then
+        env_item bad "пользователь добавлен в группу dialout, но текущая сессия её не видит: выйдите и войдите заново (или выполните newgrp dialout)"
+    else
+        env_item bad "пользователь не в группе dialout (без неё нет доступа к /dev/serial/by-id): sudo usermod -aG dialout $(id -un), затем выйдите и войдите заново"
+    fi
+}
+
+check_bootstrap() {
+    step "Окружение"
+    ENV_PROBLEMS=(); ENV_WARNINGS=()
+    local c missing=() free_mb mem_mb pyver
+    for c in sudo apt-get dpkg systemctl uname awk sed grep sort tr cut head tail mktemp xargs tar df; do
+        command -v "$c" >/dev/null || missing+=("$c")
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        env_item bad "нет команд: ${missing[*]} (нужна Debian-подобная система с apt и systemd)"
+    else
+        env_item ok "базовые утилиты, apt, dpkg, systemctl, sudo"
+    fi
+    if [[ -d /run/systemd/system ]]; then env_item ok "systemd запущен"; else env_item bad "systemd не запущен (службы klipper/moonraker ставятся как systemd-юниты; контейнеры и WSL без systemd не подходят)"; fi
+
+    free_mb=$(df -Pm "$HOME" 2>/dev/null | awk 'NR==2{print $4}')
+    if [[ -n $free_mb && $free_mb -lt $MIN_FREE_MB ]]; then env_item bad "мало места в $HOME: ${free_mb} МБ, нужно не менее $MIN_FREE_MB МБ"; else env_item ok "место на диске: ${free_mb:-?} МБ"; fi
+    mem_mb=$(awk '/^(MemTotal|SwapTotal):/{s+=$2} END{print int(s/1024)}' /proc/meminfo 2>/dev/null || echo 0)
+    if [[ ${mem_mb:-0} -lt $MIN_MEM_MB ]]; then env_item warn "мало памяти (ОЗУ + swap): ${mem_mb} МБ, сборка и установка могут не завершиться (рекомендуется от $MIN_MEM_MB МБ)"; else env_item ok "память (ОЗУ + swap): ${mem_mb} МБ"; fi
+
+    if command -v python3 >/dev/null; then
+        pyver=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo "?")
+        if python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' 2>/dev/null; then env_item ok "python3 $pyver"; else env_item bad "python3 $pyver слишком старый, нужен 3.8 или новее (KIAUH, Klipper)"; fi
+    else
+        env_item warn "python3 не установлен (будет установлен на этапе пакетов)"
+    fi
+
+    if hw_steps_planned; then
+        if { : </dev/tty; } 2>/dev/null; then env_item ok "терминал для диалога"; else env_item bad "нет терминала: шаги с железом требуют ответов в диалоге (запустите в ssh/терминале или используйте --skip-flash)"; fi
+        check_dialout
+    fi
+    if command -v ss >/dev/null && ss -ltn 2>/dev/null | grep -qE '[:.]80[[:space:]]' \
+        && [[ ! -d $HOME/fluidd ]] && ! systemctl is-active --quiet nginx 2>/dev/null; then
+        env_item warn "порт 80 занят другой программой: Fluidd (nginx) может не запуститься"
+    fi
+    env_conclude "Окружение"
+}
+
+# Инструменты: нужные команды, python-модули. after_packages=1 - этап пакетов уже выполнен (или пропущен).
+check_tools() { # need_flash(0|1) after_packages(0|1)
+    local need_flash=$1 after=$2 entry cmd pkg why pkgs=() st=bad
+    ENV_PROBLEMS=(); ENV_WARNINGS=()
+    [[ $after -eq 0 && $SKIP_SOFTWARE -eq 0 ]] && st=warn   # пакеты ещё будут установлены
+    local reqs=("python3:python3:скрипты, KIAUH" "git:git:клонирование репозиториев" "curl:curl:скачивание конфигурации" "tar:tar:распаковка архивов")
+    if [[ $need_flash -eq 1 ]]; then
+        reqs+=("make:make:сборка прошивок" "arm-none-eabi-gcc:gcc-arm-none-eabi:компилятор прошивок"
+               "dfu-util:dfu-util:прошивка katapult по DFU" "lsusb:usbutils:обнаружение плат" "ip:iproute2:интерфейс CAN")
+    fi
+    step "Инструменты"
+    for entry in "${reqs[@]}"; do
+        IFS=: read -r cmd pkg why <<<"$entry"
+        if command -v "$cmd" >/dev/null; then
+            env_item ok "$cmd"
+        else
+            env_item "$st" "нет $cmd (пакет $pkg): $why$([[ $st == warn ]] && echo '; будет установлен на этапе пакетов')"
+            pkgs+=("$pkg")
+        fi
+    done
+    if command -v python3 >/dev/null; then
+        if [[ $need_flash -eq 1 ]]; then
+            if python3 -c 'import serial' 2>/dev/null; then env_item ok "python3: pyserial"; else env_item "$st" "нет python3-serial (pyserial): нужен flashtool.py"; pkgs+=(python3-serial); fi
+        fi
+        if [[ $SKIP_SOFTWARE -eq 0 ]]; then
+            if python3 -c 'import venv, ensurepip' 2>/dev/null; then env_item ok "python3: venv"; else env_item "$st" "нет python3-venv: KIAUH не создаст окружение Klipper"; pkgs+=(python3-venv); fi
+        fi
+    fi
+    if [[ ${#pkgs[@]} -gt 0 && $st == bad ]]; then
+        info "  Установить недостающее: sudo apt install ${pkgs[*]}"
+    fi
+    env_conclude "Инструменты"
+}
+
+# Поддержка CAN в ядре: 0 есть, 1 нет, 2 неизвестно
+kernel_can_support() {
+    local cfg="" content="" opt
+    if [[ -n $KERNEL_CONFIG ]]; then cfg=$KERNEL_CONFIG
+    elif [[ -r /proc/config.gz ]]; then content=$(zcat /proc/config.gz 2>/dev/null || true)
+    elif [[ -r /boot/config-$(uname -r) ]]; then cfg=/boot/config-$(uname -r)
+    fi
+    [[ -n $cfg && -r $cfg ]] && content=$(cat "$cfg")
+    if [[ -n $content ]]; then
+        for opt in CONFIG_CAN CONFIG_CAN_RAW CONFIG_CAN_GS_USB; do
+            grep -qE "^${opt}=(y|m)$" <<<"$content" || return 1
+        done
+        return 0
+    fi
+    # конфига ядра нет: смотрим модули
+    if [[ -d /sys/module/gs_usb ]] || compgen -G "/lib/modules/$(uname -r)/kernel/drivers/net/can/usb/gs_usb.ko*" >/dev/null; then return 0; fi
+    return 2
+}
+
+# Требования, зависящие от выбранной схемы (после detect_hardware)
+check_hw_requirements() {
+    [[ $HEADS == none ]] && return 0
+    ENV_PROBLEMS=(); ENV_WARNINGS=()
+    step "Требования схемы с мостом USB-CAN"
+    local rc=0
+    kernel_can_support || rc=$?
+    case $rc in
+        0) env_item ok "ядро $(uname -r) поддерживает CAN и USB-CAN адаптеры (gs_usb)" ;;
+        1) env_item bad "ядро $(uname -r) собрано без CAN (нужны CONFIG_CAN, CONFIG_CAN_RAW, CONFIG_CAN_GS_USB): Octopus в режиме моста USB-CAN работать не сможет. Нужно ядро с поддержкой CAN (gs_usb) либо сборка без плат голов по CAN: --heads none" ;;
+        *) env_item warn "не удалось определить поддержку CAN в ядре (нет /proc/config.gz и /boot/config-*); проверьте: modinfo gs_usb" ;;
+    esac
+    command -v ip >/dev/null && env_item ok "ip (iproute2)" || env_item bad "нет ip (пакет iproute2): интерфейс can0 настроить нельзя"
+    env_conclude "Требования схемы"
 }
 
 # ---------------------------------------------------------------- этап 1
@@ -509,6 +657,7 @@ print_plan() {
 stage_can() {
     [[ $HEADS == none ]] && return 0
     step "Интерфейс CAN ($CAN_IFACE)"
+    if [[ $DRY_RUN -eq 0 ]]; then sudo modprobe -a can can_raw gs_usb 2>/dev/null || true; fi
     local f=/etc/network/interfaces.d/can0 body
     if dpkg -s ifupdown >/dev/null 2>&1; then
         body=$'allow-hotplug can0\niface can0 can static\n    bitrate 1000000\n    up ip link set can0 txqueuelen 128\n'
@@ -1127,12 +1276,17 @@ install_main() {
     stage_preflight
     start_sudo
 
+    local need_flash=1; [[ $SKIP_FLASH -eq 1 ]] && need_flash=0
     if [[ $SKIP_SOFTWARE -eq 0 && $ONLY_DETECT -eq 0 ]]; then
         stage_packages
         stage_software
+        check_tools "$need_flash" 1
+    else
+        check_tools "$need_flash" 0
     fi
 
     detect_hardware
+    [[ $SKIP_FLASH -eq 0 ]] && check_hw_requirements
     [[ $ONLY_DETECT -eq 1 ]] && exit 0
     if [[ $DRY_RUN -eq 0 ]]; then
         ask_yn "Продолжить с этим планом?" y || { info "отменено"; exit 0; }

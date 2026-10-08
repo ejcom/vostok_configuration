@@ -19,7 +19,7 @@ Scripts that set up a VOSTOK on a clean system following the [💾 Electronics f
 | ALPS sensors (USB) | 0, 1 or 2 |
 
 - **With toolhead boards** the Octopus is flashed as a **USB→CAN bridge**, as in the guide, and the toolhead boards are flashed over CAN (`can0`, 1 Mbit).
-- **Without toolhead boards** the Octopus works over plain USB.
+- **Without CAN toolhead boards** (with a passive Fly miniAB toolhead board wired directly to the Octopus) the Octopus works over plain USB.
 - ALPS (STM32F072) are flashed over USB: katapult via DFU, then Klipper.
 
 ## Requirements and checks
@@ -110,7 +110,7 @@ They live in `configs/` (Klipper) and `configs/katapult/` (katapult). Regenerate
 
 ## What has been tested
 
-Tested on a real printer: board detection, build and flashing of the USB variants (Octopus Pro H723 over USB, ALPS on STM32F072), the Fluidd button, building all configs, `printer.cfg` generation. **Not tested on hardware**: a clean KIAUH CLI installation, the USB→CAN bridge, H36 and EBB42 toolhead boards, the Octopus Pro F446, and chip detection in DFU by Option Bytes. If something does not match your board, please open an issue with the log.
+Tested on a real printer: board detection, build and flashing of the USB variants (Octopus Pro H723 over USB, ALPS on STM32F072), the Fluidd button, building all configs, `printer.cfg` generation. **Not tested on hardware**: a clean KIAUH CLI installation, the USB→CAN bridge, H36 and EBB42 toolhead boards, the Octopus Pro F446, and chip detection in DFU by Option Bytes. If something does not match your board or you found a bug, open an issue with the log (`~/printer_data/logs/vostok_install.log`) or ask in the Telegram channel [K_3_D](http://t.me/K_3_D), mentioning Dmitry Kostenko.
 
 ## Removal
 

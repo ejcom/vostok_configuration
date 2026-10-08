@@ -1,0 +1,11 @@
+[Unit]
+Description=Сборка и прошивка MCU Klipper через katapult
+After=moonraker.service
+
+[Service]
+Type=oneshot
+User=@USER@
+Environment=HOME=@HOME@
+Environment=PRINTER_DATA=@PRINTER_DATA@
+ExecStart=@SCRIPT@ -y @FLASH_ARGS@
+TimeoutStartSec=30min

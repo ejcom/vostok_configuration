@@ -1,2 +1,5 @@
 .DS_Store
 package-lock.json
+installer/build/
+installer/firmware/
+installer/devices.tsv

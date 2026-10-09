@@ -31,7 +31,7 @@ installer/                   # Установщик на чистую систе
   configs/                   # Конфиги сборки Klipper и katapult (configs/katapult/); менять через tools/gen_configs.sh.
 ```
 
-`installer/` не связан с конфигом Klipper (конфиг его не импортирует). Артефакты `installer/build/`, `installer/firmware/`, `installer/devices.tsv` создаются на машине пользователя и лежат в `.gitignore`. Новая плата в установщике = конфиги в `installer/configs/` (+ `tools/gen_configs.sh`) и ветка в `install_vostok.sh`.
+`installer/` не связан с конфигом Klipper (конфиг его не импортирует). Артефакты `installer/build/`, `installer/firmware/`, `installer/devices.tsv` создаются на машине пользователя и лежат в `.gitignore`. Новая плата в установщике = конфиги в `installer/configs/` (+ `tools/gen_configs.sh`) и ветка в `install_vostok.sh`. Генерация своего конфига электроники: `installer/templates/` (пустой шаблон, пресеты плат `boards/`, драйверы `drivers/`) и `installer/tools/gen_electronics.py`; дописывание `[mcu]` в существующий printer.cfg — `installer/tools/mcu_merge.py`. Подробное описание конфигуратора — `installer/CONFIGURATOR.md` (+ `.en.md`). Версия установщика — файл `installer/VERSION`. Настройка конфига вынесена в `installer/lib/vostok_config.sh` (общая библиотека для `install_vostok.sh` и автономного `configure_vostok.sh`); `tools/pin_conflicts.py` ищет повторяющиеся пины.
 
 ## Архитектура конфигурации
 

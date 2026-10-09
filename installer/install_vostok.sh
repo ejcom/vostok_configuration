@@ -12,7 +12,7 @@
 #      Octopus Pro H723/F446 (USB или мост USB->CAN); в нужные моменты просит перевести
 #      плату в DFU и что-то нажать/переключить;
 #   6. скачивает vostok_configuration и вписывает найденные MCU в printer.cfg
-#      (существующий printer.cfg не трогает, только печатает блок [mcu ...]);
+#      (существующий конфиг VOSTOK: меняются только электроника, [mcu] и include; пустой или чужой printer.cfg считается чистой установкой);
 #   7. ставит кнопку обновления в Fluidd (install_fluidd_button.sh).
 #
 # Запускать от обычного пользователя в терминале (sudo спросит пароль один раз).
@@ -34,6 +34,9 @@ LOG_FILE=${LOG_FILE:-$PRINTER_DATA/logs/vostok_install.log}
 # Функции update_klipper_mcu.sh (вывод, поиск MCU, сборка, прошивка, проверка версий).
 # shellcheck source=update_klipper_mcu.sh
 source "$INSTALL_DIR/update_klipper_mcu.sh"
+# Общая библиотека настройки конфига (определение железа, меню конфига, генерация, модули)
+# shellcheck source=lib/vostok_config.sh
+source "$INSTALL_DIR/lib/vostok_config.sh"
 
 KLIPPER_REPO_URL=${KLIPPER_REPO_URL:-https://github.com/dmbutyugin/klipper}
 KLIPPER_BRANCH=${KLIPPER_BRANCH:-generic-cartesian}
@@ -52,7 +55,8 @@ OPT_MAIN=""          # h723|f446
 OPT_HEADS=""           # none|v1.3|v2|ebb42
 OPT_ALPS=""          # 0|1|2
 OPT_ELECTRONICS=""   # имя electronics_*.cfg
-OPT_CONFIG_SOURCE="" # standard|user
+OPT_CONFIG_SOURCE="" # standard|user|generate|skip
+OPT_DRIVERS=""       # драйверы для сгенерированного конфига: all=2240 или x=5160,w=2240,...,e0=2209,e1=2209
 DRY_RUN=0
 ONLY_DETECT=0
 SKIP_SOFTWARE=0
@@ -81,6 +85,8 @@ FLASH_FAILED=()      # "плата: причина"
 FLASH_SKIPPED=()     # платы, пропущенные по просьбе пользователя или как уже прошитые
 PREV_DEVICES=""      # содержимое devices.tsv от прошлого запуска (до перезаписи)
 HEADS_SKIP=0         # платы голов уже прошиты, этапы katapult/Klipper по CAN пропускаются
+BOARD_START_PHASE=full  # начальная фаза следующего flash_board: full|dfuall
+OPT_MAIN_FLASH=""    # dfu|katapult: способ прошивки главной платы (иначе спросим)
 BOARD_PHASE=full     # с какого шага повторять плату: full (с DFU) или klipper
 BOARD_DEV=""         # usb-katapult_* устройство платы, прошиваемой сейчас
 
@@ -93,9 +99,17 @@ usage() {
                         с платами голов Octopus прошивается мостом USB-CAN. --h36 - то же, прежнее имя
   --alps 0|1|2          сколько датчиков ALPS подключено по USB (иначе определит/спросит)
   --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (иначе предложит по железу)
-  --config-source standard|user  откуда брать конфиг: корень main или user_configs (иначе спросит)
+  --config-source standard|user|generate|skip  откуда брать конфиг: корень main, user_configs, сгенерировать свой
+                        (шаблон без плат и драйверов) или пропустить редактирование (только дописать
+                        недостающие [mcu] в существующий printer.cfg); иначе спросит
+  --drivers СПЕК        драйверы для --config-source generate: all=2130|2208|2209|2240|5160|5160plus или список по моторам
+                        x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209 (e0/e1 при платах голов не нужны);
+                        без опции спросит в диалоге, с -y возьмёт драйверы стокового конфига
   --only-detect         только определить подключённые MCU и показать план, ничего не менять
   --dry-run             показать все шаги и команды, ничего не менять
+  --reference ФАЙЛ|none эталон пинов и параметров для сгенерированного конфига: по умолчанию ваш текущий
+                        electronics-файл, при чистой установке стоковый main (H723); none - без эталона
+  --modules ИМЕНА       дополнительные модули без вопроса: chamber_heater, all или none
   --skip-software       не ставить пакеты/KIAUH/Klipper/Moonraker/Fluidd (уже стоят)
   --skip-flash          не прошивать MCU
   --skip-config         не трогать конфиг принтера
@@ -104,6 +118,8 @@ usage() {
                         (можно повторять). Без этой опции установщик сам предложит пропустить платы,
                         на которых уже стоит Klipper текущей версии
   --reflash             не предлагать пропуск, прошить все платы заново
+  --main-flash dfu|katapult  способ прошивки главной платы: katapult и Klipper сразу по DFU (рекомендуется,
+                        по умолчанию с -y) или katapult по DFU, затем Klipper через katapult (иначе спросит)
   --upgrade             выполнить apt upgrade перед установкой
   -y, --yes             не задавать вопросов, где есть ответ по умолчанию (шаги с железом всё равно ждут Enter)
   -V, --version         показать версию установщика
@@ -121,6 +137,9 @@ parse_args() {
             --main) [[ $# -ge 2 ]] || die "--main требует аргумент"; OPT_MAIN=$2; shift ;;
             --heads|--h36) [[ $# -ge 2 ]] || die "$1 требует аргумент"; OPT_HEADS=$2; shift ;;
             --config-source) [[ $# -ge 2 ]] || die "--config-source требует аргумент"; OPT_CONFIG_SOURCE=$2; shift ;;
+            --drivers) [[ $# -ge 2 ]] || die "--drivers требует аргумент"; OPT_DRIVERS=$2; shift ;;
+            --reference) [[ $# -ge 2 ]] || die "--reference требует аргумент"; OPT_REFERENCE=$2; shift ;;
+            --modules) [[ $# -ge 2 ]] || die "--modules требует аргумент"; OPT_MODULES=$2; shift ;;
             --alps) [[ $# -ge 2 ]] || die "--alps требует аргумент"; OPT_ALPS=$2; shift ;;
             --electronics) [[ $# -ge 2 ]] || die "--electronics требует аргумент"; OPT_ELECTRONICS=$2; shift ;;
             --only-detect) ONLY_DETECT=1 ;;
@@ -131,6 +150,7 @@ parse_args() {
             --skip-button) SKIP_BUTTON=1 ;;
             --skip-board) [[ $# -ge 2 ]] || die "--skip-board требует аргумент"; OPT_SKIP_BOARDS+=("$2"); shift ;;
             --reflash) OPT_REFLASH=1 ;;
+            --main-flash) [[ $# -ge 2 ]] || die "--main-flash требует аргумент"; OPT_MAIN_FLASH=$2; shift ;;
             --upgrade) DO_UPGRADE=1 ;;
             -y|--yes) ASSUME_YES=1 ;;
             -V|--version) echo "VOSTOK installer $VOSTOK_INSTALLER_VERSION"; exit 0 ;;
@@ -141,46 +161,12 @@ parse_args() {
     done
     case $OPT_MAIN in ""|h723|f446) ;; *) die "--main: h723 или f446" ;; esac
     case $OPT_HEADS in ""|none|v1.3|v2|ebb42) ;; *) die "--heads: none, v1.3, v2 или ebb42" ;; esac
-    case $OPT_CONFIG_SOURCE in ""|standard|user) ;; *) die "--config-source: standard или user" ;; esac
+    case $OPT_CONFIG_SOURCE in ""|standard|user|generate|skip) ;; *) die "--config-source: standard, user, generate или skip" ;; esac
+    case $OPT_MAIN_FLASH in ""|dfu|katapult) ;; *) die "--main-flash: dfu или katapult" ;; esac
     case $OPT_ALPS in ""|0|1|2) ;; *) die "--alps: 0, 1 или 2" ;; esac
     local b
     for b in "${OPT_SKIP_BOARDS[@]}"; do
         case $b in alps|alps0|alps1|main|heads) ;; *) die "--skip-board: alps, alps0, alps1, main или heads" ;; esac
-    done
-}
-
-# ------------------------------------------------------------------ интерактив
-
-need_tty() { [[ -r /dev/tty ]] || die "нужен терминал: установка просит переключать платы и нажимать Enter"; }
-
-# ask_yn "вопрос" y|n : код 0 = да. С -y возвращает значение по умолчанию.
-ask_yn() {
-    local def=${2:-n} ans hint="[y/N]"
-    [[ $def == y ]] && hint="[Y/n]"
-    if [[ $ASSUME_YES -eq 1 ]]; then [[ $def == y ]]; return; fi
-    need_tty
-    read -r -p "$1 $hint " ans </dev/tty
-    [[ -z $ans ]] && ans=$def
-    [[ $ans == [yYдД]* ]]
-}
-
-# ask_choice "вопрос" по_умолчанию вариант...: печатает выбранный вариант в ответ
-ask_choice() {
-    local q=$1 def=$2; shift 2
-    local opts=("$@") i ans
-    if [[ $ASSUME_YES -eq 1 ]]; then printf '%s' "$def"; return; fi
-    need_tty
-    {
-        printf '%s\n' "$q"
-        for i in "${!opts[@]}"; do printf '  %d) %s\n' "$((i + 1))" "${opts[$i]}"; done
-    } >&2
-    while true; do
-        read -r -p "Номер [по умолчанию: $def]: " ans </dev/tty
-        [[ -z $ans ]] && { printf '%s' "$def"; return; }
-        if [[ $ans =~ ^[0-9]+$ ]] && (( ans >= 1 && ans <= ${#opts[@]} )); then
-            printf '%s' "${opts[$((ans - 1))]}"; return
-        fi
-        echo "Введите число от 1 до ${#opts[@]}" >&2
     done
 }
 
@@ -311,7 +297,7 @@ check_bootstrap() {
     fi
 
     if hw_steps_planned; then
-        if { : </dev/tty; } 2>/dev/null; then env_item ok "терминал для диалога"; else env_item bad "нет терминала: шаги с железом требуют ответов в диалоге (запустите в ssh/терминале или используйте --skip-flash)"; fi
+        if have_tty; then env_item ok "терминал для диалога"; else env_item bad "нет терминала: шаги с железом требуют ответов в диалоге (запустите в ssh/терминале или используйте --skip-flash)"; fi
         check_dialout
     fi
     if command -v ss >/dev/null && ss -ltn 2>/dev/null | grep -qE '[:.]80[[:space:]]' \
@@ -522,133 +508,6 @@ stage_software() {
 }
 MOONRAKER_DIR_DEFAULT=${MOONRAKER_DIR:-$HOME/moonraker}
 
-# ---------------------------------------------------------------- этап 3: обнаружение
-
-byid_find() { # шаблон: список путей по возрастанию
-    local f
-    for f in $BYID_DIR/$1; do [[ -e $f ]] && printf '%s\n' "$f"; done
-    return 0
-}
-
-dfu_count() { lsusb -d 0483:df11 2>/dev/null | wc -l; }
-
-# Семейство чипа в DFU по адресу Option Bytes: f0|f4|h7|g|unknown
-dfu_family() {
-    local out
-    out=$(sudo -n dfu-util -l 2>/dev/null || dfu-util -l 2>/dev/null || true)
-    shopt -s nocasematch
-    if   [[ $out == *0x1FFFF800* ]]; then echo f0
-    elif [[ $out == *0x1FFFC000* ]]; then echo f4
-    elif [[ $out == *0x5200* ]];     then echo h7
-    elif [[ $out == *0x1FFF7800* ]]; then echo g
-    else echo unknown; fi
-    shopt -u nocasematch
-}
-
-family_name() {
-    case $1 in
-        f0) echo "STM32F0 (ALPS)" ;; f4) echo "STM32F4 (Octopus Pro F446)" ;;
-        h7) echo "STM32H7 (Octopus Pro H723)" ;; g) echo "STM32G0/G4 (Fysetc H36 / BTT EBB42)" ;; *) echo "не определён" ;;
-    esac
-}
-
-show_usb_state() {
-    local f n
-    info "Устройства в /dev/serial/by-id:"
-    n=0
-    for f in /dev/serial/by-id/*; do
-        [[ -e $f ]] || continue
-        info "  $(basename "$f")"; n=$((n + 1))
-    done
-    [[ $n -eq 0 ]] && info "  (пусто)"
-    info "Устройств в режиме DFU (0483:df11): $(dfu_count)"
-    if lsusb -d 1d50:606f >/dev/null 2>&1; then
-        info "Найден мост USB-CAN Klipper (1d50:606f); интерфейс $CAN_IFACE: $(ip -br link show "$CAN_IFACE" 2>/dev/null | awk '{print $2}' || true)"
-    fi
-}
-
-detect_hardware() {
-    step "Определение подключённых MCU"
-    show_usb_state
-
-    # Главная плата
-    local guess="" alps_guess heads_guess ans
-    if   [[ -n $(byid_find 'usb-*stm32h723xx_*') ]]; then guess=h723
-    elif [[ -n $(byid_find 'usb-*stm32f446xx_*') ]]; then guess=f446
-    elif [[ $(dfu_count) -eq 1 ]]; then
-        case $(dfu_family) in h7) guess=h723 ;; f4) guess=f446 ;; esac
-    fi
-    local main_ans=$OPT_MAIN
-    if [[ -z $main_ans ]]; then
-        if [[ $ONLY_DETECT -eq 1 && -n $guess ]]; then
-            main_ans=$guess
-        else
-            ans=$(ask_choice "Главная плата:" "${guess:-h723}" "h723" "f446")
-            main_ans=$ans
-        fi
-    fi
-    # Подписи вариантов
-    [[ -n $main_ans ]] || { warn "главная плата не определена, принимаю h723 (укажите --main f446, если у вас F446)"; main_ans=h723; }
-    case $main_ans in f446) MAIN=stm32f446xx ;; *) MAIN=stm32h723xx ;; esac
-
-    # Платы голов
-    heads_guess=none
-    if lsusb -d 1d50:606f >/dev/null 2>&1 || ip link show "$CAN_IFACE" >/dev/null 2>&1; then heads_guess=v2; fi
-    HEADS=$OPT_HEADS
-    if [[ -z $HEADS ]]; then
-        if [[ $ONLY_DETECT -eq 1 ]]; then
-            HEADS=$heads_guess
-        else
-            local def_lbl="нет"
-            [[ $heads_guess != none ]] && def_lbl="Fysetc H36 v2"
-            ans=$(ask_choice "Платы голов по CAN (при их наличии Octopus станет мостом USB-CAN):" "$def_lbl" \
-                "нет" "Fysetc H36 v1.3" "Fysetc H36 v2" "BTT EBB42")
-            case $ans in
-                "Fysetc H36 v1.3") HEADS=v1.3 ;; "Fysetc H36 v2") HEADS=v2 ;; "BTT EBB42") HEADS=ebb42 ;; *) HEADS=none ;;
-            esac
-        fi
-    fi
-    set_head_names
-
-    # ALPS
-    alps_guess=$(byid_find 'usb-*stm32f072xb_*' | wc -l)
-    [[ $alps_guess -gt 2 ]] && alps_guess=2
-    if [[ -n $OPT_ALPS ]]; then
-        ALPS_COUNT=$OPT_ALPS
-    elif [[ $ONLY_DETECT -eq 1 ]]; then
-        ALPS_COUNT=$alps_guess
-    else
-        ALPS_COUNT=$(ask_choice "Сколько датчиков ALPS подключено по USB (0 - нет)?" "$alps_guess" 0 1 2)
-    fi
-
-    if [[ $HEADS == none ]]; then MODE=usb; else MODE=bridge; fi
-    print_plan
-}
-
-main_label() { [[ $MAIN == stm32h723xx ]] && echo "Octopus Pro v1.1 H723" || echo "Octopus Pro F446"; }
-alps_side() { [[ $1 -eq 0 ]] && echo "левый (T0)" || echo "правый (T1)"; }
-HEAD_MCU=(T0CB T1CB)   # имена секций [mcu ...] плат голов (уточняются по electronics-файлу)
-set_head_names() { if [[ $HEADS == ebb42 ]]; then HEAD_MCU=(T0_EBB T1_EBB); else HEAD_MCU=(T0CB T1CB); fi; }
-head_side() { [[ $1 -eq 0 ]] && echo "левая (${HEAD_MCU[0]})" || echo "правая (${HEAD_MCU[1]})"; }
-head_label() {
-    case $HEADS in
-        v1.3) echo "Fysetc H36 v1.3" ;; v2) echo "Fysetc H36 v2" ;; ebb42) echo "BTT EBB42" ;; *) echo "платы голов" ;;
-    esac
-}
-head_chip() { [[ $HEADS == v2 ]] && echo stm32g431xx || echo stm32g0b1xx; }
-head_cfg_name() { # имя файла конфига сборки (общее для Klipper и katapult)
-    case $HEADS in v1.3) echo stm32g0b1xx-can.config ;; v2) echo stm32g431xx-can.config ;; ebb42) echo stm32g0b1xx-ebb42-can.config ;; esac
-}
-head_dfu_hint() {
-    if [[ $HEADS == ebb42 ]]; then echo "зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET)"
-    else echo "зажмите BOOT0, нажмите RST, отпустите BOOT0"; fi
-}
-
-klipper_cfg_for_main() {
-    if [[ $MODE == bridge ]]; then echo "$CONFIGS_DIR/${MAIN}-canbridge.config"; else echo "$CONFIGS_DIR/${MAIN}.config"; fi
-}
-katapult_cfg_for_main() { echo "$KATAPULT_CONFIGS/${MAIN}.config"; }
-
 print_plan() {
     info ""
     info "План установки:"
@@ -668,7 +527,7 @@ print_plan() {
     if [[ $HEADS != none ]]; then
         info "  $n. $(head_label) (обе, по очереди): katapult через DFU по USB"; n=$((n + 1))
     fi
-    info "  $n. $(main_label): katapult через DFU (джампер BOOT0), затем Klipper ($([[ $MODE == bridge ]] && echo 'USB-CAN мост' || echo USB))"; n=$((n + 1))
+    info "  $n. $(main_label): katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: $([[ $MODE == bridge ]] && echo 'USB-CAN мост' || echo USB)"; n=$((n + 1))
     if [[ $HEADS != none ]]; then
         info "  $n. $(head_label) (обе, по очереди): Klipper по CAN"; n=$((n + 1))
     fi
@@ -956,26 +815,56 @@ EOF
     fi
 }
 
-# Klipper напрямую по DFU, минуя katapult (запасной путь, если flashtool не может записать блок).
-# Katapult остаётся в начале флеша и запускает приложение со смещения CONFIG_FLASH_APPLICATION_ADDRESS.
+# Klipper напрямую по DFU (запасной путь, если flashtool не может записать блок). Без katapult_cfg katapult
+# в начале флеша не затрагивается; с ним katapult и Klipper пишутся за один сеанс DFU (рекомендуемый способ).
+# Katapult запускает приложение со смещения CONFIG_FLASH_APPLICATION_ADDRESS.
 # Серийный номер результата в FLASHED_SERIAL (для моста пустой). 0 = прошито, 1 = ошибка.
-dfu_flash_klipper() { # подпись конфиг чип семейство bridge(0|1)
-    local label=$1 cfg=$2 chip=$3 fam=$4 bridge=$5 addr bin before f i dev=""
+dfu_flash_klipper() { # подпись конфиг чип семейство bridge(0 USB|1 мост|2 только CAN) [katapult_cfg [режим make|guide]]
+    local label=$1 cfg=$2 chip=$3 fam=$4 bridge=$5 kcfg=${6:-} kmode=${7:-guide} addr bin before f i dev="" kbin="" kkey
     FLASHED_SERIAL=""
     addr=$(sed -n 's/^CONFIG_FLASH_APPLICATION_ADDRESS=\(.*\)$/\1/p' "$cfg")
     [[ -n $addr ]] || { warn "в $(basename "$cfg") нет CONFIG_FLASH_APPLICATION_ADDRESS"; return 1; }
-    step "Klipper по DFU (без katapult) -> $label"
+    if [[ -n $kcfg ]]; then
+        step "katapult и Klipper по DFU за один сеанс -> $label"
+        kkey=$(basename "$kcfg" .config)
+        ( build_katapult "$kcfg" ) || { warn "сборка katapult ($kkey) не удалась"; return 1; }
+        kbin=$BUILD_DIR/katapult-$kkey/out/katapult.bin
+    else
+        step "Klipper по DFU (без katapult) -> $label"
+    fi
     build_fw_safe "$cfg" "$chip" || return 1
     bin=${BUILT_BIN[$cfg]:-}
-    pause_hw "$label: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. Katapult в начале флеша не затрагивается; Klipper запишется по адресу $addr."
-    if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] dfu-util -s $addr:leave -D $bin"; FLASHED_SERIAL=DRYRUN; return 0; fi
+    if [[ -n $kcfg ]]; then
+        pause_hw "$label: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу $addr)."
+    else
+        pause_hw "$label: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. Katapult в начале флеша не затрагивается; Klipper запишется по адресу $addr."
+    fi
+    if [[ $DRY_RUN -eq 1 ]]; then
+        [[ -n $kcfg ]] && info "[dry-run] dfu-util -a 0 -s 0x08000000$([[ $kmode == guide ]] && echo ':mass-erase:force') -D $kkey/katapult.bin"
+        info "[dry-run] dfu-util -a 0 -s $addr:leave -D ${bin:-$(basename "$cfg" .config)-$(host_version).bin}"; FLASHED_SERIAL=DRYRUN; return 0
+    fi
     wait_dfu "$fam" "$label" || return 1
+    if [[ -n $kcfg ]]; then
+        [[ -f $kbin ]] || { warn "нет $kbin"; return 1; }
+        if [[ $kmode == guide ]]; then
+            if ! dfu_run sudo dfu-util -a 0 -s 0x08000000:mass-erase:force -D "$kbin" -d 0483:df11; then
+                [[ $(dfu_count) -ge 1 ]] || { warn "katapult не записан по DFU"; return 1; }
+                warn "с mass-erase не вышло, пробую без него"
+                dfu_run sudo dfu-util -a 0 -s 0x08000000 -D "$kbin" -d 0483:df11 || { warn "katapult не записан по DFU (нет 'Download done')"; return 1; }
+            fi
+        else
+            dfu_run sudo dfu-util -a 0 -s 0x08000000 -D "$kbin" -d 0483:df11 || { warn "katapult не записан по DFU (нет 'Download done')"; return 1; }
+        fi
+        sleep 1
+        [[ $(dfu_count) -ge 1 ]] || { warn "после записи katapult плата вышла из DFU; повторите: переведите её в DFU снова"; return 1; }
+    fi
     before=$(mktemp)
     byid_find "usb-Klipper_${chip}_*" >"$before" || true
     if ! dfu_run sudo dfu-util -a 0 -s "${addr}:leave" -D "$bin" -d 0483:df11; then
         rm -f "$before"; warn "Klipper не записан по DFU (в выводе dfu-util нет 'Download done')"; return 1
     fi
     pause_hw "Снимите джампер BOOT0 (если ставили) и нажмите RESET на $label. Если плата не запустилась, нажмите RESET ещё раз."
+    if [[ $bridge -eq 2 ]]; then rm -f "$before"; ok "$label прошит по DFU (дальше доступен только по CAN)"; return 0; fi
     if [[ $bridge -eq 1 ]]; then
         rm -f "$before"
         bring_up_can || { warn "после прошивки моста не появился рабочий интерфейс $CAN_IFACE"; return 1; }
@@ -1004,11 +893,6 @@ board_opt_skipped() { # имя: задан ли --skip-board для этой п�
     return 1
 }
 
-# Ключи (serial/uuid) из devices.tsv прошлого запуска для конфига сборки, по порядку
-prev_keys() { # имя_конфига
-    [[ -n $PREV_DEVICES ]] || return 0
-    awk -F'\t' -v c="$1" '$2 == c {print $1}' <<<"$PREV_DEVICES"
-}
 
 # На плате с этим ключом стоит Klipper текущей версии хоста (по flashed.tsv)
 version_ok() { # ключ
@@ -1019,21 +903,22 @@ version_ok() { # ключ
 # Меню после неудачи. Печатает: retry|dfu|skip|abort. Без терминала или с -y - skip.
 flash_menu() { # подпись
     local ans
-    if [[ $ASSUME_YES -eq 1 ]] || ! { : </dev/tty; } 2>/dev/null; then echo skip; return; fi
+    if [[ $ASSUME_YES -eq 1 ]] || ! have_tty; then echo skip; return; fi
     ans=$(ask_choice "$1: прошивка не удалась. Что делать?" "Повторить" \
-        "Повторить" "Прошить заново через DFU (katapult и Klipper)" "Прошить Klipper напрямую по DFU (без katapult)" \
-        "Пропустить эту плату" "Прервать установку")
+        "Повторить" "Прошить katapult и Klipper сразу по DFU" "Прошить заново через DFU (katapult), Klipper через katapult" \
+        "Прошить Klipper напрямую по DFU (без katapult)" "Пропустить эту плату" "Прервать установку")
     case $ans in
-        "Прошить заново"*) echo dfu ;; "Прошить Klipper напрямую"*) echo dfuk ;; "Пропустить"*) echo skip ;; "Прервать"*) echo abort ;; *) echo retry ;;
+        "Прошить katapult и Klipper сразу"*) echo dfuall ;; "Прошить заново"*) echo dfu ;; "Прошить Klipper напрямую"*) echo dfuk ;; "Пропустить"*) echo skip ;; "Прервать"*) echo abort ;; *) echo retry ;;
     esac
 }
 
 # Прошивка одной платы с повтором. Функция fn(фаза, аргументы...) возвращает 0 при успехе и при неудаче
 # записывает в BOARD_PHASE, с какого шага повторять: full (с DFU) или klipper (плата уже в katapult).
 # Возврат 1 = плата пропущена пользователем; установка при этом продолжается.
-flash_board() { # подпись функция [аргументы]
-    local label=$1 fn=$2 phase=full c; shift 2
-    BOARD_PHASE=full; BOARD_DEV=""
+flash_board() { # подпись функция [аргументы]; начальная фаза - BOARD_START_PHASE (по умолчанию full)
+    local label=$1 fn=$2 phase=${BOARD_START_PHASE:-full} c; shift 2
+    BOARD_START_PHASE=full
+    BOARD_PHASE=$phase; BOARD_DEV=""
     while true; do
         if "$fn" "$phase" "$@"; then save_devices quiet; return 0; fi
         warn "$label: прошивка не удалась"
@@ -1041,6 +926,7 @@ flash_board() { # подпись функция [аргументы]
         case $c in
             retry) phase=$BOARD_PHASE ;;
             dfu) phase=full ;;
+            dfuall) phase=dfuall ;;
             dfuk) phase=dfuk ;;
             skip) FLASH_FAILED+=("$label: не прошита"); warn "$label пропущена, продолжаю с остальными платами"; return 1 ;;
             abort) die "установка прервана пользователем ($label)" ;;
@@ -1086,9 +972,13 @@ alps_try_skip() { # индекс
 try_alps() { # фаза индекс
     local phase=$1 i=$2 label fcfg=$CONFIGS_DIR/stm32f072xb.config
     label="ALPS $(alps_side "$i")"
-    if [[ $phase == dfuk ]]; then
-        BOARD_PHASE=dfuk
-        dfu_flash_klipper "$label" "$fcfg" stm32f072xb f0 0 || return 1
+    if [[ $phase == dfuk || $phase == dfuall ]]; then
+        BOARD_PHASE=$phase
+        if [[ $phase == dfuall ]]; then
+            dfu_flash_klipper "$label" "$fcfg" stm32f072xb f0 0 "$KATAPULT_CONFIGS/stm32f072xb.config" make || return 1
+        else
+            dfu_flash_klipper "$label" "$fcfg" stm32f072xb f0 0 || return 1
+        fi
         RES_ALPS_SERIAL[$i]=$FLASHED_SERIAL
         return 0
     fi
@@ -1155,9 +1045,25 @@ heads_try_skip() {
     save_devices quiet
 }
 
+HEAD_DFU_DONE=(0 0)  # на плате головы Klipper уже записан по DFU вместе с katapult
+
+# katapult и Klipper платы головы за один сеанс DFU (USB), затем плата работает только по CAN
+head_dfu_all() { # индекс
+    local i=$1
+    dfu_flash_klipper "$(head_label) $(head_side "$i")" "$CONFIGS_DIR/$(head_cfg_name)" "$(head_chip)" g 2 \
+        "$KATAPULT_CONFIGS/$(head_cfg_name)" guide || return 1
+    HEAD_DFU_DONE[$i]=1
+}
+
 try_head_katapult() { # фаза индекс
     local i=$2 kcfg ans
     kcfg=$KATAPULT_CONFIGS/$(head_cfg_name)
+    if [[ $1 == dfuall ]]; then
+        BOARD_PHASE=dfuall
+        head_dfu_all "$i" || return 1
+        pause_hw "Отключите USB от $(head_label) $(head_side "$i"). Дальше она будет подключена только по CAN."
+        return 0
+    fi
     pause_hw "$(head_label) $(head_side "$i"): подключите USB, переведите в DFU и нажмите Enter. DFU: $(head_dfu_hint)." 1
     ans=$(cat "$TMP_ANS" 2>/dev/null || true)
     if [[ $ans == [sSыЫ]* && $DRY_RUN -eq 0 ]]; then
@@ -1191,6 +1097,24 @@ EOF
 try_head_klipper() { # фаза индекс
     local i=$2 uuids n uuid fcfg bin
     fcfg=$CONFIGS_DIR/$(head_cfg_name)
+    if [[ $1 == dfuall ]]; then
+        BOARD_PHASE=dfuall
+        pause_hw "Подключите USB-кабелем ТОЛЬКО $(head_label) $(head_side "$i") (CAN пока отключите): плату нужно перевести в DFU ($(head_dfu_hint))."
+        head_dfu_all "$i" || return 1
+    fi
+    if [[ ${HEAD_DFU_DONE[$i]} -eq 1 ]]; then
+        pause_hw "Отключите USB, подключите CAN-кабелем ТОЛЬКО $(head_label) $(head_side "$i") (вторую плату головы отключите), подайте питание и нажмите Enter."
+        if [[ $DRY_RUN -eq 1 ]]; then RES_HEAD_UUID[$i]=00000000000$i; return 0; fi
+        uuids=$(can_uuids Klipper | grep -vix "${RES_BRIDGE_UUID:-x}" || true); n=$(grep -c . <<<"$uuids" || true)
+        if [[ $n -ne 1 ]]; then
+            warn "ожидалась одна новая плата с Klipper на CAN (кроме моста), найдено: $n. Проверьте CAN_H/CAN_L, терминаторы, питание; оставьте подключённой только эту плату."
+            return 1
+        fi
+        RES_HEAD_UUID[$i]=$uuids
+        state_set "$uuids" "$(host_version)"
+        ok "$(head_label) $(head_side "$i"): $uuids, Application: Klipper"
+        return 0
+    fi
     pause_hw "Подключите CAN-кабелем ТОЛЬКО $(head_label) $(head_side "$i") (вторую плату головы отключите) вместе с питанием платы и нажмите Enter."
     uuids=$(can_uuids Katapult); n=$(grep -c . <<<"$uuids" || true)
     if [[ $n -eq 0 ]]; then
@@ -1312,9 +1236,13 @@ try_main() { # фаза
     kcfg=$(katapult_cfg_for_main); fcfg=$(klipper_cfg_for_main)
     [[ $MODE == bridge ]] && bridge=1
     [[ $MAIN == stm32f446xx ]] && fam=f4
-    if [[ $phase == dfuk ]]; then
-        BOARD_PHASE=dfuk
-        dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" || return 1
+    if [[ $phase == dfuk || $phase == dfuall ]]; then
+        BOARD_PHASE=$phase
+        if [[ $phase == dfuall ]]; then
+            dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" "$kcfg" guide || return 1
+        else
+            dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" || return 1
+        fi
         if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; fi
         return 0
     fi
@@ -1335,11 +1263,23 @@ try_main() { # фаза
 stage_flash_main() {
     step "$(main_label)"
     main_try_skip && return 0
+    local m_dfu="katapult и Klipper сразу по DFU (рекомендуется)" m_kat="katapult по DFU, затем Klipper через katapult" way
+    case $OPT_MAIN_FLASH in
+        dfu) way=$m_dfu ;;
+        katapult) way=$m_kat ;;
+        *) way=$(ask_choice "Как прошить $(main_label)?" "$m_dfu" "$m_dfu" "$m_kat") ;;
+    esac
     cat <<EOF
 Подключите $(main_label) USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
-Другие платы в режиме DFU быть не должны. Если katapult уже на плате (прошлая попытка), ответьте s.
+Другие платы в режиме DFU быть не должны.
 EOF
+    if [[ $way == "$m_dfu" ]]; then
+        BOARD_START_PHASE=dfuall
+        info "Способ: katapult и Klipper за один сеанс DFU."
+    else
+        info "Способ: katapult по DFU, затем Klipper через katapult. Если katapult уже на плате (прошлая попытка), на запросе DFU ответьте s."
+    fi
     flash_board "$(main_label)" try_main || true
 }
 
@@ -1386,188 +1326,6 @@ save_devices() { # [quiet]
     [[ $quiet == quiet ]] || cat "$DEVICES_FILE"
 }
 
-# ---------------------------------------------------------------- этап 6: конфигурация
-
-# Выбор electronics_*.cfg: сначала источник (корень main или user_configs), затем файл.
-# Результат: EL_SRC (standard|user) и EL_NAME. Аргумент - корень распакованного архива.
-EL_SRC=""; EL_NAME=""
-SRC_LBL_STD="Стандартный (корень main)"
-SRC_LBL_USR="Пользовательский (user_configs)"
-
-el_matches() { # имя: подходит ли файл под выбранные главную плату и платы голов
-    local f=$1 chip_pat head_pat=""
-    [[ $MAIN == stm32h723xx ]] && chip_pat="_h723_" || chip_pat="_f446_"
-    [[ $f == *$chip_pat* ]] || return 1
-    case $HEADS in v1.3) head_pat="H36v1.3" ;; v2) head_pat="H36v2" ;; ebb42) head_pat="ebb42" ;; esac
-    [[ -z $head_pat || $f == *$head_pat* ]]
-}
-
-pick_electronics() { # корень_архива
-    local root=$1 f d std=() usr=() def_src="" def_file="" labels=() names=() ans k src_ans
-    for f in "$root"/electronics_*.cfg; do [[ -f $f ]] && std+=("$(basename "$f")"); done
-    for f in "$root"/user_configs/electronics_*.cfg; do [[ -f $f ]] && usr+=("$(basename "$f")"); done
-    [[ ${#std[@]} -gt 0 || ${#usr[@]} -gt 0 ]] || die "в архиве нет electronics_*.cfg"
-
-    # Явно заданный файл: ищем в обоих каталогах
-    if [[ -n $OPT_ELECTRONICS ]]; then
-        for f in "${std[@]}"; do [[ $f == "$OPT_ELECTRONICS" ]] && { EL_SRC=standard; EL_NAME=$f; return; }; done
-        for f in "${usr[@]}"; do [[ $f == "$OPT_ELECTRONICS" ]] && { EL_SRC=user; EL_NAME=$f; return; }; done
-        die "файл $OPT_ELECTRONICS не найден ни в корне main, ни в user_configs"
-    fi
-
-    # Источник
-    def_src=user
-    for f in "${std[@]}"; do el_matches "$f" && def_src=standard; done
-    [[ ${#std[@]} -eq 0 ]] && def_src=user
-    [[ ${#usr[@]} -eq 0 ]] && def_src=standard
-    if [[ -n $OPT_CONFIG_SOURCE ]]; then
-        EL_SRC=$OPT_CONFIG_SOURCE
-    elif [[ ${#std[@]} -eq 0 ]]; then EL_SRC=user
-    elif [[ ${#usr[@]} -eq 0 ]]; then EL_SRC=standard
-    else
-        info ""
-        info "Конфиг электроники можно взять из репозитория vostok_configuration:"
-        info "  - стандартный: корень main, поддерживается автором (${std[*]});"
-        info "  - пользовательский: каталог user_configs, конфиги пользователей (${#usr[@]} шт.), могут не совпадать с документацией."
-        src_ans=$(ask_choice "Откуда взять конфиг?" "$([[ $def_src == standard ]] && echo "$SRC_LBL_STD" || echo "$SRC_LBL_USR")" "$SRC_LBL_STD" "$SRC_LBL_USR")
-        [[ $src_ans == "$SRC_LBL_USR" ]] && EL_SRC=user || EL_SRC=standard
-    fi
-    if [[ $EL_SRC == standard && ${#std[@]} -eq 0 ]]; then die "в корне main нет electronics_*.cfg; используйте --config-source user"; fi
-    if [[ $EL_SRC == user && ${#usr[@]} -eq 0 ]]; then die "в user_configs нет electronics_*.cfg"; fi
-
-    # Файл
-    local list=()
-    if [[ $EL_SRC == standard ]]; then list=("${std[@]}"); else
-        list=("${usr[@]}")
-        warn "user_configs: конфиги ведут пользователи. Перед использованием сверьте схему подключения в начале файла с вашей проводкой: неверная схема может вывести электронику из строя."
-    fi
-    for f in "${list[@]}"; do
-        if el_matches "$f"; then labels+=("$f"); else labels+=("$f (другая плата)"); fi
-        names+=("$f")
-        [[ -z $def_file ]] && el_matches "$f" && def_file=${labels[-1]}
-    done
-    [[ -n $def_file ]] || def_file=${labels[0]}
-    ans=$(ask_choice "Файл электроники (распиновка плат):" "$def_file" "${labels[@]}")
-    for k in "${!labels[@]}"; do
-        [[ ${labels[$k]} == "$ans" ]] && EL_NAME=${names[$k]}
-    done
-    [[ -n $EL_NAME ]] || die "файл электроники не выбран"
-}
-
-# Имена секций [mcu ...] плат голов берём из electronics-файла (он ссылается на них как T0CB:PA1, T0_EBB:PB3 ...)
-sync_head_names() { # путь к electronics-файлу
-    local file=$1 names n0 n1
-    [[ $HEADS == none ]] && return 0
-    names=$(grep -v '^[[:space:]]*#' "$file" | grep -oE '\bT[01][A-Za-z0-9_]+:' | tr -d ':' | sort -u || true)
-    n0=$(grep -E '^T0' <<<"$names" | head -n 1 || true)
-    n1=$(grep -E '^T1' <<<"$names" | head -n 1 || true)
-    if [[ -n $n0 && -n $n1 && ( $n0 != "${HEAD_MCU[0]}" || $n1 != "${HEAD_MCU[1]}" ) ]]; then
-        warn "в $(basename "$file") платы голов называются $n0 и $n1 (по умолчанию: ${HEAD_MCU[0]} и ${HEAD_MCU[1]}); использую имена из файла"
-        HEAD_MCU=("$n0" "$n1")
-    fi
-}
-
-# Плата, не прошитая установщиком, получает заглушку ЗАПОЛНИТЕ: Klipper сообщит об ошибке, пока её не заменят
-TODO_MARK="ЗАПОЛНИТЕ"
-mcu_blocks() {
-    local i v
-    if [[ $MODE == bridge ]]; then
-        printf '[mcu]\ncanbus_uuid: %s\n\n' "${RES_BRIDGE_UUID:-$TODO_MARK}"
-        for i in 0 1; do
-            printf '[mcu %s]\ncanbus_uuid: %s\n\n' "${HEAD_MCU[$i]}" "${RES_HEAD_UUID[$i]:-$TODO_MARK}"
-        done
-    else
-        printf '[mcu]\nserial: /dev/serial/by-id/usb-Klipper_%s_%s-if00\n\n' "$MAIN" "${RES_MAIN_SERIAL:-$TODO_MARK}"
-    fi
-    for ((i = 0; i < ALPS_COUNT; i++)); do
-        v=${RES_ALPS_SERIAL[$i]:-$TODO_MARK}
-        printf '[mcu alps%s]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_%s-if00\n\n' "$([[ $i -eq 1 ]] && echo _t1)" "$v"
-    done
-}
-
-# Каталог с printer.cfg/printer_base.cfg/electronics_*.cfg: печатает путь или ничего (тогда нужно скачать)
-local_cfg_root() {
-    local root
-    case $VOSTOK_CFG_LOCAL in
-        0|no|off) return 0 ;;
-        auto) root=$(dirname "$INSTALL_DIR") ;;
-        *) root=$VOSTOK_CFG_LOCAL ;;
-    esac
-    [[ -f $root/printer.cfg && -f $root/printer_base.cfg ]] && printf '%s' "$root"
-    return 0
-}
-
-stage_config() {
-    step "Конфигурация принтера"
-    local blocks local_root; blocks=$(mcu_blocks); local_root=$(local_cfg_root)
-    if [[ -f $PRINTER_CFG_DIR/printer.cfg ]]; then
-        warn "$PRINTER_CFG_DIR/printer.cfg уже существует, не трогаю"
-        info "Впишите в него (замените секции [mcu ...]):"
-        printf '\n%s\n' "$blocks"
-        return 0
-    fi
-    if [[ $DRY_RUN -eq 1 ]]; then
-        info "[dry-run] взял бы конфигурацию из ${local_root:-$VOSTOK_CFG_TARBALL}, скопировал printer.cfg, printer_base.cfg, chamber_heater.cfg, electronics_*.cfg, postprocessing/ в $PRINTER_CFG_DIR"
-        printf '%s\n' "$blocks"
-        return 0
-    fi
-    local tmp tarball el src_dir cfg_root
-    tmp=$(mktemp -d)
-    if [[ -n $local_root ]]; then
-        cfg_root=$local_root
-        info "Конфигурация берётся из локального клона: $cfg_root"
-    else
-        tarball=$tmp/vostok_configuration.tar.gz
-        cfg_root=$tmp/src
-        mkdir -p "$cfg_root"
-        curl -fsSL -o "$tarball" "$VOSTOK_CFG_TARBALL" || die "не удалось скачать $VOSTOK_CFG_TARBALL"
-        tar -xzf "$tarball" -C "$cfg_root" --strip-components=1 || die "не удалось распаковать конфигурацию"
-        [[ -f $cfg_root/printer.cfg && -f $cfg_root/printer_base.cfg ]] || die "в архиве нет printer.cfg/printer_base.cfg"
-    fi
-    pick_electronics "$cfg_root"
-    el=$EL_NAME
-    if [[ $EL_SRC == user ]]; then src_dir=$cfg_root/user_configs; else src_dir=$cfg_root; fi
-    sync_head_names "$src_dir/$el"
-    blocks=$(mcu_blocks)
-    mkdir -p "$PRINTER_CFG_DIR"
-    cp "$cfg_root/printer_base.cfg" "$cfg_root/printer.cfg" "$PRINTER_CFG_DIR/"
-    [[ -f $cfg_root/chamber_heater.cfg ]] && cp "$cfg_root/chamber_heater.cfg" "$PRINTER_CFG_DIR/"
-    cp "$src_dir/$el" "$PRINTER_CFG_DIR/"
-    [[ -d $cfg_root/postprocessing ]] && cp -r "$cfg_root/postprocessing" "$PRINTER_CFG_DIR/"
-    printf '%s' "$blocks" >"$tmp/mcu_blocks.txt"
-    python3 -I - "$PRINTER_CFG_DIR/printer.cfg" "$el" "$tmp/mcu_blocks.txt" <<'PYEND'
-import sys, re
-path, electronics, blocks_path = sys.argv[1:4]
-text = open(path, encoding="utf-8").read().split("\n")
-blocks = open(blocks_path, encoding="utf-8").read().rstrip("\n").split("\n")
-out, i, inserted = [], 0, False
-while i < len(text):
-    line = text[i]
-    if re.match(r"\s*\[mcu(\s+[^\]]+)?\]", line):
-        # убрать секцию [mcu ...] целиком (до следующего заголовка), вставить свои блоки на место первой
-        if not inserted:
-            out.extend(blocks + [""])
-            inserted = True
-        i += 1
-        while i < len(text) and not re.match(r"\s*\[", text[i]):
-            i += 1
-        continue
-    if re.match(r"\s*\[include\s+electronics_.*\.cfg\]", line):
-        tail = line.split("]", 1)[1]
-        line = "[include %s]%s" % (electronics, tail)
-    out.append(line)
-    i += 1
-if not inserted:
-    out = blocks + [""] + out
-open(path, "w", encoding="utf-8").write("\n".join(out))
-PYEND
-    rm -rf "$tmp"
-    ok "конфигурация записана в $PRINTER_CFG_DIR (electronics: $el, источник: $([[ $EL_SRC == user ]] && echo user_configs || echo "корень main"))"
-    if [[ $HEADS == none ]]; then
-        warn "в $el могут быть включены платы голов по CAN. Без них адаптируйте этот файл под вашу проводку (гайд, раздел «Конфигурация», п. 3)"
-    fi
-}
-
 # ---------------------------------------------------------------- этап 7: запуск, кнопка, итоги
 
 # Ждёт Moonraker (после запуска служб он отвечает не сразу)
@@ -1603,11 +1361,12 @@ print_summary() {
     cat <<EOF
 
 Что осталось сделать вручную:
-  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  1. $([[ $GEN_USED -eq 1 ]] && echo "Вписать пины в сгенерированный $EL_NAME (поиск: ЗАПОЛНИТЕ), сверить блоки с пометкой СВЕРЬТЕ, проверить параметры моторов и драйверов, затем перезапустить Klipper." || echo "Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.")
   2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте ${HEAD_MCU[0]} и ${HEAD_MCU[1]} местами).
   3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
-  5. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): $INSTALL_DIR/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
 EOF
     if [[ ${#FLASH_FAILED[@]} -gt 0 ]]; then
         warn "Не прошиты платы:"
@@ -1640,6 +1399,7 @@ install_main() {
     fi
 
     detect_hardware
+    print_plan
     [[ $SKIP_FLASH -eq 0 ]] && check_hw_requirements
     [[ $ONLY_DETECT -eq 1 ]] && exit 0
     if [[ $DRY_RUN -eq 0 ]]; then

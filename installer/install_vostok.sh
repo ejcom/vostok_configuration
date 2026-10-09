@@ -60,6 +60,9 @@ SKIP_FLASH=0
 SKIP_CONFIG=0
 SKIP_BUTTON=0
 DO_UPGRADE=0
+OPT_SKIP_BOARDS=()   # alps|alps0|alps1|main|heads: не прошивать (уже прошиты)
+OPT_REFLASH=0        # не предлагать пропуск плат, уже прошитых текущей версией
+BYID_DIR=${BYID_DIR:-/dev/serial/by-id}
 
 MAIN=""              # stm32h723xx|stm32f446xx
 HEADS=""               # none|v1.3|v2
@@ -72,6 +75,14 @@ RES_MAIN_SERIAL=""   # режим usb: серийный номер Octopus
 RES_BRIDGE_UUID=""   # режим bridge: canbus_uuid Octopus
 RES_HEAD_UUID=("" "")  # платы голов T0, T1
 RES_ALPS_SERIAL=("" "")
+
+# Итоги прошивки плат: ошибка одной платы не останавливает установку
+FLASH_FAILED=()      # "плата: причина"
+FLASH_SKIPPED=()     # платы, пропущенные по просьбе пользователя или как уже прошитые
+PREV_DEVICES=""      # содержимое devices.tsv от прошлого запуска (до перезаписи)
+HEADS_SKIP=0         # платы голов уже прошиты, этапы katapult/Klipper по CAN пропускаются
+BOARD_PHASE=full     # с какого шага повторять плату: full (с DFU) или klipper
+BOARD_DEV=""         # usb-katapult_* устройство платы, прошиваемой сейчас
 
 usage() {
     cat <<'EOF'
@@ -89,6 +100,10 @@ usage() {
   --skip-flash          не прошивать MCU
   --skip-config         не трогать конфиг принтера
   --skip-button         не ставить кнопку обновления в Fluidd
+  --skip-board ПЛАТА    не прошивать плату, уже прошитую раньше: alps, alps0, alps1, main или heads
+                        (можно повторять). Без этой опции установщик сам предложит пропустить платы,
+                        на которых уже стоит Klipper текущей версии
+  --reflash             не предлагать пропуск, прошить все платы заново
   --upgrade             выполнить apt upgrade перед установкой
   -y, --yes             не задавать вопросов, где есть ответ по умолчанию (шаги с железом всё равно ждут Enter)
   -h, --help            эта справка
@@ -113,6 +128,8 @@ parse_args() {
             --skip-flash) SKIP_FLASH=1 ;;
             --skip-config) SKIP_CONFIG=1 ;;
             --skip-button) SKIP_BUTTON=1 ;;
+            --skip-board) [[ $# -ge 2 ]] || die "--skip-board требует аргумент"; OPT_SKIP_BOARDS+=("$2"); shift ;;
+            --reflash) OPT_REFLASH=1 ;;
             --upgrade) DO_UPGRADE=1 ;;
             -y|--yes) ASSUME_YES=1 ;;
             -h|--help) usage; exit 0 ;;
@@ -124,6 +141,10 @@ parse_args() {
     case $OPT_HEADS in ""|none|v1.3|v2|ebb42) ;; *) die "--heads: none, v1.3, v2 или ebb42" ;; esac
     case $OPT_CONFIG_SOURCE in ""|standard|user) ;; *) die "--config-source: standard или user" ;; esac
     case $OPT_ALPS in ""|0|1|2) ;; *) die "--alps: 0, 1 или 2" ;; esac
+    local b
+    for b in "${OPT_SKIP_BOARDS[@]}"; do
+        case $b in alps|alps0|alps1|main|heads) ;; *) die "--skip-board: alps, alps0, alps1, main или heads" ;; esac
+    done
 }
 
 # ------------------------------------------------------------------ интерактив
@@ -503,7 +524,7 @@ MOONRAKER_DIR_DEFAULT=${MOONRAKER_DIR:-$HOME/moonraker}
 
 byid_find() { # шаблон: список путей по возрастанию
     local f
-    for f in /dev/serial/by-id/$1; do [[ -e $f ]] && printf '%s\n' "$f"; done
+    for f in $BYID_DIR/$1; do [[ -e $f ]] && printf '%s\n' "$f"; done
     return 0
 }
 
@@ -764,23 +785,39 @@ wait_dfu() { # семейство подпись
     done
 }
 
+# Запуск dfu-util (или make flash): вывод на экран и в лог. Успехом считается запись данных ("Download done"),
+# даже если dfu-util вернул ошибку get_status после 100%: плата к этому моменту уже перезагрузилась.
+dfu_run() { # команда...
+    local out rc=1
+    out=$(mktemp)
+    log_to_file "\$ $*"
+    "$@" 2>&1 | tee "$out" || true
+    grep -qE 'Download done|File downloaded successfully' "$out" && rc=0
+    rm -f "$out"
+    return $rc
+}
+
 # Прошивка katapult по DFU. Режим make - как у пользователя для ALPS (make flash katapult),
-# режим guide - команда из гайда (mass-erase, запасной вариант без него).
+# режим guide - команда из гайда (mass-erase, запасной вариант без него). 0 = записано, 1 = нет.
 dfu_flash_katapult() { # режим(make|guide) конфиг
     local mode=$1 cfg=$2 key work
-    build_katapult "$cfg"
+    key=$(basename "$cfg" .config); work=$BUILD_DIR/katapult-$key
+    ( build_katapult "$cfg" ) || { warn "сборка katapult ($key) не удалась"; return 1; }
+    KATAPULT_BIN=$work/out/katapult.bin
     [[ $DRY_RUN -eq 1 ]] && { info "[dry-run] dfu-util -> $KATAPULT_BIN"; return 0; }
+    [[ -f $KATAPULT_BIN ]] || { warn "нет $KATAPULT_BIN"; return 1; }
     if [[ $mode == make ]]; then
-        key=$(basename "$cfg" .config); work=$BUILD_DIR/katapult-$key
-        # make flash из katapult (sudo dfu-util -R -a 0 -s 0x08000000:leave), ошибку get_status в конце игнорируем
-        make -C "$KATAPULT_DIR" "KCONFIG_CONFIG=$work/.config" "OUT=$work/out/" flash FLASH_DEVICE=0483:df11 \
-            || warn "make flash вернул ошибку (get_status после 100% - нормально); проверяю результат"
+        # make flash из katapult (sudo dfu-util -R -a 0 -s 0x08000000:leave)
+        dfu_run make -C "$KATAPULT_DIR" "KCONFIG_CONFIG=$work/.config" "OUT=$work/out/" flash FLASH_DEVICE=0483:df11 && return 0
     else
-        sudo dfu-util -R -a 0 -s 0x08000000:mass-erase:force:leave -D "$KATAPULT_BIN" -d 0483:df11 \
-            || { warn "с mass-erase не вышло, пробую без него (как рекомендует гайд)";
-                 sudo dfu-util -R -a 0 -s 0x08000000:leave -D "$KATAPULT_BIN" -d 0483:df11 \
-                    || warn "dfu-util вернул ошибку (get_status после 100% - нормально); проверяю результат"; }
+        dfu_run sudo dfu-util -R -a 0 -s 0x08000000:mass-erase:force:leave -D "$KATAPULT_BIN" -d 0483:df11 && return 0
+        if [[ $(dfu_count) -ge 1 ]]; then
+            warn "с mass-erase не вышло, пробую без него (как рекомендует гайд)"
+            dfu_run sudo dfu-util -R -a 0 -s 0x08000000:leave -D "$KATAPULT_BIN" -d 0483:df11 && return 0
+        fi
     fi
+    warn "katapult не записан по DFU (в выводе dfu-util нет 'Download done')"
+    return 1
 }
 
 # Ждёт появления нового usb-katapult_<чип>_* (которого не было в списке «до»): результат в NEW_KATAPULT_DEV
@@ -789,7 +826,7 @@ wait_new_katapult() { # чип секунд файл_со_списком_до
     local chip=$1 secs=$2 before=$3 i f
     NEW_KATAPULT_DEV=""
     for ((i = 0; i < secs * 2; i++)); do
-        for f in /dev/serial/by-id/usb-katapult_"${chip}"_*; do
+        for f in "$BYID_DIR"/usb-katapult_"${chip}"_*; do
             [[ -e $f ]] || continue
             grep -qxF "$f" "$before" || { NEW_KATAPULT_DEV=$f; return 0; }
         done
@@ -802,139 +839,283 @@ snapshot_katapult() { # файл
     byid_find 'usb-katapult_*' >"$1" || true
 }
 
-# Получить плату в режиме katapult: через DFU (прошивка katapult) или двойным RESET, если katapult/Klipper уже есть.
-# Результат в NEW_KATAPULT_DEV.
-enter_katapult() { # подпись чип семейство katapult_cfg режим(make|guide) подсказка_по_DFU
-    local label=$1 chip=$2 fam=$3 kcfg=$4 mode=$5 hint=$6 before ans
-    before=$(mktemp); snapshot_katapult "$before"
-    while true; do
-        pause_hw "$label: $hint" 1
-        ans=$(cat "$TMP_ANS" 2>/dev/null || true)
-        if [[ $DRY_RUN -eq 1 ]]; then dfu_flash_katapult "$mode" "$kcfg"; NEW_KATAPULT_DEV=/dev/serial/by-id/usb-katapult_${chip}_DRYRUN-if00; rm -f "$before"; return 0; fi
-        if [[ $ans == [sSыЫ]* ]]; then
-            info "Пропускаю DFU: дважды быстро нажмите RESET на $label, чтобы войти в katapult."
-            if wait_new_katapult "$chip" 25 "$before"; then break; fi
-            warn "usb-katapult_${chip}_* не появился. Двойной RESET нужно нажимать быстро (светодиод katapult мигает медленно)."
-            ask_yn "Повторить?" y || { rm -f "$before"; die "не удалось войти в katapult: $label"; }
-            continue
-        fi
-        if ! wait_dfu "$fam" "$label"; then rm -f "$before"; die "прошивка $label прервана"; fi
+katapult_devices() { byid_find "usb-katapult_${1}_*"; }   # чип
+
+# Выбор из нескольких найденных katapult-устройств (одно - берём сразу)
+pick_katapult() { # подпись список_путей
+    local label=$1 list=$2 n names=() p
+    n=$(grep -c . <<<"$list" || true)
+    if [[ $n -le 1 ]]; then printf '%s' "$list"; return; fi
+    while IFS= read -r p; do names+=("$(basename "$p")"); done <<<"$list"
+    p=$(ask_choice "$label: в katapult сразу несколько плат, какая нужна?" "${names[0]}" "${names[@]}")
+    printf '%s/%s' "$BYID_DIR" "$p"
+}
+
+# Получить плату в режиме katapult: через DFU (прошивка katapult) или без DFU, если katapult уже на плате.
+# 0 = готово (устройство в NEW_KATAPULT_DEV), 1 = не удалось (причина выведена); сама установка не прерывается.
+enter_katapult() { # подпись чип семейство katapult_cfg режим подсказка_по_DFU [сообщение_после_DFU]
+    local label=$1 chip=$2 fam=$3 kcfg=$4 mode=$5 hint=$6 after=${7:-} before ans found n
+    NEW_KATAPULT_DEV=""
+    pause_hw "$label: $hint" 1
+    ans=$(cat "$TMP_ANS" 2>/dev/null || true)
+    if [[ $DRY_RUN -eq 1 ]]; then
         dfu_flash_katapult "$mode" "$kcfg"
-        if wait_new_katapult "$chip" 20 "$before"; then break; fi
-        warn "после прошивки katapult не появился usb-katapult_${chip}_*."
-        warn "Если появился usb-Klipper_*, дважды быстро нажмите RESET; если ничего нет - прошейте katapult заново."
-        if wait_new_katapult "$chip" 15 "$before"; then break; fi
-        ask_yn "Повторить прошивку katapult для $label?" y || { rm -f "$before"; die "katapult не запустился: $label"; }
-    done
+        [[ -n $after ]] && pause_hw "$after"
+        NEW_KATAPULT_DEV=$BYID_DIR/usb-katapult_${chip}_DRYRUN-if00
+        return 0
+    fi
+    before=$(mktemp)
+    if [[ $ans == [sSыЫ]* ]]; then
+        # katapult уже на плате (например, прошлая попытка) или он запустится двойным RESET
+        found=$(katapult_devices "$chip"); n=$(grep -c . <<<"$found" || true)
+        if [[ $n -ge 1 ]]; then
+            NEW_KATAPULT_DEV=$(pick_katapult "$label" "$found")
+            rm -f "$before"
+            ok "$label уже в режиме katapult: $(basename "$NEW_KATAPULT_DEV")"
+            return 0
+        fi
+        info "Пропускаю DFU: дважды быстро нажмите RESET на $label, чтобы войти в katapult."
+        snapshot_katapult "$before"
+        if ! wait_new_katapult "$chip" 25 "$before"; then
+            rm -f "$before"
+            warn "usb-katapult_${chip}_* не появился. Двойной RESET нужно нажимать быстро (светодиод katapult мигает медленно)."
+            return 1
+        fi
+    else
+        if ! wait_dfu "$fam" "$label"; then rm -f "$before"; return 1; fi
+        # снимок после входа в DFU: katapult этой платы в by-id сейчас нет, старое имя не помешает
+        snapshot_katapult "$before"
+        if ! dfu_flash_katapult "$mode" "$kcfg"; then rm -f "$before"; return 1; fi
+        [[ -n $after ]] && pause_hw "$after"
+        if ! wait_new_katapult "$chip" 20 "$before"; then
+            warn "katapult ещё не появился. После прошивки по DFU ОДИНОЧНЫЙ RESET может запустить не katapult, а прежнюю прошивку: ДВАЖДЫ быстро нажмите RESET."
+            info "Устройства: $(ls "$BYID_DIR" 2>/dev/null | tr '\n' ' ')"
+            if ! wait_new_katapult "$chip" 30 "$before"; then
+                rm -f "$before"
+                warn "usb-katapult_${chip}_* так и не появился (ls $BYID_DIR). Если плата в DFU - katapult не записан, повторите через DFU."
+                return 1
+            fi
+        fi
+    fi
     rm -f "$before"
     ok "$label в режиме katapult: $(basename "$NEW_KATAPULT_DEV")"
 }
 
+# Сборка прошивки Klipper без выхода из скрипта при ошибке: 0 = BUILT_BIN[cfg] готов
+build_fw_safe() { # конфиг чип
+    local cfg=$1 chip=$2
+    [[ $DRY_RUN -eq 1 ]] && return 0
+    ( build_firmware "$cfg" "$chip" ) || { warn "сборка прошивки Klipper ($(basename "$cfg")) не удалась"; return 1; }
+    BUILT_BIN[$cfg]=$FIRMWARE_DIR/$(basename "$cfg" .config)-$(host_version).bin
+    [[ -f ${BUILT_BIN[$cfg]} ]] || { warn "нет файла ${BUILT_BIN[$cfg]}"; return 1; }
+}
+
 # Klipper на плату в katapult по USB. Для обычной платы ждёт usb-Klipper_*, для моста - появления gs_usb и can0.
-# Серийный номер результата в FLASHED_SERIAL.
+# Серийный номер результата в FLASHED_SERIAL. 0 = прошито, 1 = ошибка (плата остаётся в katapult).
 FLASHED_SERIAL=""
+FLASH_ERR=""
 flash_klipper_via_katapult() { # подпись katapult_dev klipper_cfg чип bridge(0|1)
     local label=$1 dev=$2 cfg=$3 chip=$4 bridge=$5 serial bin
     serial=$(sed -n 's/^usb-katapult_.*_\([^_]*\)-if[0-9]*$/\1/p' <<<"$(basename "$dev")")
     step "Klipper -> $label"
     if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] сборка $(basename "$cfg"), flashtool.py -d $dev -f <bin>"; FLASHED_SERIAL=DRYRUN; return 0; fi
-    build_firmware "$cfg" "$chip"
+    build_fw_safe "$cfg" "$chip" || return 1
     bin=${BUILT_BIN[$cfg]}
-    if ! python3 "$KATAPULT_DIR/scripts/flashtool.py" -d "$dev" -f "$bin"; then
+    local errf; errf=$(mktemp)
+    if ! python3 "$KATAPULT_DIR/scripts/flashtool.py" -d "$dev" -f "$bin" 2>&1 | tee "$errf"; then
+        FLASH_ERR=$(grep -E 'FlashError' "$errf" | tail -n 1 || true)
+        rm -f "$errf"
+        log_to_file "flashtool: ${FLASH_ERR:-ошибка}"
+        warn "причина: ${FLASH_ERR:-см. вывод выше}"
         cat >&2 <<EOF
 
 Прошивка Klipper на $label не удалась. katapult остаётся в плате.
-  - ls /dev/serial/by-id/ (должен быть usb-katapult_*), при необходимости дважды нажмите RESET;
-  - повтор: python3 $KATAPULT_DIR/scripts/flashtool.py -d $dev -f $bin
+  - ls $BYID_DIR (должен быть usb-katapult_*), при необходимости дважды быстро нажмите RESET;
+  - повтор вручную: python3 $KATAPULT_DIR/scripts/flashtool.py -d $dev -f $bin
+  - если запись блока стабильно не проходит, в меню ниже выберите прошивку Klipper напрямую по DFU (katapult не затрагивается)
 EOF
-        die "прошивка Klipper на $label не удалась"
+        return 1
     fi
+    rm -f "$errf"
     FLASHED_SERIAL=$serial
     if [[ $bridge -eq 1 ]]; then
-        bring_up_can || die "после прошивки моста не появился рабочий интерфейс $CAN_IFACE (lsusb: Geschwister Schneider / 1d50:606f; ip link show $CAN_IFACE)"
+        if ! bring_up_can; then
+            warn "после прошивки моста не появился рабочий интерфейс $CAN_IFACE (lsusb: Geschwister Schneider / 1d50:606f; ip link show $CAN_IFACE)"
+            return 1
+        fi
         ok "$label: мост USB-CAN работает, $CAN_IFACE поднят"
     else
-        wait_for_device "/dev/serial/by-id/usb-Klipper_${chip}_${serial}-if00" 20 \
-            || die "после прошивки $label не появился usb-Klipper_${chip}_${serial}-if00; проверьте ls /dev/serial/by-id/"
+        if ! wait_for_device "$BYID_DIR/usb-Klipper_${chip}_${serial}-if00" 20; then
+            warn "после прошивки $label не появился usb-Klipper_${chip}_${serial}-if00; проверьте ls $BYID_DIR"
+            return 1
+        fi
         state_set "$serial" "$(host_version)"
         ok "$label прошит (serial $serial)"
     fi
 }
 
+# Klipper напрямую по DFU, минуя katapult (запасной путь, если flashtool не может записать блок).
+# Katapult остаётся в начале флеша и запускает приложение со смещения CONFIG_FLASH_APPLICATION_ADDRESS.
+# Серийный номер результата в FLASHED_SERIAL (для моста пустой). 0 = прошито, 1 = ошибка.
+dfu_flash_klipper() { # подпись конфиг чип семейство bridge(0|1)
+    local label=$1 cfg=$2 chip=$3 fam=$4 bridge=$5 addr bin before f i dev=""
+    FLASHED_SERIAL=""
+    addr=$(sed -n 's/^CONFIG_FLASH_APPLICATION_ADDRESS=\(.*\)$/\1/p' "$cfg")
+    [[ -n $addr ]] || { warn "в $(basename "$cfg") нет CONFIG_FLASH_APPLICATION_ADDRESS"; return 1; }
+    step "Klipper по DFU (без katapult) -> $label"
+    build_fw_safe "$cfg" "$chip" || return 1
+    bin=${BUILT_BIN[$cfg]:-}
+    pause_hw "$label: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. Katapult в начале флеша не затрагивается; Klipper запишется по адресу $addr."
+    if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] dfu-util -s $addr:leave -D $bin"; FLASHED_SERIAL=DRYRUN; return 0; fi
+    wait_dfu "$fam" "$label" || return 1
+    before=$(mktemp)
+    byid_find "usb-Klipper_${chip}_*" >"$before" || true
+    if ! dfu_run sudo dfu-util -a 0 -s "${addr}:leave" -D "$bin" -d 0483:df11; then
+        rm -f "$before"; warn "Klipper не записан по DFU (в выводе dfu-util нет 'Download done')"; return 1
+    fi
+    pause_hw "Снимите джампер BOOT0 (если ставили) и нажмите RESET на $label. Если плата не запустилась, нажмите RESET ещё раз."
+    if [[ $bridge -eq 1 ]]; then
+        rm -f "$before"
+        bring_up_can || { warn "после прошивки моста не появился рабочий интерфейс $CAN_IFACE"; return 1; }
+        ok "$label: мост USB-CAN работает, $CAN_IFACE поднят"
+        return 0
+    fi
+    for ((i = 0; i < 40; i++)); do
+        for f in "$BYID_DIR"/usb-Klipper_"${chip}"_*; do
+            [[ -e $f ]] || continue
+            grep -qxF "$f" "$before" || { dev=$f; break 2; }
+        done
+        sleep 0.5
+    done
+    rm -f "$before"
+    [[ -n $dev ]] || { warn "после прошивки не появился usb-Klipper_${chip}_* (ls $BYID_DIR)"; return 1; }
+    FLASHED_SERIAL=$(sed -n "s/^usb-Klipper_${chip}_\(.*\)-if[0-9]*\$/\1/p" <<<"$(basename "$dev")")
+    state_set "$FLASHED_SERIAL" "$(host_version)"
+    ok "$label прошит по DFU (serial $FLASHED_SERIAL)"
+}
+
+# ---------------------------------------------------------------- повтор и пропуск плат
+
+board_opt_skipped() { # имя: задан ли --skip-board для этой платы
+    local b
+    for b in "${OPT_SKIP_BOARDS[@]}"; do [[ $b == "$1" ]] && return 0; done
+    return 1
+}
+
+# Ключи (serial/uuid) из devices.tsv прошлого запуска для конфига сборки, по порядку
+prev_keys() { # имя_конфига
+    [[ -n $PREV_DEVICES ]] || return 0
+    awk -F'\t' -v c="$1" '$2 == c {print $1}' <<<"$PREV_DEVICES"
+}
+
+# На плате с этим ключом стоит Klipper текущей версии хоста (по flashed.tsv)
+version_ok() { # ключ
+    local v; v=$(state_get "$1")
+    [[ -n $v && $(norm_version "$v") == "$(norm_version "$(host_version)")" ]]
+}
+
+# Меню после неудачи. Печатает: retry|dfu|skip|abort. Без терминала или с -y - skip.
+flash_menu() { # подпись
+    local ans
+    if [[ $ASSUME_YES -eq 1 ]] || ! { : </dev/tty; } 2>/dev/null; then echo skip; return; fi
+    ans=$(ask_choice "$1: прошивка не удалась. Что делать?" "Повторить" \
+        "Повторить" "Прошить заново через DFU (katapult и Klipper)" "Прошить Klipper напрямую по DFU (без katapult)" \
+        "Пропустить эту плату" "Прервать установку")
+    case $ans in
+        "Прошить заново"*) echo dfu ;; "Прошить Klipper напрямую"*) echo dfuk ;; "Пропустить"*) echo skip ;; "Прервать"*) echo abort ;; *) echo retry ;;
+    esac
+}
+
+# Прошивка одной платы с повтором. Функция fn(фаза, аргументы...) возвращает 0 при успехе и при неудаче
+# записывает в BOARD_PHASE, с какого шага повторять: full (с DFU) или klipper (плата уже в katapult).
+# Возврат 1 = плата пропущена пользователем; установка при этом продолжается.
+flash_board() { # подпись функция [аргументы]
+    local label=$1 fn=$2 phase=full c; shift 2
+    BOARD_PHASE=full; BOARD_DEV=""
+    while true; do
+        if "$fn" "$phase" "$@"; then save_devices quiet; return 0; fi
+        warn "$label: прошивка не удалась"
+        c=$(flash_menu "$label")
+        case $c in
+            retry) phase=$BOARD_PHASE ;;
+            dfu) phase=full ;;
+            dfuk) phase=dfuk ;;
+            skip) FLASH_FAILED+=("$label: не прошита"); warn "$label пропущена, продолжаю с остальными платами"; return 1 ;;
+            abort) die "установка прервана пользователем ($label)" ;;
+        esac
+    done
+}
+
+# ---------------------------------------------------------------- ALPS
+
+alps_candidates() { # serial присутствующих ALPS с Klipper: сначала в порядке прошлого devices.tsv, без занятых
+    local s seen=" ${RES_ALPS_SERIAL[*]} "
+    for s in $(prev_keys stm32f072xb.config) \
+             $(byid_find 'usb-Klipper_stm32f072xb_*' | sed -n 's/.*stm32f072xb_\(.*\)-if00$/\1/p'); do
+        [[ -e $BYID_DIR/usb-Klipper_stm32f072xb_${s}-if00 ]] || continue
+        [[ $seen == *" $s "* ]] && continue
+        seen+="$s "
+        printf '%s\n' "$s"
+    done
+}
+
+# 0 = ALPS i пропущен (уже прошит), 1 = нужно прошивать
+alps_try_skip() { # индекс
+    local i=$1 s forced=0
+    board_opt_skipped alps || board_opt_skipped "alps$i" && forced=1
+    [[ $forced -eq 0 && $OPT_REFLASH -eq 1 ]] && return 1
+    s=$(alps_candidates | head -n 1)
+    if [[ -z $s ]]; then
+        [[ $forced -eq 1 ]] || return 1
+        warn "--skip-board: ALPS $(alps_side "$i") не найден, serial неизвестен (впишите [mcu alps...] вручную)"
+        FLASH_SKIPPED+=("ALPS $(alps_side "$i"): пропущен по --skip-board, serial неизвестен")
+        return 0
+    fi
+    if [[ $forced -eq 0 ]]; then
+        version_ok "$s" || return 1
+        ask_yn "ALPS $(alps_side "$i"): найден $s, Klipper $(host_version) уже установлен. Пропустить прошивку?" y || return 1
+    fi
+    RES_ALPS_SERIAL[$i]=$s
+    FLASH_SKIPPED+=("ALPS $(alps_side "$i"): уже прошит ($s)")
+    ok "ALPS $(alps_side "$i"): пропускаю, serial $s"
+    save_devices quiet
+}
+
+try_alps() { # фаза индекс
+    local phase=$1 i=$2 label fcfg=$CONFIGS_DIR/stm32f072xb.config
+    label="ALPS $(alps_side "$i")"
+    if [[ $phase == dfuk ]]; then
+        BOARD_PHASE=dfuk
+        dfu_flash_klipper "$label" "$fcfg" stm32f072xb f0 0 || return 1
+        RES_ALPS_SERIAL[$i]=$FLASHED_SERIAL
+        return 0
+    fi
+    [[ $phase == klipper && ! -e $BOARD_DEV ]] && phase=full
+    if [[ $phase == full ]]; then
+        BOARD_PHASE=full
+        enter_katapult "$label" stm32f072xb f0 "$KATAPULT_CONFIGS/stm32f072xb.config" make \
+            "переведите этот ALPS в режим DFU (BOOT + RESET, затем отпустить BOOT)" || return 1
+        BOARD_DEV=$NEW_KATAPULT_DEV
+    fi
+    BOARD_PHASE=klipper
+    flash_klipper_via_katapult "$label" "$BOARD_DEV" "$fcfg" stm32f072xb 0 || return 1
+    RES_ALPS_SERIAL[$i]=$FLASHED_SERIAL
+}
+
 stage_flash_alps() {
-    local i fcfg=$CONFIGS_DIR/stm32f072xb.config
+    local i
     for ((i = 0; i < ALPS_COUNT; i++)); do
-        step "ALPS $(alps_side $i)"
+        step "ALPS $(alps_side "$i")"
+        alps_try_skip "$i" && continue
         cat <<EOF
 Датчик ALPS подключите USB-кабелем к хосту (другие ALPS можно не отключать).
 Режим DFU: зажмите BOOT, нажмите и отпустите RESET, отпустите BOOT.
 EOF
-        enter_katapult "ALPS $(alps_side $i)" stm32f072xb f0 "$KATAPULT_CONFIGS/stm32f072xb.config" make \
-            "переведите этот ALPS в режим DFU (BOOT + RESET, затем отпустить BOOT)"
-        flash_klipper_via_katapult "ALPS $(alps_side $i)" "$NEW_KATAPULT_DEV" "$fcfg" stm32f072xb 0
-        RES_ALPS_SERIAL[$i]=$FLASHED_SERIAL
+        flash_board "ALPS $(alps_side "$i")" try_alps "$i" || true
     done
 }
 
-stage_flash_heads_katapult() {
-    [[ $HEADS == none ]] && return 0
-    local i kcfg
-    kcfg=$KATAPULT_CONFIGS/$(head_cfg_name)
-    for ((i = 0; i < 2; i++)); do
-        step "$(head_label): katapult, плата $(head_side $i)"
-        cat <<EOF
-Эти шаги выполняются по одной плате:
-  - подключите к хосту USB-кабелем ТОЛЬКО $(head_label) $(head_side $i) (другую плату головы от USB отключите);
-  - режим DFU: $(head_dfu_hint).
-katapult на этих платах работает только по CAN, поэтому после прошивки отключите USB.
-EOF
-        pause_hw "$(head_label) $(head_side $i): подключите USB, переведите в DFU и нажмите Enter. DFU: $(head_dfu_hint)." 1
-        if [[ $(cat "$TMP_ANS" 2>/dev/null || true) == [sSыЫ]* && $DRY_RUN -eq 0 ]]; then
-            info "DFU для этой платы головы пропущен (katapult уже на плате)"
-            continue
-        fi
-        if [[ $DRY_RUN -eq 1 ]]; then dfu_flash_katapult guide "$kcfg"; continue; fi
-        wait_dfu g "$(head_label) $(head_side $i)" || die "прошивка платы головы прервана"
-        dfu_flash_katapult guide "$kcfg"
-        pause_hw "Отключите USB от $(head_label) $(head_side $i). Дальше она будет подключена только по CAN."
-        ok "katapult записан на $(head_label) $(head_side $i)"
-    done
-}
-
-stage_flash_main() {
-    step "$(main_label)"
-    local hint kcfg fcfg bridge=0
-    kcfg=$(katapult_cfg_for_main); fcfg=$(klipper_cfg_for_main)
-    [[ $MODE == bridge ]] && bridge=1
-    cat <<EOF
-Подключите $(main_label) USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
-Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
-Другие платы в режиме DFU быть не должны.
-EOF
-    hint="поставьте джампер BOOT0, нажмите RESET и нажмите Enter (после прошивки katapult джампер нужно будет снять)"
-    local before; before=$(mktemp); snapshot_katapult "$before"
-    pause_hw "$(main_label): $hint"
-    local ans; ans=$(cat "$TMP_ANS" 2>/dev/null || true)
-    if [[ $DRY_RUN -eq 1 ]]; then
-        dfu_flash_katapult guide "$kcfg"; NEW_KATAPULT_DEV=/dev/serial/by-id/usb-katapult_${MAIN}_DRYRUN-if00
-    elif [[ $ans == [sSыЫ]* ]]; then
-        info "Пропускаю DFU: дважды быстро нажмите RESET на $(main_label)."
-        wait_new_katapult "$MAIN" 25 "$before" || die "usb-katapult_${MAIN}_* не появился после двойного RESET"
-    else
-        local fam=h7; [[ $MAIN == stm32f446xx ]] && fam=f4
-        wait_dfu "$fam" "$(main_label)" || die "прошивка $(main_label) прервана"
-        dfu_flash_katapult guide "$kcfg"
-        pause_hw "Снимите джампер BOOT0 с $(main_label) и нажмите RESET."
-        if ! wait_new_katapult "$MAIN" 20 "$before"; then
-            warn "usb-katapult_${MAIN}_* не появился. Если вместо него usb-Klipper_* - дважды быстро нажмите RESET."
-            wait_new_katapult "$MAIN" 20 "$before" || die "katapult на $(main_label) не запустился (ls /dev/serial/by-id/); прошейте его заново"
-        fi
-    fi
-    rm -f "$before"
-    ok "$(main_label) в режиме katapult: $(basename "$NEW_KATAPULT_DEV")"
-    flash_klipper_via_katapult "$(main_label)" "$NEW_KATAPULT_DEV" "$fcfg" "$MAIN" "$bridge"
-    if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; fi
-}
+# ---------------------------------------------------------------- платы голов
 
 # UUID с «Application: Klipper»/«Katapult» в CAN
 can_uuids() { # Klipper|Katapult
@@ -948,16 +1129,109 @@ can_uuids() { # Klipper|Katapult
     fi
 }
 
-stage_flash_heads_klipper() {
+# 0 = платы голов уже прошиты (оба этапа пропускаются), 1 = прошивать
+heads_try_skip() {
+    [[ $HEADS == none ]] && return 1
+    local forced=0 u0 u1 uuids
+    board_opt_skipped heads && forced=1
+    [[ $forced -eq 0 && $OPT_REFLASH -eq 1 ]] && return 1
+    { read -r u0; read -r u1; } < <(prev_keys "$(head_cfg_name)") || true
+    if [[ $forced -eq 0 ]]; then
+        [[ -n ${u0:-} && -n ${u1:-} ]] || return 1
+        can_iface_up || return 1
+        uuids=$(can_uuids Klipper)
+        grep -qix "$u0" <<<"$uuids" && grep -qix "$u1" <<<"$uuids" || return 1
+        version_ok "$u0" && version_ok "$u1" || return 1
+        ask_yn "$(head_label): обе платы на шине, Klipper $(host_version) уже установлен. Пропустить прошивку плат голов?" y || return 1
+    elif [[ -z ${u0:-} || -z ${u1:-} ]]; then
+        warn "--skip-board heads: UUID плат голов неизвестны (нет devices.tsv), впишите canbus_uuid в printer.cfg вручную"
+    fi
+    RES_HEAD_UUID=("${u0:-}" "${u1:-}")
+    HEADS_SKIP=1
+    FLASH_SKIPPED+=("$(head_label): уже прошиты")
+    ok "платы голов: пропускаю (${u0:-?}, ${u1:-?})"
+    save_devices quiet
+}
+
+try_head_katapult() { # фаза индекс
+    local i=$2 kcfg ans
+    kcfg=$KATAPULT_CONFIGS/$(head_cfg_name)
+    pause_hw "$(head_label) $(head_side "$i"): подключите USB, переведите в DFU и нажмите Enter. DFU: $(head_dfu_hint)." 1
+    ans=$(cat "$TMP_ANS" 2>/dev/null || true)
+    if [[ $ans == [sSыЫ]* && $DRY_RUN -eq 0 ]]; then
+        info "DFU для этой платы головы пропущен (katapult уже на плате)"
+        return 0
+    fi
+    if [[ $DRY_RUN -eq 1 ]]; then dfu_flash_katapult guide "$kcfg"; return 0; fi
+    wait_dfu g "$(head_label) $(head_side "$i")" || return 1
+    dfu_flash_katapult guide "$kcfg" || return 1
+    pause_hw "Отключите USB от $(head_label) $(head_side "$i"). Дальше она будет подключена только по CAN."
+}
+
+stage_flash_heads_katapult() {
     [[ $HEADS == none ]] && return 0
-    local i fcfg chip uuids n
-    chip=$(head_chip)
+    heads_try_skip && return 0
+    local i
+    for ((i = 0; i < 2; i++)); do
+        step "$(head_label): katapult, плата $(head_side "$i")"
+        cat <<EOF
+Эти шаги выполняются по одной плате:
+  - подключите к хосту USB-кабелем ТОЛЬКО $(head_label) $(head_side "$i") (другую плату головы от USB отключите);
+  - режим DFU: $(head_dfu_hint).
+katapult на этих платах работает только по CAN, поэтому после прошивки отключите USB.
+EOF
+        if flash_board "$(head_label) $(head_side "$i") (katapult)" try_head_katapult "$i"; then
+            ok "katapult записан на $(head_label) $(head_side "$i")"
+        fi
+    done
+}
+
+try_head_klipper() { # фаза индекс
+    local i=$2 uuids n uuid fcfg bin
     fcfg=$CONFIGS_DIR/$(head_cfg_name)
+    pause_hw "Подключите CAN-кабелем ТОЛЬКО $(head_label) $(head_side "$i") (вторую плату головы отключите) вместе с питанием платы и нажмите Enter."
+    uuids=$(can_uuids Katapult); n=$(grep -c . <<<"$uuids" || true)
+    if [[ $n -eq 0 ]]; then
+        warn "плата katapult по CAN не найдена. Проверьте CAN_H/CAN_L, терминаторы 120 Ом (около 60 Ом на шине), питание плат голов."
+        warn "Если на плате уже Klipper, дважды быстро нажмите RESET (красный светодиод мигает) - она станет Katapult."
+        return 1
+    fi
+    if [[ $n -ne 1 ]]; then
+        warn "ожидалась одна плата в katapult на CAN, найдено: $n (оставьте подключённой только $(head_label) $(head_side "$i"))"
+        return 1
+    fi
+    uuid=$uuids
+    build_fw_safe "$fcfg" "$(head_chip)" || return 1
+    bin=${BUILT_BIN[$fcfg]:-}
+    if [[ $DRY_RUN -eq 0 ]] && ! python3 "$KATAPULT_DIR/scripts/flashtool.py" -i "$CAN_IFACE" -u "$uuid" -f "$bin"; then
+        warn "прошивка $(head_label) $(head_side "$i") ($uuid) не удалась: повтор python3 $KATAPULT_DIR/scripts/flashtool.py -i $CAN_IFACE -u $uuid -f $bin"
+        return 1
+    fi
+    sleep 2
+    if can_uuids Klipper | grep -qix "$uuid"; then
+        ok "$(head_label) $(head_side "$i"): $uuid, Application: Klipper"
+    else
+        warn "после прошивки $uuid не отвечает как Klipper (canbus_query.py $CAN_IFACE); продолжаю"
+    fi
+    state_set "$uuid" "$(host_version)"
+    RES_HEAD_UUID[$i]=$uuid
+}
+
+stage_flash_heads_klipper() {
+    [[ $HEADS == none || $HEADS_SKIP -eq 1 ]] && return 0
+    local i uuids n
+    if [[ $DRY_RUN -eq 0 ]] && ! ip link show "$CAN_IFACE" >/dev/null 2>&1; then
+        warn "интерфейса $CAN_IFACE нет (мост USB-CAN не работает): платы голов по CAN не прошиваю"
+        FLASH_FAILED+=("$(head_label): не прошиты по CAN (нет $CAN_IFACE; прошейте Octopus и запустите установку снова)")
+        return 0
+    fi
     step "UUID моста ($(main_label))"
     info "Для этого этапа подайте питание 24 В на Octopus и платы голов и подключите CAN-кабели по схеме из гайда."
     if [[ $DRY_RUN -eq 1 ]]; then
         info "[dry-run] canbus_query.py $CAN_IFACE -> UUID Octopus"
         RES_BRIDGE_UUID=000000000000
+    elif [[ -n $RES_BRIDGE_UUID ]]; then
+        info "UUID Octopus (мост) известен: $RES_BRIDGE_UUID"
     else
         check_can_health || true
         uuids=$(can_uuids Klipper)
@@ -970,44 +1244,23 @@ stage_flash_heads_klipper() {
         if [[ $n -ne 1 ]]; then
             warn "ожидался один UUID на шине, найдено: $n"
             info "Проверьте: ip -s -d link show $CAN_IFACE; $KLIPPY_ENV/bin/python $KLIPPER_DIR/scripts/canbus_query.py $CAN_IFACE"
-            die "не удалось определить UUID Octopus"
+            FLASH_FAILED+=("Octopus: UUID моста не определён (впишите canbus_uuid в [mcu] вручную)")
+        else
+            RES_BRIDGE_UUID=$uuids
+            state_set "$RES_BRIDGE_UUID" "$(host_version)"
+            ok "UUID Octopus (мост): $RES_BRIDGE_UUID"
+            save_devices quiet
         fi
-        RES_BRIDGE_UUID=$uuids
-        ok "UUID Octopus (мост): $RES_BRIDGE_UUID"
     fi
 
     for ((i = 0; i < 2; i++)); do
-        step "$(head_label) $(head_side $i): Klipper по CAN"
-        local uuid="" bin
+        step "$(head_label) $(head_side "$i"): Klipper по CAN"
         if [[ $DRY_RUN -eq 1 ]]; then
             info "[dry-run] flashtool.py -i $CAN_IFACE -q -> UUID, затем -u UUID -f klipper.bin"
             RES_HEAD_UUID[$i]=00000000000$i
             continue
         fi
-        pause_hw "Подключите CAN-кабелем ТОЛЬКО $(head_label) $(head_side $i) (вторую плату головы отключите) вместе с питанием платы и нажмите Enter."
-        uuids=$(can_uuids Katapult)
-        n=$(grep -c . <<<"$uuids" || true)
-        if [[ $n -eq 0 ]]; then
-            warn "плата katapult по CAN не найдена. Проверьте CAN_H/CAN_L, терминаторы 120 Ом (около 60 Ом на шине), питание плат голов."
-            warn "Если на плате уже Klipper, дважды быстро нажмите RESET (красный светодиод мигает) - она станет Katapult."
-            ask_yn "Проверить ещё раз?" y || die "$(head_label) $(head_side $i) не найдена"
-            pause_hw "Нажмите Enter для повторного опроса шины."
-            uuids=$(can_uuids Katapult); n=$(grep -c . <<<"$uuids" || true)
-        fi
-        [[ $n -eq 1 ]] || die "ожидалась одна плата в katapult на CAN, найдено: $n (оставьте подключённой только $(head_label) $(head_side $i))"
-        uuid=$uuids
-        build_firmware "$fcfg" "$chip"
-        bin=${BUILT_BIN[$fcfg]}
-        python3 "$KATAPULT_DIR/scripts/flashtool.py" -i "$CAN_IFACE" -u "$uuid" -f "$bin" \
-            || die "прошивка $(head_label) $(head_side $i) ($uuid) не удалась: повтор python3 $KATAPULT_DIR/scripts/flashtool.py -i $CAN_IFACE -u $uuid -f $bin"
-        sleep 2
-        if can_uuids Klipper | grep -qix "$uuid"; then
-            ok "$(head_label) $(head_side $i): $uuid, Application: Klipper"
-        else
-            warn "после прошивки $uuid не отвечает как Klipper (canbus_query.py $CAN_IFACE); продолжаю"
-        fi
-        state_set "$uuid" "$(host_version)"
-        RES_HEAD_UUID[$i]=$uuid
+        flash_board "$(head_label) $(head_side "$i") (Klipper)" try_head_klipper "$i" || true
     done
     if [[ $DRY_RUN -eq 0 ]]; then
         pause_hw "Подключите CAN-кабелем обе платы голов вместе и нажмите Enter для проверки шины."
@@ -1017,7 +1270,79 @@ stage_flash_heads_klipper() {
     fi
 }
 
+# ---------------------------------------------------------------- главная плата
+
+# 0 = Octopus пропущен (уже прошит), 1 = прошивать
+main_try_skip() {
+    local forced=0 s u
+    board_opt_skipped main && forced=1
+    [[ $forced -eq 0 && $OPT_REFLASH -eq 1 ]] && return 1
+    if [[ $MODE == usb ]]; then
+        s=$(byid_find "usb-Klipper_${MAIN}_*" | sed -n "s/.*${MAIN}_\\(.*\\)-if00\$/\\1/p" | head -n 1)
+        if [[ -z $s ]]; then
+            [[ $forced -eq 1 ]] || return 1
+            warn "--skip-board main: usb-Klipper_${MAIN}_* не найден, serial неизвестен (впишите [mcu] вручную)"
+        elif [[ $forced -eq 0 ]]; then
+            version_ok "$s" || return 1
+            ask_yn "$(main_label): найден $s, Klipper $(host_version) уже установлен. Пропустить прошивку?" y || return 1
+        fi
+        RES_MAIN_SERIAL=$s
+    else
+        u=$(prev_keys "${MAIN}-canbridge.config" | head -n 1)
+        if [[ $forced -eq 0 ]]; then
+            [[ -n $u ]] || return 1
+            can_iface_up || return 1
+            can_uuids Klipper | grep -qix "$u" || return 1
+            version_ok "$u" || return 1
+            ask_yn "$(main_label): мост на шине ($u), Klipper $(host_version) уже установлен. Пропустить прошивку?" y || return 1
+        elif [[ -z $u ]]; then
+            warn "--skip-board main: UUID моста неизвестен (нет devices.tsv), впишите canbus_uuid в [mcu] вручную"
+        fi
+        RES_BRIDGE_UUID=${u:-}
+    fi
+    FLASH_SKIPPED+=("$(main_label): уже прошит")
+    ok "$(main_label): пропускаю"
+    save_devices quiet
+}
+
+try_main() { # фаза
+    local phase=$1 kcfg fcfg bridge=0 fam=h7
+    kcfg=$(katapult_cfg_for_main); fcfg=$(klipper_cfg_for_main)
+    [[ $MODE == bridge ]] && bridge=1
+    [[ $MAIN == stm32f446xx ]] && fam=f4
+    if [[ $phase == dfuk ]]; then
+        BOARD_PHASE=dfuk
+        dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" || return 1
+        if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; fi
+        return 0
+    fi
+    [[ $phase == klipper && ! -e $BOARD_DEV ]] && phase=full
+    if [[ $phase == full ]]; then
+        BOARD_PHASE=full
+        enter_katapult "$(main_label)" "$MAIN" "$fam" "$kcfg" guide \
+            "поставьте джампер BOOT0 и нажмите RESET (после прошивки katapult джампер нужно будет снять)" \
+            "Снимите джампер BOOT0 с $(main_label) и ДВАЖДЫ быстро нажмите RESET (одиночный RESET после прошивки по DFU может не запустить katapult)." \
+            || return 1
+        BOARD_DEV=$NEW_KATAPULT_DEV
+    fi
+    BOARD_PHASE=klipper
+    flash_klipper_via_katapult "$(main_label)" "$BOARD_DEV" "$fcfg" "$MAIN" "$bridge" || return 1
+    if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; fi
+}
+
+stage_flash_main() {
+    step "$(main_label)"
+    main_try_skip && return 0
+    cat <<EOF
+Подключите $(main_label) USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны. Если katapult уже на плате (прошлая попытка), ответьте s.
+EOF
+    flash_board "$(main_label)" try_main || true
+}
+
 stage_flash() {
+    [[ -f $DEVICES_FILE ]] && PREV_DEVICES=$(cat "$DEVICES_FILE")
     if [[ $DRY_RUN -eq 0 ]]; then
         step "Остановка Klipper на время прошивки"
         local u; u=$(klipper_units)
@@ -1027,23 +1352,36 @@ stage_flash() {
     stage_flash_heads_katapult
     stage_flash_main
     stage_flash_heads_klipper
+    step "Карта устройств ($DEVICES_FILE)"
     save_devices
+    [[ ${#FLASH_FAILED[@]} -gt 0 ]] && FINISH_RC=1
+    return 0
 }
 
-# devices.tsv: ключ(serial|uuid) -> конфиг сборки и роль (его читает update_klipper_mcu.sh / кнопка)
-save_devices() {
-    step "Карта устройств ($DEVICES_FILE)"
-    local lines="" i
+# devices.tsv: ключ(serial|uuid) -> конфиг сборки и роль (его читает update_klipper_mcu.sh / кнопка).
+# quiet - промежуточное сохранение после каждой платы: к известным платам добавляются строки прошлого запуска.
+save_devices() { # [quiet]
+    local quiet=${1:-} lines="" i k keys=" "
+    add_dev() { [[ -n $1 ]] || return 0; lines+="$1"$'\t'"$2"$'\t'"$3"$'\n'; keys+="$1 "; }
     if [[ $MODE == bridge ]]; then
-        lines+="${RES_BRIDGE_UUID}"$'\t'"${MAIN}-canbridge.config"$'\t'"bridge"$'\n'
-        for i in 0 1; do lines+="${RES_HEAD_UUID[$i]}"$'\t'"$(head_cfg_name)"$'\t'"can"$'\n'; done
+        add_dev "$RES_BRIDGE_UUID" "${MAIN}-canbridge.config" bridge
+        for i in 0 1; do add_dev "${RES_HEAD_UUID[$i]}" "$(head_cfg_name)" can; done
     else
-        lines+="${RES_MAIN_SERIAL}"$'\t'"${MAIN}.config"$'\t'"usb"$'\n'
+        add_dev "$RES_MAIN_SERIAL" "${MAIN}.config" usb
     fi
-    for ((i = 0; i < ALPS_COUNT; i++)); do lines+="${RES_ALPS_SERIAL[$i]}"$'\t'"stm32f072xb.config"$'\t'"usb"$'\n'; done
-    if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] записал бы:"; printf '%s' "$lines"; return; fi
+    for ((i = 0; i < ALPS_COUNT; i++)); do add_dev "${RES_ALPS_SERIAL[$i]}" stm32f072xb.config usb; done
+    if [[ $quiet == quiet && -n $PREV_DEVICES ]]; then
+        local cfg role
+        while IFS=$'\t' read -r k cfg role; do
+            [[ -n $k && $keys != *" $k "* ]] && lines+="$k"$'\t'"$cfg"$'\t'"$role"$'\n'
+        done <<<"$PREV_DEVICES"
+    fi
+    if [[ $DRY_RUN -eq 1 ]]; then
+        [[ $quiet == quiet ]] || { info "[dry-run] записал бы:"; printf '%s' "$lines"; }
+        return 0
+    fi
     printf '%s' "$lines" >"$DEVICES_FILE"
-    cat "$DEVICES_FILE"
+    [[ $quiet == quiet ]] || cat "$DEVICES_FILE"
 }
 
 # ---------------------------------------------------------------- этап 6: конфигурация
@@ -1127,17 +1465,21 @@ sync_head_names() { # путь к electronics-файлу
     fi
 }
 
+# Плата, не прошитая установщиком, получает заглушку ЗАПОЛНИТЕ: Klipper сообщит об ошибке, пока её не заменят
+TODO_MARK="ЗАПОЛНИТЕ"
 mcu_blocks() {
-    local i
+    local i v
     if [[ $MODE == bridge ]]; then
-        printf '[mcu]\ncanbus_uuid: %s\n\n' "$RES_BRIDGE_UUID"
-        printf '[mcu %s]\ncanbus_uuid: %s\n\n' "${HEAD_MCU[0]}" "${RES_HEAD_UUID[0]}"
-        printf '[mcu %s]\ncanbus_uuid: %s\n\n' "${HEAD_MCU[1]}" "${RES_HEAD_UUID[1]}"
+        printf '[mcu]\ncanbus_uuid: %s\n\n' "${RES_BRIDGE_UUID:-$TODO_MARK}"
+        for i in 0 1; do
+            printf '[mcu %s]\ncanbus_uuid: %s\n\n' "${HEAD_MCU[$i]}" "${RES_HEAD_UUID[$i]:-$TODO_MARK}"
+        done
     else
-        printf '[mcu]\nserial: /dev/serial/by-id/usb-Klipper_%s_%s-if00\n\n' "$MAIN" "$RES_MAIN_SERIAL"
+        printf '[mcu]\nserial: /dev/serial/by-id/usb-Klipper_%s_%s-if00\n\n' "$MAIN" "${RES_MAIN_SERIAL:-$TODO_MARK}"
     fi
     for ((i = 0; i < ALPS_COUNT; i++)); do
-        printf '[mcu alps%s]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_%s-if00\n\n' "$([[ $i -eq 1 ]] && echo _t1)" "${RES_ALPS_SERIAL[$i]}"
+        v=${RES_ALPS_SERIAL[$i]:-$TODO_MARK}
+        printf '[mcu alps%s]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_%s-if00\n\n' "$([[ $i -eq 1 ]] && echo _t1)" "$v"
     done
 }
 
@@ -1265,6 +1607,16 @@ print_summary() {
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
 EOF
+    if [[ ${#FLASH_FAILED[@]} -gt 0 ]]; then
+        warn "Не прошиты платы:"
+        printf '  - %s\n' "${FLASH_FAILED[@]}" >&2
+        info "В printer.cfg у них стоит $TODO_MARK вместо serial/canbus_uuid. Чтобы повторить, запустите установку снова:"
+        info "  уже прошитые платы установщик предложит пропустить (или укажите --skip-board alps|main|heads)."
+    fi
+    if [[ ${#FLASH_SKIPPED[@]} -gt 0 ]]; then
+        info "Пропущено как уже прошитое:"
+        printf '  - %s\n' "${FLASH_SKIPPED[@]}"
+    fi
     if [[ $FINISH_RC -eq 0 ]]; then ok "установка завершена"; else warn "установка завершена с замечаниями (лог: $LOG_FILE)"; fi
 }
 

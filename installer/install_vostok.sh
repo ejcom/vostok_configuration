@@ -106,6 +106,7 @@ usage() {
   --reflash             не предлагать пропуск, прошить все платы заново
   --upgrade             выполнить apt upgrade перед установкой
   -y, --yes             не задавать вопросов, где есть ответ по умолчанию (шаги с железом всё равно ждут Enter)
+  -V, --version         показать версию установщика
   -h, --help            эта справка
 
 Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, KIAUH_DIR, CAN_IFACE (can0).
@@ -132,6 +133,7 @@ parse_args() {
             --reflash) OPT_REFLASH=1 ;;
             --upgrade) DO_UPGRADE=1 ;;
             -y|--yes) ASSUME_YES=1 ;;
+            -V|--version) echo "VOSTOK installer $VOSTOK_INSTALLER_VERSION"; exit 0 ;;
             -h|--help) usage; exit 0 ;;
             *) usage >&2; die "неизвестная опция: $1" ;;
         esac
@@ -1624,7 +1626,7 @@ EOF
 
 install_main() {
     parse_args "${INSTALL_ARGS[@]}"
-    log_to_file "=== install_vostok.sh: ${INSTALL_ARGS[*]:-} ==="
+    log_to_file "=== install_vostok.sh $VOSTOK_INSTALLER_VERSION: ${INSTALL_ARGS[*]:-} ==="
     stage_preflight
     start_sudo
 

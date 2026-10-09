@@ -16,6 +16,8 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+VOSTOK_INSTALLER_VERSION=$(head -n1 "$SCRIPT_DIR/VERSION" 2>/dev/null | tr -d '[:space:]' || true)
+VOSTOK_INSTALLER_VERSION=${VOSTOK_INSTALLER_VERSION:-неизвестна}
 UPDATE_SCRIPT=$SCRIPT_DIR/update_klipper_mcu.sh
 UNIT_TEMPLATE=$SCRIPT_DIR/mcu-update.service.in
 SERVICE=mcu-update
@@ -55,6 +57,7 @@ usage() {
   --uninstall         удалить сервис, строку в moonraker.asvc и sudoers-файл
   --dry-run           ничего не менять, показать unit и план действий
   -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
   -h, --help          эта справка
 
 Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, MOONRAKER_URL.
@@ -82,6 +85,7 @@ while [[ $# -gt 0 ]]; do
         --uninstall) UNINSTALL=1 ;;
         --dry-run) DRY_RUN=1 ;;
         -y|--yes) ASSUME_YES=1 ;;
+        -V|--version) echo "VOSTOK installer $VOSTOK_INSTALLER_VERSION"; exit 0 ;;
         -h|--help) usage; exit 0 ;;
         *) usage >&2; die "неизвестная опция: $1" ;;
     esac

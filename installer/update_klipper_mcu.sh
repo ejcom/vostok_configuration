@@ -28,6 +28,9 @@ if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4) ))
 fi
 
 SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+# Версия установщика (общая для всех скриптов): файл VERSION рядом со скриптом.
+VOSTOK_INSTALLER_VERSION=$(head -n1 "$SCRIPT_DIR/VERSION" 2>/dev/null | tr -d '[:space:]' || true)
+VOSTOK_INSTALLER_VERSION=${VOSTOK_INSTALLER_VERSION:-неизвестна}
 
 # Пути и адреса можно переопределить через окружение: KLIPPER_DIR=... ./update_klipper_mcu.sh
 KLIPPER_DIR=${KLIPPER_DIR:-$HOME/klipper}
@@ -86,6 +89,7 @@ usage() {
   --force-flash       прошить все MCU, даже если версии уже совпадают с хостом
   --git-update        обновить хост без KIAUH (git fast-forward + pip, без sudo);
                       включается сам, если нет терминала (кнопка в Fluidd)
+  -V, --version       показать версию установщика
   --ignore-moonraker  продолжить, если Moonraker недоступен (статус печати и
                       секции [mcu*] из printer.cfg не проверяются)
   -y, --yes           не задавать вопросов
@@ -117,6 +121,7 @@ while [[ $# -gt 0 ]]; do
         --git-update) GIT_UPDATE=1 ;;
         --ignore-moonraker) IGNORE_MOONRAKER=1 ;;
         -y|--yes) ASSUME_YES=1 ;;
+        -V|--version) echo "VOSTOK installer $VOSTOK_INSTALLER_VERSION"; exit 0 ;;
         -h|--help) usage; exit 0 ;;
         *) usage >&2; die "неизвестная опция: $1" ;;
     esac
@@ -652,7 +657,7 @@ verify_versions() {
 # ---------------------------------------------------------------------- main
 
 main() {
-    log_to_file "=== запуск: $* ==="
+    log_to_file "=== запуск (VOSTOK installer $VOSTOK_INSTALLER_VERSION): $* ==="
     preflight
 
     step "Найденные MCU"

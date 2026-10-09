@@ -78,6 +78,7 @@ Do by hand afterwards: adapt `electronics_*.cfg` to your wiring, check the toolh
 | `--skip-board BOARD` | do not flash an already flashed board: `alps`, `alps0`, `alps1`, `main` or `heads` (repeatable) |
 | `--reflash` | do not offer to skip, flash every board again |
 | `--upgrade` | `apt upgrade` before installing |
+| `-V`, `--version` | print the installer version (current: 1.0a, file `VERSION`) |
 | `-y` | no questions where a default exists (hardware steps still wait for Enter) |
 
 Log: `~/printer_data/logs/vostok_install.log`. The installation is repeatable: finished stages are skipped.

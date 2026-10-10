@@ -24,7 +24,7 @@ README.md                    # Пользовательская документ
 README.en.md                 # её английский перевод.
 user_configs/                # Пользовательские конфигурации электроники.
   README.md                  # Описание папки (на русском) + README.en.md.
-installer/                   # Установщик на чистую систему + кнопка обновления Klipper и прошивок (bash). README.md + README.en.md.
+installer/                   # Установщик на чистую систему + кнопка обновления Klipper и прошивок (bash). README.md (быстрый старт и содержание) + README.en.md, разделы в installer/docs/*.md (+ *.en.md).
   install_vostok.sh          # Первичная установка: ПО, прошивка плат, конфигурация. Берёт конфиги из клона (если запущен из него), иначе скачивает main.
   update_klipper_mcu.sh      # Обновление Klipper и перепрошивка MCU (USB и CAN) через katapult; его же запускает кнопка Fluidd.
   install_fluidd_button.sh   # Сервис mcu-update для меню питания Fluidd.

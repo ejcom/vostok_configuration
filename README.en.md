@@ -14,7 +14,7 @@ The flashing and installation procedure is covered in detail in several articles
 - [🔪 Slicer settings](https://k3d.tech/vostok/manual/slicer_configuration/);
 - [🔄 Fast tool change script](https://k3d.tech/vostok/manual/fast_tool_swaps/).
 
-The flashing and software setup can be automated: [`installer/`](installer/README.en.md) is a first-time installer script (Klipper fork, Moonraker, Fluidd, katapult, flashing of all boards, configuration), a Fluidd button that updates Klipper and the firmware, a [Fluidd theme](installer/README.en.md#fluidd-theme) in the K3D VOSTOK style (teal `#009B98`, K3D logo, Tektur font), and a separate [configurator](installer/CONFIGURATOR.en.md) (`configure_vostok.sh`): it generates `electronics_*.cfg` for your drivers and wiring, adds `[mcu]` sections and enables modules such as `chamber_heater.cfg`.
+The flashing and software setup can be automated: [`installer/`](installer/README.en.md) is a first-time installer script (Klipper fork, Moonraker, Fluidd, katapult, flashing of all boards, configuration), a Fluidd button that updates Klipper and the firmware, a [Fluidd theme](installer/docs/theme.en.md) in the K3D VOSTOK style (teal `#009B98`, K3D logo, Tektur font), and a separate [configurator](installer/CONFIGURATOR.en.md) (`configure_vostok.sh`): it generates `electronics_*.cfg` for your drivers and wiring, adds `[mcu]` sections and enables modules such as `chamber_heater.cfg`.
 
 Note that the articles are written in Russian. A lot of information on how to install and further tune this configuration is also provided directly in the `printer.cfg`, `printer_base.cfg` and `electronics_*.cfg` files.
 

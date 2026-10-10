@@ -14,7 +14,7 @@
 - [🔪 Настройки слайсера](https://k3d.tech/vostok/manual/slicer_configuration/);
 - [🔄 Скрипт быстрой смены инструмента](https://k3d.tech/vostok/manual/fast_tool_swaps/).
 
-Прошивку электроники и установку ПО можно автоматизировать: [`installer/`](installer/README.md) — скрипт первоначальной установки (Klipper-форк, Moonraker, Fluidd, katapult, прошивка всех плат, конфигурация), кнопка обновления Klipper и прошивок в Fluidd, [тема Fluidd](installer/README.md#тема-fluidd) в стиле K3D VOSTOK (бирюзовый `#009B98`, логотип K3D, шрифт Tektur) и отдельный [конфигуратор](installer/CONFIGURATOR.md) (`configure_vostok.sh`): генерация `electronics_*.cfg` под ваши драйверы и проводку, дописывание `[mcu]`, подключение модулей вроде `chamber_heater.cfg`.
+Прошивку электроники и установку ПО можно автоматизировать: [`installer/`](installer/README.md) — скрипт первоначальной установки (Klipper-форк, Moonraker, Fluidd, katapult, прошивка всех плат, конфигурация), кнопка обновления Klipper и прошивок в Fluidd, [тема Fluidd](installer/docs/theme.md) в стиле K3D VOSTOK (бирюзовый `#009B98`, логотип K3D, шрифт Tektur) и отдельный [конфигуратор](installer/CONFIGURATOR.md) (`configure_vostok.sh`): генерация `electronics_*.cfg` под ваши драйверы и проводку, дописывание `[mcu]`, подключение модулей вроде `chamber_heater.cfg`.
 
 Также большое количество информации о том, как установить и донастроить эту конфигурацию указано прямо в файлах `printer.cfg`, `printer_base.cfg` и `electronics_*.cfg`.
 

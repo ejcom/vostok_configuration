@@ -36,7 +36,7 @@ Scripts that set up a VOSTOK on a clean system following the [💾 Electronics f
 | `templates/` | blank electronics config without boards and drivers (`electronics_blank.cfg`), board presets (`boards/`) and driver presets (`drivers/`) |
 | `tools/` | `gen_electronics.py` (electronics config generator), `mcu_merge.py` (adds `[mcu]` sections), `pin_conflicts.py` (finds duplicated pins), `gen_configs.sh` (firmware build configs) |
 | `configs/` | Klipper and katapult build configs |
-| `VERSION` | installer version (`-V`/`--version` in every script) |
+| `VERSION`, `CHANGELOG.en.md` | installer version (`-V`/`--version` in every script) and the [changelog](CHANGELOG.en.md) |
 
 ## Requirements and checks
 
@@ -107,7 +107,7 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 | `--skip-board BOARD` | do not flash an already flashed board: `alps`, `alps0`, `alps1`, `main` or `heads` (repeatable) |
 | `--reflash` | do not offer to skip, flash every board again |
 | `--upgrade` | `apt upgrade` before installing |
-| `-V`, `--version` | print the installer version (current: 1.2a, file `VERSION`) |
+| `-V`, `--version` | print the installer version (current: 1.2b, file `VERSION`) |
 | `-y` | no questions where a default exists (hardware steps still wait for Enter) |
 
 Log: `~/printer_data/logs/vostok_install.log`. The installation is repeatable: finished stages are skipped.

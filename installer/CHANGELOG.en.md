@@ -4,6 +4,13 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.2c — 2026-10-10
+
+- Toolhead boards are now flashed "on the bench" by default: katapult and Klipper in one DFU session over USB, without 24 V or CAN. The method is chosen in the dialog or with `--heads-flash dfu|can`; "Klipper over CAN" is kept for an assembled printer (the installer warns about 24 V and CAN cables beforehand).
+- The toolhead boards' `canbus_uuid` is computed from the chip UID read over DFU (`tools/can_uuid.py`), the Octopus bridge UUID from its USB serial. The values are written to `printer.cfg` and `devices.tsv` with a warning that they are not verified on the bus.
+- New `--check-can` option: after installing the electronics in the printer it reads `canbus_uuid` from the bus, compares them and fixes `devices.tsv` and `printer.cfg` (`tools/mcu_merge.py --set`).
+- Plan, flashing steps, summary and error menu hints were rewritten for both methods.
+
 ## 1.2b — 2026-10-10
 
 - K3D VOSTOK Fluidd theme: `install_fluidd_theme.sh` and `fluidd-theme/` (teal `#009B98`, K3D logo, Tektur font, a preset in the Moonraker database).

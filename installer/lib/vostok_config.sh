@@ -92,6 +92,43 @@ family_name() {
     esac
 }
 
+# Адрес 12-байтного UID чипа по семейству (ROM-загрузчик отдаёт его по DFU)
+uid_addr() { # f0|f4|h7|g
+    case $1 in
+        f0) echo 0x1FFFF7AC ;; f4) echo 0x1FFF7A10 ;; h7) echo 0x1FF1E800 ;; g) echo 0x1FFF7590 ;;
+    esac
+}
+
+# canbus_uuid по UID, прочитанному из платы в DFU (плата остаётся в DFU). Результат: DFU_UID_UUID (пусто при ошибке)
+DFU_UID_UUID=""
+dfu_read_uid() { # семейство
+    local addr tmp
+    DFU_UID_UUID=""
+    addr=$(uid_addr "$1"); [[ -n $addr ]] || return 1
+    [[ $DRY_RUN -eq 1 ]] && { info "[dry-run] dfu-util -U UID ($addr) -> canbus_uuid"; DFU_UID_UUID=000000000000; return 0; }
+    tmp=$(mktemp -d)
+    if sudo dfu-util -a 0 -s "$addr:12:force" -U "$tmp/uid.bin" -d 0483:df11 >>"${LOG_FILE:-/dev/null}" 2>&1 \
+        && DFU_UID_UUID=$(python3 -I "$INSTALL_DIR/tools/can_uuid.py" --uid-file "$tmp/uid.bin" 2>/dev/null); then
+        rm -rf "$tmp"; return 0
+    fi
+    rm -rf "$tmp"; DFU_UID_UUID=""
+    return 1
+}
+
+can_uuid_from_serial() { # serial (UID в hex, как у USB-устройства Klipper)
+    python3 -I "$INSTALL_DIR/tools/can_uuid.py" --uid-hex "$1" 2>/dev/null
+}
+
+# USB-serial моста USB-CAN (1d50:606f)
+bridge_usb_serial() {
+    local d
+    for d in /sys/bus/usb/devices/*; do
+        [[ $(cat "$d/idVendor" 2>/dev/null) == 1d50 && $(cat "$d/idProduct" 2>/dev/null) == 606f ]] || continue
+        cat "$d/serial" 2>/dev/null && return 0
+    done
+    return 1
+}
+
 show_usb_state() {
     local f n
     info "Устройства в /dev/serial/by-id:"

@@ -8,9 +8,12 @@
 #      расширение gcode_shell_command, katapult;
 #   3. определяет подключённые MCU, спрашивает про отсутствующее (платы голов, ALPS) и показывает план;
 #   4. при наличии плат голов настраивает CAN-интерфейс can0 (1 Мбит, txqueuelen 128);
-#   5. прошивает katapult и Klipper: ALPS (F072, DFU), платы голов Fysetc H36 или BTT EBB42 (CAN),
+#   5. прошивает katapult и Klipper: ALPS (F072, DFU), платы голов Fysetc H36 или BTT EBB42,
 #      Octopus Pro H723/F446 (USB или мост USB->CAN); в нужные моменты просит перевести
-#      плату в DFU и что-то нажать/переключить;
+#      плату в DFU и что-то нажать/переключить. Платы голов - на выбор:
+#        dfu (по умолчанию) - "на столе": katapult и Klipper сразу по DFU через USB, без 24 В и CAN;
+#          canbus_uuid вычисляется по UID чипа, после установки в принтер его проверяют (--check-can);
+#        can - в собранном принтере: katapult по DFU, Klipper по CAN (нужны 24 В и CAN-кабели);
 #   6. скачивает vostok_configuration и вписывает найденные MCU в printer.cfg
 #      (существующий конфиг VOSTOK: меняются только электроника, [mcu] и include; пустой или чужой printer.cfg считается чистой установкой);
 #   7. ставит кнопку обновления в Fluidd (install_fluidd_button.sh);
@@ -89,6 +92,10 @@ PREV_DEVICES=""      # содержимое devices.tsv от прошлого з
 HEADS_SKIP=0         # платы голов уже прошиты, этапы katapult/Klipper по CAN пропускаются
 BOARD_START_PHASE=full  # начальная фаза следующего flash_board: full|dfuall
 OPT_MAIN_FLASH=""    # dfu|katapult: способ прошивки главной платы (иначе спросим)
+OPT_HEADS_FLASH=""   # dfu|can: способ прошивки плат голов (иначе спросим)
+HEADS_WAY=dfu        # dfu (на столе, без 24 В и CAN) | can (в собранном принтере)
+CHECK_CAN=0          # --check-can: только прочитать canbus_uuid с шины и вписать в конфиг
+HEAD_UUID_SRC=("" "")  # uid: UUID вычислен по UID чипа, bus: прочитан с шины, пусто: неизвестен
 BOARD_PHASE=full     # с какого шага повторять плату: full (с DFU) или klipper
 BOARD_DEV=""         # usb-katapult_* устройство платы, прошиваемой сейчас
 
@@ -123,6 +130,11 @@ usage() {
   --reflash             не предлагать пропуск, прошить все платы заново
   --main-flash dfu|katapult  способ прошивки главной платы: katapult и Klipper сразу по DFU (рекомендуется,
                         по умолчанию с -y) или katapult по DFU, затем Klipper через katapult (иначе спросит)
+  --heads-flash dfu|can способ прошивки плат голов: dfu - "на столе", katapult и Klipper сразу по DFU через USB,
+                        24 В и CAN не нужны (по умолчанию, в том числе с -y); can - katapult по DFU, Klipper по CAN
+                        (для собранного принтера, нужны 24 В и CAN-кабели). Иначе спросит
+  --check-can           только прочитать canbus_uuid плат с шины CAN (нужны 24 В и CAN-кабели) и вписать
+                        в devices.tsv и printer.cfg вместо вычисленных/ЗАПОЛНИТЕ; ничего не прошивает
   --upgrade             выполнить apt upgrade перед установкой
   -y, --yes             не задавать вопросов, где есть ответ по умолчанию (шаги с железом всё равно ждут Enter)
   -V, --version         показать версию установщика
@@ -155,6 +167,8 @@ parse_args() {
             --skip-board) [[ $# -ge 2 ]] || die "--skip-board требует аргумент"; OPT_SKIP_BOARDS+=("$2"); shift ;;
             --reflash) OPT_REFLASH=1 ;;
             --main-flash) [[ $# -ge 2 ]] || die "--main-flash требует аргумент"; OPT_MAIN_FLASH=$2; shift ;;
+            --heads-flash) [[ $# -ge 2 ]] || die "--heads-flash требует аргумент"; OPT_HEADS_FLASH=$2; shift ;;
+            --check-can) CHECK_CAN=1 ;;
             --upgrade) DO_UPGRADE=1 ;;
             -y|--yes) ASSUME_YES=1 ;;
             -V|--version) echo "VOSTOK installer $VOSTOK_INSTALLER_VERSION"; exit 0 ;;
@@ -167,6 +181,7 @@ parse_args() {
     case $OPT_HEADS in ""|none|v1.3|v2|ebb42) ;; *) die "--heads: none, v1.3, v2 или ebb42" ;; esac
     case $OPT_CONFIG_SOURCE in ""|standard|user|generate|skip) ;; *) die "--config-source: standard, user, generate или skip" ;; esac
     case $OPT_MAIN_FLASH in ""|dfu|katapult) ;; *) die "--main-flash: dfu или katapult" ;; esac
+    case $OPT_HEADS_FLASH in ""|dfu|can) ;; *) die "--heads-flash: dfu или can" ;; esac
     case $OPT_ALPS in ""|0|1|2) ;; *) die "--alps: 0, 1 или 2" ;; esac
     local b
     for b in "${OPT_SKIP_BOARDS[@]}"; do
@@ -512,6 +527,26 @@ stage_software() {
 }
 MOONRAKER_DIR_DEFAULT=${MOONRAKER_DIR:-$HOME/moonraker}
 
+choose_heads_flash() {
+    [[ $HEADS == none ]] && { HEADS_WAY=dfu; return 0; }
+    local w_dfu="На столе: katapult и Klipper по DFU через USB (24 В и CAN не нужны)"
+    local w_can="Собранный принтер: katapult по DFU, Klipper по CAN (нужны 24 В и CAN-кабели)"
+    case $OPT_HEADS_FLASH in
+        dfu) HEADS_WAY=dfu; return 0 ;;
+        can) HEADS_WAY=can; return 0 ;;
+    esac
+    if [[ $ASSUME_YES -eq 1 || $ONLY_DETECT -eq 1 || $DRY_RUN -eq 1 ]] || ! have_tty; then HEADS_WAY=dfu; return 0; fi
+    local ans
+    ans=$(ask_choice "Как прошивать платы голов?" "$w_dfu" "$w_dfu" "$w_can")
+    if [[ $ans == "$w_can" ]]; then
+        HEADS_WAY=can
+        warn "Для прошивки по CAN понадобятся источник 24 В (питание Octopus и плат голов) и подключение плат по CAN (CAN_H/CAN_L, терминаторы 120 Ом)."
+    else
+        HEADS_WAY=dfu
+        info "Платы голов прошиваются по USB по одной. canbus_uuid будет вычислен по UID чипа; после установки электроники в принтер его нужно проверить (install_vostok.sh --check-can, нужны 24 В)."
+    fi
+}
+
 print_plan() {
     info ""
     info "План установки:"
@@ -529,11 +564,19 @@ print_plan() {
         info "  $n. ALPS $(alps_side $i): katapult через DFU, затем Klipper"; n=$((n + 1))
     done
     if [[ $HEADS != none ]]; then
-        info "  $n. $(head_label) (обе, по очереди): katapult через DFU по USB"; n=$((n + 1))
+        if [[ $HEADS_WAY == dfu ]]; then
+            info "  $n. $(head_label) (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)"; n=$((n + 1))
+        else
+            info "  $n. $(head_label) (обе, по очереди): katapult через DFU по USB"; n=$((n + 1))
+        fi
     fi
     info "  $n. $(main_label): katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: $([[ $MODE == bridge ]] && echo 'USB-CAN мост' || echo USB)"; n=$((n + 1))
     if [[ $HEADS != none ]]; then
-        info "  $n. $(head_label) (обе, по очереди): Klipper по CAN"; n=$((n + 1))
+        if [[ $HEADS_WAY == dfu ]]; then
+            info "  $n. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)"; n=$((n + 1))
+        else
+            info "  $n. $(head_label) (обе, по очереди): Klipper по CAN. ВНИМАНИЕ: нужны источник 24 В и подключение плат голов и Octopus по CAN"; n=$((n + 1))
+        fi
     fi
     info "  $n. Прошивки собираются из $CONFIGS_DIR и $KATAPULT_CONFIGS"
 }
@@ -778,6 +821,7 @@ build_fw_safe() { # конфиг чип
 # Klipper на плату в katapult по USB. Для обычной платы ждёт usb-Klipper_*, для моста - появления gs_usb и can0.
 # Серийный номер результата в FLASHED_SERIAL. 0 = прошито, 1 = ошибка (плата остаётся в katapult).
 FLASHED_SERIAL=""
+FLASHED_UUID=""    # bridge=2: canbus_uuid, вычисленный по UID чипа, прочитанному в DFU
 FLASH_ERR=""
 flash_klipper_via_katapult() { # подпись katapult_dev klipper_cfg чип bridge(0|1)
     local label=$1 dev=$2 cfg=$3 chip=$4 bridge=$5 serial bin
@@ -825,7 +869,7 @@ EOF
 # Серийный номер результата в FLASHED_SERIAL (для моста пустой). 0 = прошито, 1 = ошибка.
 dfu_flash_klipper() { # подпись конфиг чип семейство bridge(0 USB|1 мост|2 только CAN) [katapult_cfg [режим make|guide]]
     local label=$1 cfg=$2 chip=$3 fam=$4 bridge=$5 kcfg=${6:-} kmode=${7:-guide} addr bin before f i dev="" kbin="" kkey
-    FLASHED_SERIAL=""
+    FLASHED_SERIAL=""; FLASHED_UUID=""
     addr=$(sed -n 's/^CONFIG_FLASH_APPLICATION_ADDRESS=\(.*\)$/\1/p' "$cfg")
     [[ -n $addr ]] || { warn "в $(basename "$cfg") нет CONFIG_FLASH_APPLICATION_ADDRESS"; return 1; }
     if [[ -n $kcfg ]]; then
@@ -845,9 +889,20 @@ dfu_flash_klipper() { # подпись конфиг чип семейство br
     fi
     if [[ $DRY_RUN -eq 1 ]]; then
         [[ -n $kcfg ]] && info "[dry-run] dfu-util -a 0 -s 0x08000000$([[ $kmode == guide ]] && echo ':mass-erase:force') -D $kkey/katapult.bin"
-        info "[dry-run] dfu-util -a 0 -s $addr:leave -D ${bin:-$(basename "$cfg" .config)-$(host_version).bin}"; FLASHED_SERIAL=DRYRUN; return 0
+        info "[dry-run] dfu-util -a 0 -s $addr:leave -D ${bin:-$(basename "$cfg" .config)-$(host_version).bin}"; FLASHED_SERIAL=DRYRUN
+        if [[ $bridge -eq 2 ]]; then dfu_read_uid "$fam"; FLASHED_UUID=$DFU_UID_UUID; fi
+        return 0
     fi
     wait_dfu "$fam" "$label" || return 1
+    if [[ $bridge -eq 2 ]]; then
+        # UID читаем, пока плата в DFU: по нему считается canbus_uuid, который без шины CAN узнать нельзя
+        if dfu_read_uid "$fam"; then
+            FLASHED_UUID=$DFU_UID_UUID
+            ok "$label: canbus_uuid по UID чипа: $FLASHED_UUID (на шине пока не проверен)"
+        else
+            warn "$label: UID чипа прочитать не удалось, canbus_uuid останется неизвестным (после установки в принтер: install_vostok.sh --check-can)"
+        fi
+    fi
     if [[ -n $kcfg ]]; then
         [[ -f $kbin ]] || { warn "нет $kbin"; return 1; }
         if [[ $kmode == guide ]]; then
@@ -867,8 +922,13 @@ dfu_flash_klipper() { # подпись конфиг чип семейство br
     if ! dfu_run sudo dfu-util -a 0 -s "${addr}:leave" -D "$bin" -d 0483:df11; then
         rm -f "$before"; warn "Klipper не записан по DFU (в выводе dfu-util нет 'Download done')"; return 1
     fi
+    if [[ $bridge -eq 2 ]]; then
+        rm -f "$before"
+        pause_hw "Снимите джампер BOOT0 (если ставили) и отключите USB от $label. Дальше плата подключается только по CAN (она запустится от питания 24 В в принтере)."
+        ok "$label: katapult и Klipper записаны по DFU (дальше доступна только по CAN)"
+        return 0
+    fi
     pause_hw "Снимите джампер BOOT0 (если ставили) и нажмите RESET на $label. Если плата не запустилась, нажмите RESET ещё раз."
-    if [[ $bridge -eq 2 ]]; then rm -f "$before"; ok "$label прошит по DFU (дальше доступен только по CAN)"; return 0; fi
     if [[ $bridge -eq 1 ]]; then
         rm -f "$before"
         bring_up_can || { warn "после прошивки моста не появился рабочий интерфейс $CAN_IFACE"; return 1; }
@@ -905,9 +965,15 @@ version_ok() { # ключ
 }
 
 # Меню после неудачи. Печатает: retry|dfu|skip|abort. Без терминала или с -y - skip.
-flash_menu() { # подпись
+flash_menu() { # подпись [headsdfu]
     local ans
     if [[ $ASSUME_YES -eq 1 ]] || ! have_tty; then echo skip; return; fi
+    if [[ ${2:-} == headsdfu ]]; then
+        ans=$(ask_choice "$1: прошивка не удалась. Что делать?" "Повторить" \
+            "Повторить" "Прошить только Klipper по DFU (katapult уже записан)" "Пропустить эту плату" "Прервать установку")
+        case $ans in "Прошить только"*) echo dfuk ;; "Пропустить"*) echo skip ;; "Прервать"*) echo abort ;; *) echo retry ;; esac
+        return
+    fi
     ans=$(ask_choice "$1: прошивка не удалась. Что делать?" "Повторить" \
         "Повторить" "Прошить katapult и Klipper сразу по DFU" "Прошить заново через DFU (katapult), Klipper через katapult" \
         "Прошить Klipper напрямую по DFU (без katapult)" "Пропустить эту плату" "Прервать установку")
@@ -920,13 +986,14 @@ flash_menu() { # подпись
 # записывает в BOARD_PHASE, с какого шага повторять: full (с DFU) или klipper (плата уже в katapult).
 # Возврат 1 = плата пропущена пользователем; установка при этом продолжается.
 flash_board() { # подпись функция [аргументы]; начальная фаза - BOARD_START_PHASE (по умолчанию full)
-    local label=$1 fn=$2 phase=${BOARD_START_PHASE:-full} c; shift 2
+    local label=$1 fn=$2 phase=${BOARD_START_PHASE:-full} c menu=""; shift 2
+    [[ $fn == try_head_dfu ]] && menu=headsdfu
     BOARD_START_PHASE=full
     BOARD_PHASE=$phase; BOARD_DEV=""
     while true; do
         if "$fn" "$phase" "$@"; then save_devices quiet; return 0; fi
         warn "$label: прошивка не удалась"
-        c=$(flash_menu "$label")
+        c=$(flash_menu "$label" $menu)
         case $c in
             retry) phase=$BOARD_PHASE ;;
             dfu) phase=full ;;
@@ -1034,11 +1101,17 @@ heads_try_skip() {
     { read -r u0; read -r u1; } < <(prev_keys "$(head_cfg_name)") || true
     if [[ $forced -eq 0 ]]; then
         [[ -n ${u0:-} && -n ${u1:-} ]] || return 1
-        can_iface_up || return 1
-        uuids=$(can_uuids Klipper)
-        grep -qix "$u0" <<<"$uuids" && grep -qix "$u1" <<<"$uuids" || return 1
-        version_ok "$u0" && version_ok "$u1" || return 1
-        ask_yn "$(head_label): обе платы на шине, Klipper $(host_version) уже установлен. Пропустить прошивку плат голов?" y || return 1
+        if [[ $HEADS_WAY == can ]]; then
+            can_iface_up || return 1
+            uuids=$(can_uuids Klipper)
+            grep -qix "$u0" <<<"$uuids" && grep -qix "$u1" <<<"$uuids" || return 1
+            version_ok "$u0" && version_ok "$u1" || return 1
+            ask_yn "$(head_label): обе платы на шине, Klipper $(host_version) уже установлен. Пропустить прошивку плат голов?" y || return 1
+        else
+            # на столе шины нет: ориентируемся на devices.tsv и версию, записанную после прошлой прошивки
+            version_ok "$u0" && version_ok "$u1" || return 1
+            ask_yn "$(head_label): по записям прошлой установки на обеих платах Klipper $(host_version) (UUID $u0, $u1). Пропустить прошивку плат голов?" y || return 1
+        fi
     elif [[ -z ${u0:-} || -z ${u1:-} ]]; then
         warn "--skip-board heads: UUID плат голов неизвестны (нет devices.tsv), впишите canbus_uuid в printer.cfg вручную"
     fi
@@ -1084,6 +1157,7 @@ stage_flash_heads_katapult() {
     [[ $HEADS == none ]] && return 0
     heads_try_skip && return 0
     local i
+    warn "Вариант «Klipper по CAN»: на следующих этапах понадобятся источник 24 В и подключение плат голов и Octopus по CAN. Для прошивки на столе по USB используйте --heads-flash dfu."
     for ((i = 0; i < 2; i++)); do
         step "$(head_label): katapult, плата $(head_side "$i")"
         cat <<EOF
@@ -1096,6 +1170,81 @@ EOF
             ok "katapult записан на $(head_label) $(head_side "$i")"
         fi
     done
+}
+
+# ---- платы голов "на столе": katapult и Klipper за один сеанс DFU по USB, без 24 В и CAN
+
+try_head_dfu() { # фаза индекс
+    local i=$2 label
+    label="$(head_label) $(head_side "$i")"
+    if [[ $1 == dfuk ]]; then
+        BOARD_PHASE=dfuk
+        dfu_flash_klipper "$label" "$CONFIGS_DIR/$(head_cfg_name)" "$(head_chip)" g 2 || return 1
+    else
+        BOARD_PHASE=dfuall
+        head_dfu_all "$i" || return 1
+    fi
+    RES_HEAD_UUID[$i]=$FLASHED_UUID
+    if [[ -n $FLASHED_UUID ]]; then
+        HEAD_UUID_SRC[$i]=uid
+        state_set "$FLASHED_UUID" "$(host_version)"
+    else
+        HEAD_UUID_SRC[$i]=""
+    fi
+}
+
+stage_flash_heads_dfu() {
+    [[ $HEADS == none ]] && return 0
+    heads_try_skip && return 0
+    local i
+    for ((i = 0; i < 2; i++)); do
+        step "$(head_label): katapult и Klipper по DFU, плата $(head_side "$i")"
+        cat <<MSG
+Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+  - подключите к хосту USB-кабелем ТОЛЬКО $(head_label) $(head_side "$i") (остальные платы голов от USB отключите);
+  - режим DFU: $(head_dfu_hint);
+  - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+MSG
+        BOARD_START_PHASE=dfuall
+        flash_board "$(head_label) $(head_side "$i")" try_head_dfu "$i" || true
+    done
+}
+
+# Мост USB-CAN: canbus_uuid считается по USB-serial (это UID чипа), 24 В и шина не нужны
+set_bridge_uuid() {
+    [[ $MODE == bridge ]] || return 0
+    if [[ $DRY_RUN -eq 1 ]]; then RES_BRIDGE_UUID=000000000000; return 0; fi
+    local ser="" u=""
+    ser=$(bridge_usb_serial) || ser=""
+    if [[ -n $ser ]]; then u=$(can_uuid_from_serial "$ser") || u=""; fi
+    if [[ -n $u ]]; then
+        RES_BRIDGE_UUID=$u
+        state_set "$u" "$(host_version)"
+        ok "$(main_label): canbus_uuid моста по UID чипа: $u"
+    else
+        warn "$(main_label): canbus_uuid моста вычислить не удалось (lsusb -d 1d50:606f -v | grep iSerial); позже: install_vostok.sh --check-can"
+    fi
+}
+
+# Итог для режима dfu: что вычислено по UID и что нужно проверить на шине
+stage_heads_uuid_check() {
+    [[ $HEADS == none || $HEADS_WAY != dfu ]] && return 0
+    step "canbus_uuid плат: проверка на шине"
+    local i unknown=0
+    info "  мост ($(main_label)): ${RES_BRIDGE_UUID:-не определён}"
+    [[ -n $RES_BRIDGE_UUID ]] || unknown=1
+    for ((i = 0; i < 2; i++)); do
+        info "  $(head_label) $(head_side "$i"): ${RES_HEAD_UUID[$i]:-не определён}${HEAD_UUID_SRC[$i]:+ (вычислен по UID чипа)}"
+        [[ -n ${RES_HEAD_UUID[$i]} ]] || unknown=1
+    done
+    warn "canbus_uuid получены по UID чипов и на шине CAN не проверены."
+    info "После установки электроники в принтер подайте 24 В и проверьте их командой: $INSTALL_DIR/install_vostok.sh --check-can"
+    info "(она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg)."
+    [[ $unknown -eq 1 ]] && warn "Где UUID не определён, в printer.cfg стоит $TODO_MARK: впишите canbus_uuid вручную или выполните --check-can."
+    [[ $DRY_RUN -eq 1 ]] && return 0
+    if ask_yn "Сейчас подано 24 В и платы подключены по CAN: проверить UUID на шине прямо сейчас?" n; then
+        check_can_uuids || true
+    fi
 }
 
 try_head_klipper() { # фаза индекс
@@ -1247,7 +1396,7 @@ try_main() { # фаза
         else
             dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" || return 1
         fi
-        if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; fi
+        if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; else set_bridge_uuid; fi
         return 0
     fi
     [[ $phase == klipper && ! -e $BOARD_DEV ]] && phase=full
@@ -1261,7 +1410,7 @@ try_main() { # фаза
     fi
     BOARD_PHASE=klipper
     flash_klipper_via_katapult "$(main_label)" "$BOARD_DEV" "$fcfg" "$MAIN" "$bridge" || return 1
-    if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; fi
+    if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; else set_bridge_uuid; fi
 }
 
 stage_flash_main() {
@@ -1295,9 +1444,15 @@ stage_flash() {
         if [[ -n $u ]]; then services stop; KLIPPER_STOPPED=1; fi
     fi
     stage_flash_alps
-    stage_flash_heads_katapult
-    stage_flash_main
-    stage_flash_heads_klipper
+    if [[ $HEADS_WAY == dfu ]]; then
+        stage_flash_heads_dfu
+        stage_flash_main
+        stage_heads_uuid_check
+    else
+        stage_flash_heads_katapult
+        stage_flash_main
+        stage_flash_heads_klipper
+    fi
     step "Карта устройств ($DEVICES_FILE)"
     save_devices
     [[ ${#FLASH_FAILED[@]} -gt 0 ]] && FINISH_RC=1
@@ -1350,6 +1505,12 @@ stage_start_klipper() {
     if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] systemctl start klipper; проверка ready и версий MCU"; return 0; fi
     if [[ $KLIPPER_STOPPED -eq 1 ]]; then services start; KLIPPER_STOPPED=0; else sctl restart klipper || true; fi
     if ! wait_moonraker; then warn "Moonraker не отвечает: systemctl status moonraker"; FINISH_RC=1; return 0; fi
+    if [[ $HEADS_WAY == dfu && $HEADS != none && $CHECK_CAN -eq 0 ]]; then
+        # прошивка "на столе": CAN и 24 В нет, Klipper не соединится с платами голов, это ожидаемо
+        info "Платы голов прошиты на столе: Klipper подключится к ним после установки электроники в принтер и подачи 24 В."
+        wait_for_klipper || info "Klipper не в состоянии ready: пока платы голов недоступны по CAN, это нормально."
+        return 0
+    fi
     wait_for_klipper || FINISH_RC=1
     verify_versions || FINISH_RC=1
 }
@@ -1379,6 +1540,12 @@ print_summary() {
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): $INSTALL_DIR/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
 EOF
+    if [[ $HEADS != none && $HEADS_WAY == dfu ]]; then
+        warn "Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены."
+        info "  После установки электроники в принтер подайте 24 В и выполните: $INSTALL_DIR/install_vostok.sh --check-can"
+        info "  Команда прочитает UUID с шины CAN, исправит devices.tsv и printer.cfg и перезапустит Klipper."
+        info "  Вручную: остановите Klipper и выполните $KLIPPY_ENV/bin/python $KLIPPER_DIR/scripts/canbus_query.py $CAN_IFACE, затем впишите canbus_uuid в [mcu], [mcu ${HEAD_MCU[0]}], [mcu ${HEAD_MCU[1]}]."
+    fi
     if [[ ${#FLASH_FAILED[@]} -gt 0 ]]; then
         warn "Не прошиты платы:"
         printf '  - %s\n' "${FLASH_FAILED[@]}" >&2
@@ -1392,11 +1559,154 @@ EOF
     if [[ $FINISH_RC -eq 0 ]]; then ok "установка завершена"; else warn "установка завершена с замечаниями (лог: $LOG_FILE)"; fi
 }
 
+# ---------------------------------------------------------------- проверка canbus_uuid на шине
+
+# Записать UUID в devices.tsv и в [mcu ...] printer.cfg (бэкап перед записью)
+write_uuid_to_cfg() { # имя_секции uuid
+    local cfg=$PRINTER_CFG_DIR/printer.cfg res kind
+    [[ -f $cfg ]] || return 0
+    res=$(python3 -I "$INSTALL_DIR/tools/mcu_merge.py" "$cfg" --set "$1" "$2" || true)
+    kind=${res%%$'\t'*}
+    case $kind in
+        SET) ok "printer.cfg: [$1] canbus_uuid: $2" ;;
+        SAME) info "printer.cfg: [$1] уже содержит $2" ;;
+        NOSECTION) warn "в printer.cfg нет секции [$1]: впишите canbus_uuid: $2 вручную" ;;
+        DIFF)
+            if ask_yn "В printer.cfg у [$1] другое значение ($(cut -f3 <<<"$res")). Заменить на найденное на шине ($2)?" y; then
+                python3 -I "$INSTALL_DIR/tools/mcu_merge.py" "$cfg" --set "$1" "$2" --force >/dev/null || true
+                ok "printer.cfg: [$1] canbus_uuid: $2"
+            else
+                warn "[$1] оставлен без изменений, проверьте вручную"
+            fi ;;
+    esac
+}
+
+# Читает canbus_uuid с шины, сверяет с ожидаемыми (мост, головы) и исправляет devices.tsv и printer.cfg.
+# Нужны 24 В и CAN-кабели. 0 = все платы найдены, 1 = есть замечания.
+check_can_uuids() {
+    local uuids n u i slot rc=0 bad=() free=() cfg=$PRINTER_CFG_DIR/printer.cfg
+    local -a exp want_name
+    step "canbus_uuid на шине $CAN_IFACE"
+    info "Нужны питание 24 В и подключённые по CAN Octopus и платы голов."
+    if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] canbus_query.py $CAN_IFACE, сверка с devices.tsv, запись в printer.cfg"; return 0; fi
+    if ! bring_up_can; then
+        warn "интерфейса $CAN_IFACE нет: мост USB-CAN не подключён к хосту или не прошит"
+        return 1
+    fi
+    check_can_health || true
+    uuids=$(can_uuids Klipper); n=$(grep -c . <<<"$uuids" || true)
+    info "На шине устройств с Klipper: $n (ожидается 3: Octopus и две платы голов)"
+    [[ $n -gt 0 ]] && while IFS= read -r u; do info "  $u"; done <<<"$uuids"
+    exp=("${RES_BRIDGE_UUID:-}" "${RES_HEAD_UUID[0]:-}" "${RES_HEAD_UUID[1]:-}")
+    want_name=("mcu" "mcu ${HEAD_MCU[0]}" "mcu ${HEAD_MCU[1]}")
+    # какие из найденных на шине UUID ещё не закреплены за платой
+    while IFS= read -r u; do
+        [[ -n $u ]] || continue
+        if [[ " ${exp[*]} " == *" ${u,,} "* || " ${exp[*]} " == *" $u "* ]]; then continue; fi
+        free+=("$u")
+    done <<<"$uuids"
+    for slot in 0 1 2; do
+        if [[ -n ${exp[$slot]} ]] && grep -qix "${exp[$slot]}" <<<"$uuids"; then
+            ok "${want_name[$slot]}: ${exp[$slot]} найден на шине"
+        else
+            bad+=("$slot")
+        fi
+    done
+    if [[ ${#bad[@]} -gt 0 && ${#free[@]} -eq 0 ]]; then
+        for slot in "${bad[@]}"; do
+            warn "${want_name[$slot]}: ${exp[$slot]:-UUID неизвестен} - на шине не найден. Проверьте питание 24 В, CAN_H/CAN_L, терминаторы (около 60 Ом между CAN_H и CAN_L)."
+        done
+        return 1
+    fi
+    if [[ ${#bad[@]} -gt 0 ]]; then
+        # UUID по UID не подошёл или неизвестен: определяем, какая плата какая
+        if [[ ${#bad[@]} -eq 1 && ${#free[@]} -eq 1 ]]; then
+            slot=${bad[0]}
+            info "${want_name[$slot]}: на шине вместо ${exp[$slot]:-неизвестного UUID} найден ${free[0]}"
+            exp[$slot]=${free[0]}
+        else
+            if [[ ${#bad[@]} -eq 3 ]]; then
+                pause_hw "Определим мост: отключите CAN-кабель от обеих плат голов (на шине должен остаться только Octopus) и нажмите Enter."
+                u=$(can_uuids Klipper); n=$(grep -c . <<<"$u" || true)
+                if [[ $n -eq 1 ]]; then exp[0]=$u; else warn "ожидался один UUID (Octopus), найдено: $n"; return 1; fi
+                free=(); while IFS= read -r u; do [[ -n $u && ${u,,} != "${exp[0],,}" ]] && free+=("$u"); done <<<"$uuids"
+                bad=(1 2)
+            fi
+            if [[ ${#free[@]} -eq 2 && ${#bad[@]} -eq 2 ]]; then
+                pause_hw "Подключите к Octopus по CAN ТОЛЬКО левую голову ${HEAD_MCU[0]} (правую отключите) и нажмите Enter."
+                u=$(can_uuids Klipper | grep -vix "${exp[0]}" || true); n=$(grep -c . <<<"$u" || true)
+                if [[ $n -ne 1 ]]; then warn "ожидалась одна плата головы, найдено: $n"; return 1; fi
+                exp[1]=$u
+                for i in "${free[@]}"; do [[ ${i,,} != "${u,,}" ]] && exp[2]=$i; done
+                info "правая голова ${HEAD_MCU[1]}: ${exp[2]}"
+                pause_hw "Подключите обе платы голов вместе по CAN и нажмите Enter."
+            else
+                warn "не удалось однозначно сопоставить платы (найдено свободных UUID: ${#free[@]}, не подтверждено: ${#bad[@]}). Впишите canbus_uuid в printer.cfg вручную."
+                return 1
+            fi
+        fi
+    fi
+    # итог: bus - истина
+    RES_BRIDGE_UUID=${exp[0]}; RES_HEAD_UUID=("${exp[1]}" "${exp[2]}"); HEAD_UUID_SRC=(bus bus)
+    PREV_DEVICES=$(awk -F'\t' '$3 != "bridge" && $3 != "can"' <<<"${PREV_DEVICES:-}")
+    for u in "${exp[@]}"; do [[ -n $u ]] && state_set "$u" "$(host_version)"; done
+    save_devices quiet
+    for slot in 0 1 2; do [[ -n ${exp[$slot]} ]] && write_uuid_to_cfg "${want_name[$slot]}" "${exp[$slot]}"; done
+    [[ -f $cfg ]] || info "printer.cfg не найден: canbus_uuid записаны только в $DEVICES_FILE"
+    ok "canbus_uuid подтверждены на шине"
+    return $rc
+}
+
+# Режим --check-can: отдельный запуск после установки электроники в принтер
+check_can_main() {
+    step "Проверка canbus_uuid на шине CAN"
+    [[ -f $DEVICES_FILE ]] && PREV_DEVICES=$(cat "$DEVICES_FILE")
+    local k cfg role heads=0 mk
+    MODE=bridge
+    while IFS=$'\t' read -r k cfg role; do
+        [[ -n $k ]] || continue
+        case $role in
+            bridge) RES_BRIDGE_UUID=$k; MAIN=${cfg%-canbridge.config} ;;
+            can)
+                RES_HEAD_UUID[$heads]=$k; heads=$((heads + 1))
+                case $cfg in
+                    stm32g0b1xx-ebb42-can.config) HEADS=ebb42 ;; stm32g431xx-can.config) HEADS=v2 ;; stm32g0b1xx-can.config) HEADS=v1.3 ;;
+                esac ;;
+        esac
+    done <<<"${PREV_DEVICES:-}"
+    [[ -n $MAIN ]] || case $(ask_choice "Главная плата:" "${OPT_MAIN:-h723}" h723 f446) in f446) MAIN=stm32f446xx ;; *) MAIN=stm32h723xx ;; esac
+    if [[ -z $HEADS || $HEADS == none ]]; then
+        case $(ask_choice "Платы голов:" "v2" "v1.3" "v2" "ebb42") in v1.3) HEADS=v1.3 ;; ebb42) HEADS=ebb42 ;; *) HEADS=v2 ;; esac
+    fi
+    [[ -n $OPT_HEADS ]] && HEADS=$OPT_HEADS
+    set_head_names
+    # имена секций голов берём из printer.cfg (T0*/T1*)
+    if [[ -f $PRINTER_CFG_DIR/printer.cfg ]]; then
+        local n0 n1 names
+        names=$(python3 -I "$INSTALL_DIR/tools/mcu_merge.py" "$PRINTER_CFG_DIR/printer.cfg" --list | cut -f1 | sed -n 's/^mcu //p')
+        n0=$(grep -E '^T0' <<<"$names" | head -n 1 || true); n1=$(grep -E '^T1' <<<"$names" | head -n 1 || true)
+        [[ -n $n0 && -n $n1 ]] && HEAD_MCU=("$n0" "$n1")
+    fi
+    if [[ $DRY_RUN -eq 0 ]]; then
+        local u; u=$(klipper_units)
+        if [[ -n $u ]]; then services stop; KLIPPER_STOPPED=1; fi
+    fi
+    check_can_uuids || FINISH_RC=1
+    stage_start_klipper
+    if [[ $FINISH_RC -eq 0 ]]; then ok "проверка завершена"; else warn "проверка завершена с замечаниями (лог: $LOG_FILE)"; fi
+}
+
 # ---------------------------------------------------------------- main
 
 install_main() {
     parse_args "${INSTALL_ARGS[@]}"
     log_to_file "=== install_vostok.sh $VOSTOK_INSTALLER_VERSION: ${INSTALL_ARGS[*]:-} ==="
+    if [[ $CHECK_CAN -eq 1 ]]; then
+        [[ $EUID -ne 0 ]] || die "не запускайте от root; sudo спросит пароль сам"
+        start_sudo
+        check_can_main
+        exit $FINISH_RC
+    fi
     stage_preflight
     start_sudo
 
@@ -1410,6 +1720,7 @@ install_main() {
     fi
 
     detect_hardware
+    choose_heads_flash
     print_plan
     [[ $SKIP_FLASH -eq 0 ]] && check_hw_requirements
     [[ $ONLY_DETECT -eq 1 ]] && exit 0

@@ -3,12 +3,15 @@
 
 Запуск: python3 -I mcu_merge.py printer.cfg blocks.txt [--dry]
         python3 -I mcu_merge.py printer.cfg --list   (только перечислить [mcu ...] конфига и его include)
+        python3 -I mcu_merge.py printer.cfg --set ИМЯ UUID [--force]   (задать canbus_uuid в секции [ИМЯ] самого printer.cfg;
+          значение ЗАПОЛНИТЕ или пустое заменяется, другое значение - только с --force)
 blocks.txt - секции [mcu ...] прошитых плат (serial/canbus_uuid; значение ЗАПОЛНИТЕ = плата не прошита).
 Остальное в конфиге не меняется. Вывод (stdout), по строке на секцию:
   OK<TAB>имя<TAB>где        секция уже есть (по значению serial/uuid или по имени с тем же значением)
   ADD<TAB>имя               секция добавлена
   DIFF<TAB>имя<TAB>опция<TAB>есть<TAB>нужно   секция есть, но значение другое: не меняем
   TODO<TAB>имя              плата не прошита, секция не добавлена
+Для --set: SET<TAB>имя (записано) | SAME<TAB>имя | DIFF<TAB>имя<TAB>есть<TAB>нужно (не менялось) | NOSECTION<TAB>имя
 """
 import glob
 import os
@@ -69,7 +72,46 @@ def split_wanted(text):
     return res
 
 
+def set_uuid(cfg_path, name, uuid, force):
+    lines = open(cfg_path, encoding="utf-8").read().split("\n")
+    start = None
+    for i, ln in enumerate(lines):
+        m = HDR.match(ln)
+        if m and " ".join(m.group(1).split()) == name:
+            start = i
+            break
+    if start is None:
+        print("NOSECTION\t%s" % name)
+        return
+    end = start + 1
+    while end < len(lines) and not HDR.match(lines[end]) and not lines[end].startswith("#*#"):
+        end += 1
+    idx = next((j for j in range(start + 1, end)
+                if re.match(r"canbus_uuid\s*:", lines[j])), None)
+    cur = ""
+    if idx is not None:
+        cur = lines[idx].partition(":")[2].split(" #")[0].strip()
+    if idx is None and not force and any(re.match(r"serial\s*:", lines[j]) for j in range(start + 1, end)):
+        print("DIFF\t%s\tserial\t%s" % (name, uuid))
+        return
+    if cur.lower() == uuid.lower():
+        print("SAME\t%s" % name)
+        return
+    if cur and TODO not in cur and not force:
+        print("DIFF\t%s\t%s\t%s" % (name, cur, uuid))
+        return
+    if idx is not None:
+        lines[idx] = "canbus_uuid: %s" % uuid
+    else:
+        lines.insert(start + 1, "canbus_uuid: %s" % uuid)
+    open(cfg_path, "w", encoding="utf-8").write("\n".join(lines))
+    print("SET\t%s" % name)
+
+
 def main():
+    if len(sys.argv) > 4 and sys.argv[2] == "--set":
+        set_uuid(sys.argv[1], sys.argv[3], sys.argv[4], "--force" in sys.argv[5:])
+        return
     if len(sys.argv) > 2 and sys.argv[2] == "--list":
         for n, o in mcus(read_with_includes(sys.argv[1])):
             key = next((k for k in KEYS if o.get(k)), "")

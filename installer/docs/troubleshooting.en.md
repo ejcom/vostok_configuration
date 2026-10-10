@@ -10,6 +10,8 @@ If `flashtool.py` cannot write Klipper through katapult, choose "Flash Klipper d
 
 **RESET after DFU.** After flashing katapult over DFU, a single RESET may start the old firmware instead of katapult. Press RESET **twice in a row, quickly** (katapult blinks its LED slowly). If katapult is already on the board (for example after a previous attempt), answer `s` at the DFU prompt.
 
+**Toolhead boards "on the bench".** If a board is not visible over USB without 24 V, check whether it is powered from USB (jumper or power switch on the board). If the chip UID could not be read, the installer says so and `printer.cfg` keeps `ЗАПОЛНИТЕ`: after installing in the printer run `install_vostok.sh --check-can`. If `--check-can` does not find a board, check 24 V, CAN_H/CAN_L and the terminators (about 60 Ω between CAN_H and CAN_L with power off); the UUID found on the bus always wins over the computed one, and if it differs from `printer.cfg` the script asks whether to replace the value.
+
 **Re-running.** The installer detects boards that already run the current Klipper version (`firmware/flashed.tsv` and `devices.tsv`) and offers to skip them, so flashed ALPS, head boards and Octopus are not flashed again. Explicitly: `--skip-board alps --skip-board heads`; to flash everything again: `--reflash`.
 
 Manual retry: katapult stays in the board, Klipper stays stopped meanwhile.

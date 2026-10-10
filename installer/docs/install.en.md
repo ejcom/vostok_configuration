@@ -6,7 +6,7 @@
 
 ## Launch and check modes
 
-You need a Debian-like system (Armbian, Raspberry Pi OS, BTT Pi, etc.), a regular user with `sudo`, internet access and the boards connected over USB. 24 V power is not needed for USB flashing, but is needed to flash toolhead boards over CAN.
+You need a Debian-like system (Armbian, Raspberry Pi OS, BTT Pi, etc.), a regular user with `sudo`, internet access and the boards connected over USB. 24 V power is not needed for USB flashing: toolhead boards are flashed "on the bench" over DFU by default. A 24 V supply and CAN cables are needed only for the "Klipper over CAN" option and for verifying `canbus_uuid` after the electronics are installed in the printer.
 
 ```bash
 git clone https://github.com/dmitry-sorkin/vostok_configuration.git
@@ -29,7 +29,9 @@ Keep the clone where it is: the update button runs the scripts from it. When the
 4. With toolhead boards, configures `can0` (`/etc/network/interfaces.d/can0`, 1 Mbit, `txqueuelen 128`).
 5. Flashes the boards one by one and tells you what to do by hand at each step:
    - **ALPS**: BOOT + RESET → DFU → katapult → Klipper;
-   - **toolhead boards**: BOOT0/BOOT + RESET → DFU → katapult; Klipper later over CAN, verified with `canbus_query.py`;
+   - **toolhead boards** — method of your choice (`--heads-flash`):
+     - **`dfu` — "on the bench" (the default, also with `-y`)**: one board at a time, connected over USB only, BOOT0/BOOT + RESET → DFU → katapult and Klipper in a single session. No 24 V and no CAN needed, so every board can be flashed before it goes into the printer. The `canbus_uuid` cannot be queried without a bus, so the installer reads the chip UID over DFU and computes `canbus_uuid` with the same algorithm as the firmware; the bridge UUID is computed from the Octopus USB serial. These values go to `printer.cfg` and `devices.tsv` but are **not verified on the bus**: after installing the electronics in the printer, apply 24 V and run `./install_vostok.sh --check-can` (see below). If the UID could not be read, `printer.cfg` keeps `ЗАПОЛНИТЕ`;
+     - **`can` — for an assembled printer**: BOOT0/BOOT + RESET → DFU → katapult, then Klipper over CAN, verified with `canbus_query.py`. **A 24 V supply and CAN connections of the toolhead boards and the Octopus are required** — the installer warns about this before flashing starts;
    - **Octopus**: BOOT0 jumper + RESET → DFU. Method of your choice: **katapult and Klipper together over DFU in one session (recommended, the default)** or katapult over DFU and then Klipper through katapult (then remove the jumper). Klipper is for USB or the USB→CAN bridge.
 
    If flashing a board fails, a menu offers: retry, flash katapult and Klipper together over DFU, flash again via DFU (katapult) and Klipper through katapult, flash only Klipper directly over DFU, skip the board or abort. It works for every board.
@@ -51,6 +53,8 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 |---|---|
 | `--main h723\|f446` | mainboard (otherwise detected/asked) |
 | `--heads none\|v1.3\|v2\|ebb42` | toolhead boards (`--h36` is the old name) |
+| `--heads-flash dfu\|can` | how to flash toolhead boards: `dfu` — "on the bench", katapult and Klipper over USB without 24 V or CAN (the default, also with `-y`); `can` — katapult over DFU, Klipper over CAN (24 V and CAN cables required) |
+| `--check-can` | after installing the electronics in the printer: read `canbus_uuid` from the CAN bus (24 V required), compare with the computed values, fix `devices.tsv` and `printer.cfg`, restart Klipper; flashes nothing |
 | `--alps 0\|1\|2` | number of ALPS |
 | `--config-source standard\|user\|generate\|skip` | config source: repository root, `user_configs/`, generate your own (blank template + presets of the detected boards + driver wizard) or skip editing (only add missing `[mcu …]` sections to an existing `printer.cfg`) |
 | `--drivers SPEC` | drivers for `generate`: `all=2130\|2208\|2209\|2240\|5160\|5160plus` or `x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209` (no option: dialog, with `-y`: as in the stock config) |
@@ -64,7 +68,7 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 | `--skip-board BOARD` | do not flash an already flashed board: `alps`, `alps0`, `alps1`, `main` or `heads` (repeatable) |
 | `--reflash` | do not offer to skip, flash every board again |
 | `--upgrade` | `apt upgrade` before installing |
-| `-V`, `--version` | print the installer version (current: 1.2b, file `VERSION`) |
+| `-V`, `--version` | print the installer version (current: 1.2c, file `VERSION`) |
 | `-y` | no questions where a default exists (hardware steps still wait for Enter) |
 
 Log: `~/printer_data/logs/vostok_install.log`. The installation is repeatable: finished stages are skipped.

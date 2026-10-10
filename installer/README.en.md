@@ -181,3 +181,5 @@ Tested only in `--dry-run` and on copies of the config directory: generating the
 ## Removal
 
 `./install_fluidd_button.sh --uninstall` removes the service, the Moonraker drop-in and the sudoers rule.
+
+`./install_fluidd_theme.sh --uninstall` removes the preset and theme files and restores the default Fluidd theme.

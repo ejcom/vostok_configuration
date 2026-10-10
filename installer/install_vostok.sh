@@ -13,7 +13,8 @@
 #      плату в DFU и что-то нажать/переключить;
 #   6. скачивает vostok_configuration и вписывает найденные MCU в printer.cfg
 #      (существующий конфиг VOSTOK: меняются только электроника, [mcu] и include; пустой или чужой printer.cfg считается чистой установкой);
-#   7. ставит кнопку обновления в Fluidd (install_fluidd_button.sh).
+#   7. ставит кнопку обновления в Fluidd (install_fluidd_button.sh);
+#   8. ставит тему K3D VOSTOK в Fluidd (install_fluidd_theme.sh).
 #
 # Запускать от обычного пользователя в терминале (sudo спросит пароль один раз).
 # Подробности: README.md, ./install_vostok.sh --help
@@ -63,6 +64,7 @@ SKIP_SOFTWARE=0
 SKIP_FLASH=0
 SKIP_CONFIG=0
 SKIP_BUTTON=0
+SKIP_THEME=0
 DO_UPGRADE=0
 OPT_SKIP_BOARDS=()   # alps|alps0|alps1|main|heads: не прошивать (уже прошиты)
 OPT_REFLASH=0        # не предлагать пропуск плат, уже прошитых текущей версией
@@ -114,6 +116,7 @@ usage() {
   --skip-flash          не прошивать MCU
   --skip-config         не трогать конфиг принтера
   --skip-button         не ставить кнопку обновления в Fluidd
+  --skip-theme          не ставить тему K3D VOSTOK в Fluidd
   --skip-board ПЛАТА    не прошивать плату, уже прошитую раньше: alps, alps0, alps1, main или heads
                         (можно повторять). Без этой опции установщик сам предложит пропустить платы,
                         на которых уже стоит Klipper текущей версии
@@ -148,6 +151,7 @@ parse_args() {
             --skip-flash) SKIP_FLASH=1 ;;
             --skip-config) SKIP_CONFIG=1 ;;
             --skip-button) SKIP_BUTTON=1 ;;
+            --skip-theme) SKIP_THEME=1 ;;
             --skip-board) [[ $# -ge 2 ]] || die "--skip-board требует аргумент"; OPT_SKIP_BOARDS+=("$2"); shift ;;
             --reflash) OPT_REFLASH=1 ;;
             --main-flash) [[ $# -ge 2 ]] || die "--main-flash требует аргумент"; OPT_MAIN_FLASH=$2; shift ;;
@@ -1357,6 +1361,13 @@ stage_button() {
         || { warn "кнопку установить не удалось; позже: $INSTALL_DIR/install_fluidd_button.sh"; FINISH_RC=1; }
 }
 
+stage_theme() {
+    step "Тема K3D VOSTOK в Fluidd"
+    if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] $INSTALL_DIR/install_fluidd_theme.sh -y"; return 0; fi
+    "$INSTALL_DIR/install_fluidd_theme.sh" -y \
+        || { warn "тему установить не удалось; позже: $INSTALL_DIR/install_fluidd_theme.sh"; FINISH_RC=1; }
+}
+
 print_summary() {
     cat <<EOF
 
@@ -1415,6 +1426,7 @@ install_main() {
     fi
     stage_start_klipper
     [[ $SKIP_BUTTON -eq 0 ]] && stage_button
+    [[ $SKIP_THEME -eq 0 ]] && stage_theme
     print_summary
     exit $FINISH_RC
 }

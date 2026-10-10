@@ -8,6 +8,7 @@ Scripts that set up a VOSTOK on a clean system following the [💾 Electronics f
 - `configure_vostok.sh` — set up the printer config separately from the installation: choose or generate `electronics_*.cfg`, motor drivers, missing `[mcu]` sections, optional modules. Details: [CONFIGURATOR.en.md](CONFIGURATOR.en.md).
 - `update_klipper_mcu.sh` — updates Klipper and re-flashes all boards (the button runs it too).
 - `install_fluidd_button.sh` — installs the `mcu-update` button in Fluidd (power menu ⏻ → `mcu-update` → Start).
+- `install_fluidd_theme.sh` — installs the K3D VOSTOK theme in Fluidd (colour, logo, Tektur font).
 
 > ⚠️ The installer flashes boards and asks you to move jumpers and cables by hand. Read the prompts at every step. Without `--dry-run` it changes the system: installs packages, services and firmware.
 
@@ -30,6 +31,7 @@ Scripts that set up a VOSTOK on a clean system following the [💾 Electronics f
 | `install_vostok.sh` | first-time installation (all stages) |
 | `configure_vostok.sh` | printer config setup separate from the installation, see [CONFIGURATOR.en.md](CONFIGURATOR.en.md) |
 | `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `mcu-update.service.in` | Klipper and firmware update, the Fluidd button |
+| `install_fluidd_theme.sh`, `fluidd-theme/` | K3D VOSTOK theme for Fluidd: logo, `custom.css`, preset |
 | `lib/vostok_config.sh` | shared config-setup library (sourced by `install_vostok.sh` and `configure_vostok.sh`) |
 | `templates/` | blank electronics config without boards and drivers (`electronics_blank.cfg`), board presets (`boards/`) and driver presets (`drivers/`) |
 | `tools/` | `gen_electronics.py` (electronics config generator), `mcu_merge.py` (adds `[mcu]` sections), `pin_conflicts.py` (finds duplicated pins), `gen_configs.sh` (firmware build configs) |
@@ -82,7 +84,7 @@ Keep the clone where it is: the update button runs the scripts from it. When the
    - **skip editing** (only if `printer.cfg` already exists, the default): only the missing `[mcu …]` sections are added.
 
    Then it asks about optional modules (for example `chamber_heater.cfg`) and checks for pin conflicts. Details and all rules: [CONFIGURATOR.en.md](CONFIGURATOR.en.md). Files are copied to `~/printer_data/config`, previous ones are saved as `*.bak-<date>`.
-7. Starts Klipper, checks the firmware versions and installs the update button.
+7. Starts Klipper, checks the firmware versions and installs the update button and the Fluidd theme.
 
 Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a generated file: fill in the pins marked `ЗАПОЛНИТЕ` and review the blocks marked `СВЕРЬТЕ`), check the toolhead thermistors (hold a thermistor with your fingers — the temperature should rise on the right head, otherwise swap the `T0…`/`T1…` sections), and for ALPS add `[load_cell_probe]` and run `LOAD_CELL_CALIBRATE`.
 
@@ -101,7 +103,7 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 | `--electronics FILE` | a specific `electronics_*.cfg` |
 | `--only-detect` | only detect boards and show the plan |
 | `--dry-run` | show steps and commands, change nothing |
-| `--skip-software` / `--skip-flash` / `--skip-config` / `--skip-button` | skip a stage |
+| `--skip-software` / `--skip-flash` / `--skip-config` / `--skip-button` / `--skip-theme` | skip a stage |
 | `--skip-board BOARD` | do not flash an already flashed board: `alps`, `alps0`, `alps1`, `main` or `heads` (repeatable) |
 | `--reflash` | do not offer to skip, flash every board again |
 | `--upgrade` | `apt upgrade` before installing |
@@ -121,6 +123,16 @@ Log: `~/printer_data/logs/vostok_install.log`. The installation is repeatable: f
 ```
 
 The main rule: if you already have your own `electronics_*.cfg`, it is always the base (pins and parameters are taken from it); the stock main is used only on a clean installation. The full description, preset tables, file names, modules, backups and the option reference: **[CONFIGURATOR.en.md](CONFIGURATOR.en.md)**. Log: `~/printer_data/logs/vostok_configure.log`.
+
+## Fluidd theme
+
+`install_fluidd_theme.sh` (called by the installer, skip with `--skip-theme`) styles Fluidd like k3d.tech/vostok: teal `#009B98`, the K3D mark instead of the Fluidd logo, Tektur font in headings, background and cards in the site palette.
+
+- The logo and `custom.css` go to `~/printer_data/config/.fluidd-theme/` (Fluidd picks them up itself and Fluidd updates leave the directory alone).
+- The "K3D VOSTOK" preset is added to `~/fluidd/config.json` (it is in the Update Manager `persistent_files`) and activated through the Moonraker database. If another theme is already selected the script asks (`--force` replaces it without asking).
+- A foreign `custom.css` is not overwritten without `--force` (the old one is kept as `.bak-<date>`). The font loads from Google Fonts; offline the default font stays.
+- If the logo does not show (Moonraker requires authorization), run with `--logo-copy`; repeat after a Fluidd update.
+- Reload the browser tab afterwards (Ctrl+F5). Options: `--no-activate`, `--dry-run`, `--uninstall`.
 
 ## Update button
 

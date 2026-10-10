@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">
+  <!-- Знак K3D (контуры сняты с логотипа k3d.tech), вписан в квадрат 56x56 как у остальных логотипов Fluidd -->
+  <g transform="translate(2 21.04) scale(0.026)" fill="var(--v-logo-base, #009B98)">
+    <path d="M0 0H185V185H311L438 0H656V113H593L478 258V286L583 421H656V536H438L311 351H185V536H0Z"/>
+    <path d="M723 0H1184L1298 115V152H723Z"/>
+    <path d="M868 198H1293V213L1243 267L1293 322V338H868Z"/>
+    <path d="M723 384H1298V421L1184 536H723Z"/>
+    <path d="M1361 0H1884L2000 115V152H1361Z"/>
+    <path d="M1361 198H1547V338H1361Z"/>
+    <path d="M1813 198H2000V338H1813Z"/>
+    <path d="M1361 384H2000V421L1884 536H1361Z"/>
+  </g>
+</svg>

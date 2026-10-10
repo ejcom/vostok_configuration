@@ -1,0 +1,48 @@
+/* VOSTOK-THEME */
+/* Тема K3D VOSTOK для Fluidd (ставится install_fluidd_theme.sh, стили сайта k3d.tech/vostok).
+   Только цвета и шрифт, раскладку не меняем. Файл перезаписывается при повторном запуске install_fluidd_theme.sh, правки вносите в installer/fluidd-theme/custom.css. */
+
+/* Шрифт заголовков и логотипа сайта VOSTOK */
+@import url("https://fonts.googleapis.com/css2?family=Tektur:wght@400..800&display=swap");
+
+:root {
+  --vostok-teal: #009B98;
+  --vostok-teal-light: #00ccb8;
+  --vostok-indigo: #526cfe;
+  --vostok-bg: #1e2029;
+  --vostok-card: #2a2b38;
+  --vostok-card-dark: #1e1f2a;
+}
+
+/* Заголовки: Tektur, при отсутствии сети остаётся обычный шрифт Fluidd */
+.v-toolbar__title,
+.v-card__title,
+.collapsable-card-title,
+.v-navigation-drawer .v-list-item__title,
+h1, h2, h3, h4 {
+  font-family: "Tektur", "Roboto", sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* Тёмная тема: фон, карточки, шапка и меню в палитре сайта */
+.theme--dark.v-application {
+  background: var(--vostok-bg);
+}
+.theme--dark.v-card {
+  background: linear-gradient(135deg, var(--vostok-card) 0%, var(--vostok-card-dark) 100%);
+}
+.theme--dark.v-app-bar.v-toolbar.v-sheet,
+.theme--dark.v-navigation-drawer {
+  background-color: var(--vostok-card-dark);
+}
+
+/* Ссылки как на сайте (бирюзовый), второй акцент индиго */
+.theme--dark.v-application a {
+  color: var(--vostok-teal-light);
+}
+.theme--dark.v-application .v-list-item--active {
+  color: var(--vostok-teal-light);
+}
+.theme--dark.v-application .v-tabs-slider {
+  background-color: var(--vostok-indigo);
+}

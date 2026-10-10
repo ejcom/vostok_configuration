@@ -1,0 +1,8 @@
+{
+  "name": "K3D VOSTOK",
+  "color": "#009B98",
+  "isDark": true,
+  "logo": {
+    "src": "server/files/config/.fluidd-theme/logo_vostok.svg"
+  }
+}

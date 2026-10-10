@@ -8,6 +8,7 @@
 - `update_klipper_mcu.sh` — обновление Klipper и перепрошивка всех плат (его же запускает кнопка).
 - `configure_vostok.sh` — настройка конфига отдельно от установки: выбор или генерация `electronics_*.cfg`, драйверы моторов, недостающие `[mcu]`, дополнительные модули. Подробно: [CONFIGURATOR.md](CONFIGURATOR.md).
 - `install_fluidd_button.sh` — ставит в Fluidd кнопку `mcu-update` (меню питания ⏻ → `mcu-update` → Start).
+- `install_fluidd_theme.sh` — ставит в Fluidd тему K3D VOSTOK (цвет, логотип, шрифт Tektur).
 
 > ⚠️ Установщик прошивает платы и просит вручную переключать джамперы и кабели. Читайте подсказки на каждом шаге. Без `--dry-run` он меняет систему: ставит пакеты, службы и прошивки.
 
@@ -30,6 +31,7 @@
 | `install_vostok.sh` | первоначальная установка (все этапы) |
 | `configure_vostok.sh` | настройка конфига отдельно от установки, см. [CONFIGURATOR.md](CONFIGURATOR.md) |
 | `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `mcu-update.service.in` | обновление Klipper и прошивок, кнопка в Fluidd |
+| `install_fluidd_theme.sh`, `fluidd-theme/` | тема K3D VOSTOK для Fluidd: логотип, `custom.css`, пресет |
 | `lib/vostok_config.sh` | общая библиотека настройки конфига (её подключают `install_vostok.sh` и `configure_vostok.sh`) |
 | `templates/` | шаблон конфига электроники без плат и драйверов (`electronics_blank.cfg`), пресеты плат (`boards/`) и драйверов (`drivers/`) |
 | `tools/` | `gen_electronics.py` (генерация конфига электроники), `mcu_merge.py` (дописывание `[mcu]`), `pin_conflicts.py` (поиск повторяющихся пинов), `gen_configs.sh` (конфиги сборки прошивок) |
@@ -82,7 +84,7 @@ cd vostok_configuration/installer
    - **пропустить редактирование конфига** (только если `printer.cfg` уже есть, по умолчанию): дописываются только недостающие `[mcu …]`.
 
    Затем спрашивает про дополнительные модули (например, `chamber_heater.cfg`) и проверяет пересечения пинов. Подробности и все правила: [CONFIGURATOR.md](CONFIGURATOR.md). Файлы копируются в `~/printer_data/config`, прежние сохраняются как `*.bak-<дата>`.
-7. Запускает Klipper, сверяет версии прошивок, ставит кнопку обновления.
+7. Запускает Klipper, сверяет версии прошивок, ставит кнопку обновления и тему Fluidd.
 
 После установки вручную: сверить `electronics_*.cfg` со своей проводкой (у сгенерированного файла — вписать пины с пометкой `ЗАПОЛНИТЕ` и проверить блоки с `СВЕРЬТЕ`), проверить термисторы голов (возьмите термистор пальцами — температура должна расти у нужной головы, иначе поменяйте местами секции `T0…`/`T1…`), для ALPS добавить `[load_cell_probe]` и выполнить `LOAD_CELL_CALIBRATE`.
 
@@ -101,7 +103,7 @@ cd vostok_configuration/installer
 | `--electronics ФАЙЛ` | конкретный `electronics_*.cfg` |
 | `--only-detect` | только определить платы и показать план |
 | `--dry-run` | показать шаги и команды, ничего не менять |
-| `--skip-software` / `--skip-flash` / `--skip-config` / `--skip-button` | пропустить этап |
+| `--skip-software` / `--skip-flash` / `--skip-config` / `--skip-button` / `--skip-theme` | пропустить этап |
 | `--skip-board ПЛАТА` | не прошивать уже прошитую плату: `alps`, `alps0`, `alps1`, `main` или `heads` (можно повторять) |
 | `--reflash` | не предлагать пропуск, прошить все платы заново |
 | `--upgrade` | `apt upgrade` перед установкой |
@@ -121,6 +123,16 @@ cd vostok_configuration/installer
 ```
 
 Главное правило: если у вас уже есть свой `electronics_*.cfg`, он всегда основа (пины и параметры берутся из него); стоковый main используется только при чистой установке. Полное описание, таблицы пресетов, имена файлов, модули, резервные копии и справочник опций: **[CONFIGURATOR.md](CONFIGURATOR.md)**. Лог: `~/printer_data/logs/vostok_configure.log`.
+
+## Тема Fluidd
+
+`install_fluidd_theme.sh` (его же вызывает установщик, пропуск: `--skip-theme`) оформляет Fluidd в стиле k3d.tech/vostok: бирюзовый цвет `#009B98`, знак K3D вместо логотипа Fluidd, шрифт Tektur в заголовках, фон и карточки в палитре сайта.
+
+- Логотип и `custom.css` кладутся в `~/printer_data/config/.fluidd-theme/` (Fluidd подхватывает их сам, обновления Fluidd каталог не трогают).
+- Пресет «K3D VOSTOK» добавляется в `~/fluidd/config.json` (он в `persistent_files` Update Manager), тема включается через базу Moonraker. Если в Fluidd уже выбрана другая тема, скрипт спросит (`--force` заменит без вопроса).
+- Чужой `custom.css` не перезаписывается без `--force` (прежний сохраняется как `.bak-<дата>`). Шрифт грузится с Google Fonts, без интернета остаётся стандартный.
+- Если логотип не показывается (Moonraker требует авторизацию), запустите с `--logo-copy`; после обновления Fluidd повторите.
+- После установки обновите вкладку (Ctrl+F5). Опции: `--no-activate`, `--dry-run`, `--uninstall`.
 
 ## Кнопка обновления
 

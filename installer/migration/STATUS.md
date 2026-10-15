@@ -6,7 +6,7 @@
 
 | агент | ветка | статус | последний коммит | открытые вопросы | дата |
 |---|---|---|---|---|---|
-| A0 harness | py/harness | review | см. git log py/harness | 5 вопросов в reports/harness.md (нумерация A–H, 10 главных плат, требования к хосту) | 2026-10-15 |
+| A0 harness | py/harness | merged | b89f806 (слияние в py-migration; golden 234/0 расхождений) | 5 вопросов в reports/harness.md (нумерация A–H, 10 главных плат, требования к хосту) | 2026-10-15 |
 | A1 core | py/core | todo | | | |
 | A2 update | py/update | todo | | | |
 | A3 integrations | py/integrations | todo | | | |
@@ -20,7 +20,7 @@
 
 | сессия | содержание | статус |
 |---|---|---|
-| S1 | подготовка (каталог migration/) + A0 harness + R | подготовка выполнена 2026-10-15, A0 не начат |
+| S1 | подготовка (каталог migration/) + A0 harness + R | подготовка и A0 выполнены 2026-10-15, ревью R по волне 0 не запущено |
 | S2 | A1 core + R | todo |
 | S3 | A2 ‖ A3 ‖ A4 + слияние + R | todo |
 | S4 | A5 install-flow | todo |

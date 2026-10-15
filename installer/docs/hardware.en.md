@@ -59,7 +59,7 @@ Katapult is always written over DFU at 0x08000000 on every board. USB is PA11/PA
 - **Octopus Pro F429** is v1.0 only; v1.1 has a different pinout and chip (H723), use `octopus-pro-h723` for it.
 - **FLY-C8**: DIP switches 1 and 2 route the internal USB to the ARM part of the board, 3 and 4 route it to the Type-C connector; flashing is done over DFU via USB. Mellow's documentation has no "Fly C6" board, that name is taken to mean the FLY-C8 (aliases `fly-c6`, `flyc6`).
 - **Manta M8P**: the MCU sits on the same board as the CB1/CM4, USB to it is internal.
-- **Pins and the configurator.** There is no stock `electronics_*.cfg` for the new boards: the configurator generates a template without pins (`--config-source generate`) or takes your file from `user_configs/` (`--config-source user`); the Octopus pin presets apply to the Octopus Pro boards only (see [CONFIGURATOR.en.md](../CONFIGURATOR.en.md)).
+- **Pins and the configurator.** There is no stock `electronics_*.cfg` for the new boards: the configurator generates a template without pins (`--config-source generate`) or takes your file from `user_configs/` (`--config-source user`); pin presets exist for the Octopus Pro (H723 per the guide; F446/F429 use `octopus_pro_v1.0`) and Manta M8P v1.0 / v1.1 / v2.0 (`templates/boards/main/`, not verified on hardware); Spider v2.x / v3.0 and FLY-C8 have no preset (see [CONFIGURATOR.en.md](../CONFIGURATOR.en.md)).
 
 How to add your own board: [build-configs.en.md](build-configs.en.md#how-to-add-a-board).
 

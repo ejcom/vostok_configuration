@@ -4,6 +4,12 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.3a — 2026-10-15
+
+- Configurator: main-board pin presets in `templates/boards/main/` (`octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0`); the `TEMPLATE` field of a `.board` file points at the preset and `tools/gen_configs.sh --check` verifies the file exists. For these boards `gen_electronics.py --template <name>` fills motors, sockets and driver SPI, bed, fans, endstops, probe, hotends (without head boards) and the "equipment → connector" table in the header; blocks carry the СВЕРЬТЕ note. The boards are not verified on hardware. Spider v2.x / v3.0 and FLY-C8 have no preset: no reliable pin source was found.
+- Fixed: the driver SPI pins (`PA5/PA7/PA6`) are no longer applied to boards other than the Octopus Pro; the `--template octopus_pro` preset gave the F446 the v1.1 pins (bed `PB0`), whereas on the Octopus Pro v1.0 that is HE2 = `PB10`: F446 and F429 now use `octopus_pro_v1.0`. The H723 output is unchanged (compared byte for byte).
+- Warning and installer messages name the preset's board instead of "Octopus Pro".
+
 ## 1.3 — 2026-10-15
 
 - Board registry: `boards/*.board` (one file per board: chip, crystal, application offset, CAN pins, DFU hint, whether verified on hardware) and `lib/boards.sh`. Labels, build configs, DFU hints and checks in the installer come from the registry instead of being tied to the chip.

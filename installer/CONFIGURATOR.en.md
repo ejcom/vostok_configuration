@@ -296,9 +296,25 @@ The script exits with code 1 on an error (no `python3`, no `printer_data` direct
 ./configure_vostok.sh --config-source skip --modules chamber_heater
 ```
 
+## Pin presets of other main boards
+
+The `TEMPLATE` field of `boards/<id>.board` (other than `octopus_pro`) names the file `templates/boards/main/<name>.cfg`; `tools/gen_configs.sh --check` verifies that the file exists. Roles follow the connector order: X, W, left Y, right Y, Z → drivers 1–5, extruders T0/T1 (without head boards) → 6–7; the bed uses the stock BED/HB output, the light a free HE output; hotends HE0/HE1 + T0/T1, FAN0/FAN1 are the hotend fans, FAN2 the model fan, FAN3 the electronics fan; endstops: left/right Y are the first two STOP inputs, X/W (without head boards) the next two; the probe is the BLTouch connector. Polarities as in the stock config: `!` on `enable_pin` and `[fan]`, `^` on endstops. The `dir_pin` sign comes from the manufacturer's example (for the Octopus Pro v1.0, from `user_configs/`) and is checked after the first start. Boards with a preset are not verified on hardware: blocks carry the СВЕРЬТЕ ("check") note and the file header holds an "equipment → connector" table.
+
+A preset file consists of marker sections (a line `@@NAME@@`); the text before the first marker is a header naming the pin source:
+
+| Marker | Contents |
+|---|---|
+| `@@TABLE@@` | rows of the "Equipment \| Connector" header table; rows prefixed `H\|` are printed only without head boards |
+| `@@BASE@@` | `[carriage ylc]`, `[extra_carriage yrc]`, `[heater_bed]`, `[fan]`, `[controller_fan electronics_fan]`, `[led print_chamber_led]` |
+| `@@MOTORS@@` | `[stepper motor_x\|w\|yl\|yr\|z]` (step/dir/enable), `[socket motor_x]` (`pin:` is the driver's cs_pin or uart_pin), `[spi]` (shared `spi_software_*` driver pins) |
+| `@@EXTRUDERS@@` | `[extruder]`, `[extruder1]` and `[socket extruder]`, `[socket extruder1]` (without head boards only) |
+| `@@HEADS@@` | hotends, thermistors, `e0_fan`/`e1_fan`, X/W endstops, probe (without head boards only) |
+
+The reference (the user's own config) always wins over the preset: the preset only fills what the reference lacks. To add a board with a preset: a `.board` file with `TEMPLATE=<name>` plus `templates/boards/main/<name>.cfg`; check the pins with `tools/pin_conflicts.py` and against the vendor's official example.
+
 ## Limitations
 
-- **New boards** (other than the Octopus Pro): they have no stock main and no Octopus pin presets. Only `--config-source generate` (a template without pins, `--template none` of `gen_electronics.py`; the board name goes into the header) and `user` are available. If the reference is the electronics of a different board, the configurator warns and asks whether to take pins from it (default: no).
+- **New boards:** they have no stock main. Pin presets (`templates/boards/main/`) exist for the Octopus Pro v1.0 (F446/F429) and Manta M8P v1.0 / v1.1 / v2.0; Spider v2.x / v3.0 and FLY-C8 have no preset (no reliable pin source), so only `--config-source generate` (a template without pins, `--template none`; the board name goes into the header) and `user` are available. If the reference is the electronics of a different board, the configurator warns and asks whether to take pins from it (default: no).
 - **H723.** Taking pins from the stock main and from the MOTOR4/MOTOR5 table is designed for the Octopus Pro v1.1 H723. For the F446 without its own config pins stay empty (the head pin table also applies to the F446, it comes from F446 configs).
 - **The head pin table is not checked** against the Octopus Pro v1.1 H723 documentation: check it against your wiring. Check the `dir_pin` sign and the motor directions after the first start.
 - **`SAVE_CONFIG` is not carried over** only on a clean install over a foreign or empty `printer.cfg` (see above).
@@ -317,6 +333,7 @@ The script exits with code 1 on an error (no `python3`, no `printer_data` direct
 | `tools/pin_conflicts.py` | finds duplicated pins |
 | `templates/electronics_blank.cfg` | template with empty pins and the markers `;;DRIVERS;;`, `;;EXTRAS;;` |
 | `templates/boards/*.cfg` | board presets: `octopus_pro`, `octopus_extruders`, `octopus_heads`, `h36_v1.3`, `h36_v2`, `ebb42`, `alps` |
+| `templates/boards/main/*.cfg` | pin presets of other main boards: `octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0` (format and how to add one: below) |
 | `templates/drivers/*.cfg` | driver presets (`{SEC}` is the motor section name) |
 
 How to extend:

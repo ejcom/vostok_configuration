@@ -59,7 +59,7 @@ Katapult у всех плат пишется по DFU с 0x08000000. USB у вс
 - **Octopus Pro F429** — только версия v1.0; у v1.1 другая распиновка и чип (H723), для неё используйте `octopus-pro-h723`.
 - **FLY-C8**: DIP-переключатели 1 и 2 направляют внутренний USB к ARM-части платы, 3 и 4 — на разъём Type-C; прошивка идёт через DFU по USB. В документации Mellow платы «Fly C6» нет, под этим названием понимается FLY-C8 (алиасы `fly-c6`, `flyc6`).
 - **Manta M8P**: MCU стоит на одной плате с CB1/CM4, USB к нему внутренний.
-- **Пины и конфигуратор.** Стокового `electronics_*.cfg` для новых плат нет: конфигуратор генерирует шаблон без пинов (`--config-source generate`) или берёт ваш файл из `user_configs/` (`--config-source user`); пресеты пинов Octopus применяются только к платам Octopus Pro (см. [CONFIGURATOR.md](../CONFIGURATOR.md)).
+- **Пины и конфигуратор.** Стокового `electronics_*.cfg` для новых плат нет: конфигуратор генерирует шаблон без пинов (`--config-source generate`) или берёт ваш файл из `user_configs/` (`--config-source user`); пресеты пинов есть у Octopus Pro (H723 — по гайду; F446/F429 — `octopus_pro_v1.0`) и Manta M8P v1.0 / v1.1 / v2.0 (`templates/boards/main/`, не проверены на железе); у Spider v2.x / v3.0 и FLY-C8 пресета нет (см. [CONFIGURATOR.md](../CONFIGURATOR.md)).
 
 Как добавить свою плату: [build-configs.md](build-configs.md#как-добавить-плату).
 

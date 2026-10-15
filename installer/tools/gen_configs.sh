@@ -150,6 +150,15 @@ if [[ $CHECK -eq 1 ]]; then
         if d=$(diff <(sig "$old") <(sig "$new")); then echo "совпадает: configs/$rel"
         else echo "РАСХОЖДЕНИЕ: configs/$rel (< каталог, > сгенерировано)"; echo "$d" | sed 's/^/    /'; bad=$((bad + 1)); fi
     done < <(find "$TMP/gen/configs" -name '*.config' | sort)
+    # пресет пинов главной платы (TEMPLATE) должен существовать: octopus_pro - встроенный, прочие - templates/boards/main/<имя>.cfg
+    for id in "${ids[@]}"; do
+        board_load "$id"
+        t=$B_TEMPLATE
+        [[ -z $t || $t == octopus_pro ]] && continue
+        n=$((n + 1))
+        if [[ -f $ROOT/templates/boards/main/$t.cfg ]]; then echo "совпадает: пресет пинов $id -> $t"
+        else echo "НЕТ ФАЙЛА: templates/boards/main/$t.cfg (TEMPLATE платы $id)"; bad=$((bad + 1)); fi
+    done
     echo "проверено: $n, расхождений: $bad"
     [[ $bad -eq 0 ]]
     exit

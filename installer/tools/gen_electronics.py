@@ -3,6 +3,7 @@
 
 Берёт шаблон без плат и драйверов (templates/electronics_blank.cfg), накладывает пресеты:
   - Octopus Pro по гайду (templates/boards/octopus_pro.cfg);
+  - пресет другой главной платы (templates/boards/main/<имя>.cfg, секции @@TABLE@@ @@BASE@@ @@MOTORS@@ @@EXTRUDERS@@ @@HEADS@@);
   - платы голов H36 v1.3 / v2 или EBB42 (templates/boards/<плата>.cfg);
   - драйверы моторов (templates/drivers/tmc*.cfg, пины пустые);
   - ALPS (закомментированный блок);
@@ -53,6 +54,7 @@ DRIVER_ALIASES = {"5160pro": "5160", "5160tpro": "5160", "5160tplus": "5160plus"
 
 
 SVERIT = "# !!! СВЕРЬТЕ СО СВОЕЙ СХЕМОЙ: пины подставлены по разъёмам Octopus Pro из конфигов репозитория (в main они на платах голов)"
+TABLE_SRC = "Octopus Pro"      # плата, по разъёмам которой подставлены пины (для текстов предупреждений)
 
 
 class Block:
@@ -163,8 +165,8 @@ def resolve_table_conflicts(all_blocks):
         others = [(bb, kk) for bb, kk in uses.get(pid, []) if bb.name != b.name]
         if pid and others:
             b.set(key, ["%s:" % key])
-            warns.append("[%s] %s: пин %s из таблицы разъёмов Octopus Pro уже занят (%s), оставлен пустым - впишите свободный пин"
-                         % (b.name, key, pid.split(":", 1)[1], "; ".join("[%s] %s" % (bb.name, kk) for bb, kk in others)))
+            warns.append("[%s] %s: пин %s из таблицы разъёмов %s уже занят (%s), оставлен пустым - впишите свободный пин"
+                         % (b.name, key, pid.split(":", 1)[1], TABLE_SRC, "; ".join("[%s] %s" % (bb.name, kk) for bb, kk in others)))
     return warns
 
 
@@ -193,6 +195,34 @@ def apply_overlay(blocks, overlay, new_drivers, new_extras, note=None):
                 if note:
                     targets[0].note = note
                     TABLE_OPTS.append((targets[0], key))
+
+
+def load_preset(text):
+    """Пресет главной платы: {'TABLE': текст, 'BASE': ..., 'MOTORS': ..., 'EXTRUDERS': ..., 'HEADS': ...}; шапка до первого маркера отбрасывается."""
+    parts = re.split(r"^@@([A-Z]+)@@[ \t]*$", text, flags=re.M)
+    return {parts[i]: parts[i + 1] for i in range(1, len(parts), 2)}
+
+
+def preset_motor_pins(preset, with_extruders):
+    """Из секций MOTORS/EXTRUDERS пресета: ({мотор: {step/dir/enable}}, {мотор: пин разъёма драйвера}, {spi-опция: пин})."""
+    by_sec = {v: k for k, v in MOTORS.items()}
+    by_short = {v.replace("stepper ", ""): k for k, v in MOTORS.items()}
+    step, sock, spi = {}, {}, {}
+    for key in ("MOTORS", "EXTRUDERS") if with_extruders else ("MOTORS",):
+        for b in split_blocks(preset.get(key, "")):
+            if b.name is None:
+                continue
+            opts = {k: clean_value(vl[0]) for k, vl in parse_options(b.lines[1:])}
+            m = re.match(r"^socket (.+)$", b.name)
+            if b.name == "spi":
+                spi.update(opts)
+            elif m and m.group(1) in by_short:
+                sock[by_short[m.group(1)]] = opts.get("pin", "")
+            elif b.name in by_sec:
+                step[by_sec[b.name]] = opts
+            else:
+                sys.exit("пресет: неизвестная секция [%s] в @@%s@@" % (b.name, key))
+    return step, sock, spi
 
 
 def read_params(cfg_path):
@@ -291,10 +321,12 @@ def parse_drivers(spec, heads):
     return drv
 
 
-def render(blocks):
-    out = []
+def render(blocks, collapse_notes=False):
+    out, prev_note = [], None
     for b in blocks:
-        if b.note:
+        note_shown = b.note and not (collapse_notes and b.note == prev_note)
+        prev_note = b.note
+        if note_shown:
             # комментарий ставим перед заголовком секции, после пустой строки предыдущего блока
             while out and not out[-1].strip():
                 out.pop()
@@ -341,8 +373,9 @@ def main():
     ap.add_argument("--main", default="h723", help="id платы из реестра boards/ или h723|f446 (старые значения)")
     ap.add_argument("--board-name", default="", help="название платы для заголовка (иначе запасное для h723/f446)")
     ap.add_argument("--board-file", default="", help="часть имени файла (иначе запасная для h723/f446)")
-    ap.add_argument("--template", default="octopus_pro", choices=["octopus_pro", "none"],
-                    help="пресет пинов главной платы; none - без пинов Octopus (--octopus-* игнорируются)")
+    ap.add_argument("--template", default="octopus_pro",
+                    help="пресет пинов главной платы: octopus_pro (v1.1 по гайду), none (без пинов, --octopus-* игнорируются) "
+                         "или имя файла из templates/boards/main/ без .cfg")
     ap.add_argument("--out", default="", help="выходной файл (иначе имя по образцу user_configs в каталоге --out-dir)")
     ap.add_argument("--out-dir", default="")
     ap.add_argument("--octopus-heads", action="store_true",
@@ -353,10 +386,20 @@ def main():
     board_file = a.board_file or BOARD_FILE.get(a.main)
     if not board_name or not board_file:
         ap.error("для платы %r нужны --board-name и --board-file" % a.main)
-    if a.template == "none":
-        a.octopus_heads = a.octopus_extruders = False
-
     t = Path(a.templates)
+    mainp = None
+    if a.template not in ("octopus_pro", "none"):
+        pf = t / "boards/main" / (a.template + ".cfg")
+        if not re.fullmatch(r"[A-Za-z0-9_.]+", a.template) or not pf.is_file():
+            ap.error("нет пресета платы %r (ожидается %s)" % (a.template, pf))
+        mainp = load_preset(pf.read_text(encoding="utf-8"))
+    if a.template == "none" or mainp:
+        a.octopus_heads = a.octopus_extruders = False
+    if mainp:
+        global SVERIT, TABLE_SRC
+        TABLE_SRC = board_name
+        SVERIT = ("# !!! СВЕРЬТЕ СО СВОЕЙ СХЕМОЙ: пины подставлены по разъёмам %s из пресета VOSTOK (плата не проверена на железе)"
+                  % board_name)
     names = a.head_names.split(",")
     drv = parse_drivers(a.drivers, a.heads != "none")
     needed = [m for m in MOTORS if not (a.heads != "none" and m in ("e0", "e1"))]
@@ -365,13 +408,32 @@ def main():
         sys.exit("--drivers: не задан драйвер для %s" % ",".join(missing))
 
     text = (t / "electronics_blank.cfg").read_text(encoding="utf-8")
+    if mainp:
+        stub = "# (впишите свою распиновку)         |                   |"
+        if text.count(stub) != 1:
+            sys.exit("electronics_blank.cfg: не найдена строка таблицы разъёмов")
+        rows = []
+        for ln in mainp.get("TABLE", "").strip("\n").split("\n"):
+            if ln.startswith("H|"):
+                if a.heads != "none":
+                    continue
+                ln = ln[2:]
+            if ln.strip():
+                rows.append(ln)
+        text = text.replace(stub, "\n".join(rows))
     blocks = split_blocks(text)
     new_drivers, new_extras = [], []
 
     if a.template == "octopus_pro":
         apply_overlay(blocks, parse_overlay((t / "boards/octopus_pro.cfg").read_text(encoding="utf-8"), {}), new_drivers, new_extras)
 
-    if a.heads == "none" and a.octopus_heads and (t / "boards/octopus_heads.cfg").is_file():
+    if mainp:
+        apply_overlay(blocks, parse_overlay(mainp.get("BASE", ""), {}), new_drivers, new_extras, note=SVERIT)
+
+    if mainp and a.heads == "none":
+        apply_overlay(blocks, parse_overlay(mainp.get("HEADS", ""), {}), new_drivers, new_extras, note=SVERIT)
+        sverit_sections = True
+    elif a.heads == "none" and a.octopus_heads and (t / "boards/octopus_heads.cfg").is_file():
         apply_overlay(blocks, parse_overlay((t / "boards/octopus_heads.cfg").read_text(encoding="utf-8"), {}),
                       new_drivers, new_extras, note=SVERIT)
         sverit_sections = True
@@ -415,8 +477,12 @@ def main():
             if b.find(key) is None:
                 b.set(key, ["%s: %s" % (key, p[key])])
     # Пины моторов и драйверов: сначала эталон, затем (экструдеры без голов) таблица разъёмов Octopus
-    filled = {"ref": 0, "octopus": 0}
+    filled = {"ref": 0, "octopus": 0, "board": 0}
     ext_tpl = {"step": {}, "socket": {}}
+    ext_src, spi_default = "octopus", (OCTOPUS_SPI if a.template == "octopus_pro" else {})
+    if mainp:
+        ext_src = "board"
+        ext_tpl["step"], ext_tpl["socket"], spi_default = preset_motor_pins(mainp, a.heads == "none")
     tpl_path = t / "boards/octopus_extruders.cfg"
     if a.octopus_extruders and a.heads == "none" and tpl_path.is_file():
         for b in split_blocks(tpl_path.read_text(encoding="utf-8")):
@@ -434,7 +500,7 @@ def main():
             if blk.name == name and blk.find(key) is not None:
                 blk.set(key, ["%s: %s" % (key, value)])
                 filled[src] += 1
-                if src == "octopus" and block_list is blocks:
+                if src in ("octopus", "board") and block_list is blocks:
                     blk.note = SVERIT
                     TABLE_OPTS.append((blk, key))
                 return True
@@ -445,14 +511,14 @@ def main():
         src = "ref"
         steps = ref["step"].get(m)
         if not steps and m in ext_tpl["step"]:
-            steps, src = ext_tpl["step"][m], "octopus"
+            steps, src = ext_tpl["step"][m], ext_src
         for k, v in (steps or {}).items():
             if k in STEP_KEYS:
                 put(blocks, sec, k, v, src)
         dsrc = "ref"
         dd = ref["drv"].get(m)
         if not dd and ext_tpl["socket"].get(m):
-            dd, dsrc = {"socket": ext_tpl["socket"][m]}, "octopus"
+            dd, dsrc = {"socket": ext_tpl["socket"][m]}, ext_src
         if not dd:
             continue
         for b in drv_blocks:
@@ -462,8 +528,9 @@ def main():
             if spi:
                 put(drv_blocks, b.name, "cs_pin", dd["socket"], dsrc)
                 for k in SPI_KEYS:
-                    v = dd.get(k) or OCTOPUS_SPI[k]
-                    put(drv_blocks, b.name, k, v, dsrc)
+                    v = dd.get(k) or spi_default.get(k)
+                    if v:
+                        put(drv_blocks, b.name, k, v, dsrc)
             else:
                 put(drv_blocks, b.name, "uart_pin", dd["socket"], dsrc)
 
@@ -500,9 +567,9 @@ def main():
     warns.extend(resolve_table_conflicts(blocks + new_extras + drv_blocks))
     groups = driver_groups(drv, needed)
     name = a.out and Path(a.out).name or config_name(board_file, a.heads, groups)
-    result = render(blocks)
+    result = render(blocks, collapse_notes=bool(mainp))
     heads_title = HEAD_TITLE[a.heads]
-    if a.heads == "none" and a.template == "none":
+    if a.heads == "none" and a.template != "octopus_pro":
         heads_title = "нет (головы подключены к основной плате)"
     result = (result.replace("{BOARD}", board_name).replace("{HEADS}", heads_title)
               .replace("{DRIVERS}", ", ".join("%dx %s" % (n, DRIVER_TITLE[d]) for n, d in groups)
@@ -525,9 +592,11 @@ def main():
     out_path = Path(a.out) if a.out else Path(a.out_dir or ".") / name
     out_path.write_text("\n".join(out_lines), encoding="utf-8")
     print("NAME\t%s" % name)
-    if sverit_sections or filled["octopus"]:
+    if sverit_sections or filled["octopus"] or filled["board"]:
         secs = [b.name for b in blocks if b.note]
-        print("WARN\tПины из таблицы разъёмов Octopus Pro (конфиги репозитория, не main), сверьте со своей схемой подключения: "
+        what = ("Пины по разъёмам %s (пресет VOSTOK, плата не проверена на железе)" % board_name if mainp
+                else "Пины из таблицы разъёмов Octopus Pro (конфиги репозитория, не main)")
+        print("WARN\t%s, сверьте со своей схемой подключения: " % what
               + ", ".join("[%s]" % s_ for s_ in dict.fromkeys(secs)))
     for src, n in filled.items():
         print("FILL\t%s\t%d" % (src, n))

@@ -4,6 +4,12 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.2d — 2026-10-12
+
+- K3D VOSTOK theme for KlipperScreen: `install_klipperscreen_theme.sh` and `klipperscreen-theme/` (k3d.tech/vostok palette, the K3D mark on the splash screen, Tektur font from `fonts/`, OFL license). `styles/vostok` is assembled from the `material-dark` icons, the font goes to `~/.local/share/fonts`, the theme is enabled in `KlipperScreen.conf`.
+- The installer sets it up together with the Fluidd theme when `~/KlipperScreen` exists; skip with `--skip-theme`.
+- Options: `--ks-dir`, `--printer-data`, `--no-activate`, `--force`, `--uninstall`, `--dry-run`.
+
 ## 1.2c — 2026-10-10
 
 - Toolhead boards are now flashed "on the bench" by default: katapult and Klipper in one DFU session over USB, without 24 V or CAN. The method is chosen in the dialog or with `--heads-flash dfu|can`; "Klipper over CAN" is kept for an assembled printer (the installer warns about 24 V and CAN cables beforehand).

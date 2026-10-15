@@ -28,7 +28,7 @@ cd vostok_configuration/installer
 | [Требования и проверки](docs/requirements.md) | что проверяет скрипт перед установкой |
 | [Установка](docs/install.md) | запуск, этапы установщика, опции `install_vostok.sh` |
 | [Настройка конфига](docs/configure.md) | `configure_vostok.sh` отдельно от установки; полное описание: [CONFIGURATOR.md](CONFIGURATOR.md) |
-| [Тема Fluidd](docs/theme.md) | оформление Fluidd в стиле K3D VOSTOK |
+| [Тема Fluidd и KlipperScreen](docs/theme.md) | оформление Fluidd и сенсорного экрана в стиле K3D VOSTOK |
 | [Кнопка обновления](docs/update-button.md) | обновление Klipper и прошивок плат из Fluidd |
 | [Если прошивка не удалась](docs/troubleshooting.md) | повтор, DFU, CAN, ручная прошивка |
 | [Параметры сборки прошивок](docs/build-configs.md) | `configs/`, `devices.tsv` |

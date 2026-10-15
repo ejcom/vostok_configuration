@@ -26,6 +26,7 @@
 | `configure_vostok.sh` | настройка конфига отдельно от установки, см. [CONFIGURATOR.md](../CONFIGURATOR.md) |
 | `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `mcu-update.service.in` | обновление Klipper и прошивок, кнопка в Fluidd |
 | `install_fluidd_theme.sh`, `fluidd-theme/` | тема K3D VOSTOK для Fluidd: логотип, `custom.css`, пресет |
+| `install_klipperscreen_theme.sh`, `klipperscreen-theme/` | тема K3D VOSTOK для KlipperScreen: `style.css`, `style.conf`, знак K3D, шрифт Tektur |
 | `lib/vostok_config.sh` | общая библиотека настройки конфига (её подключают `install_vostok.sh` и `configure_vostok.sh`) |
 | `templates/` | шаблон конфига электроники без плат и драйверов (`electronics_blank.cfg`), пресеты плат (`boards/`) и драйверов (`drivers/`) |
 | `tools/` | `gen_electronics.py` (генерация конфига электроники), `mcu_merge.py` (дописывание `[mcu]`, `--set` для `canbus_uuid`), `can_uuid.py` (canbus_uuid по UID чипа), `pin_conflicts.py` (поиск повторяющихся пинов), `gen_configs.sh` (конфиги сборки прошивок) |

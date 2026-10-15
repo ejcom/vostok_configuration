@@ -28,7 +28,7 @@ The installer detects the boards, installs the software, flashes the boards, bui
 | [Requirements and checks](docs/requirements.en.md) | what the script checks before installing |
 | [Installation](docs/install.en.md) | launch, installer stages, `install_vostok.sh` options |
 | [Config setup](docs/configure.en.md) | `configure_vostok.sh` separately from the installation; full description: [CONFIGURATOR.en.md](CONFIGURATOR.en.md) |
-| [Fluidd theme](docs/theme.en.md) | Fluidd in the K3D VOSTOK style |
+| [Fluidd and KlipperScreen theme](docs/theme.en.md) | Fluidd and the touchscreen in the K3D VOSTOK style |
 | [Update button](docs/update-button.en.md) | updating Klipper and board firmware from Fluidd |
 | [If flashing failed](docs/troubleshooting.en.md) | retry, DFU, CAN, manual flashing |
 | [Firmware build settings](docs/build-configs.en.md) | `configs/`, `devices.tsv` |

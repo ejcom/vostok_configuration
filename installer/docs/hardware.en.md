@@ -26,6 +26,7 @@
 | `configure_vostok.sh` | printer config setup separate from the installation, see [CONFIGURATOR.en.md](../CONFIGURATOR.en.md) |
 | `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `mcu-update.service.in` | Klipper and firmware update, the Fluidd button |
 | `install_fluidd_theme.sh`, `fluidd-theme/` | K3D VOSTOK theme for Fluidd: logo, `custom.css`, preset |
+| `install_klipperscreen_theme.sh`, `klipperscreen-theme/` | K3D VOSTOK theme for KlipperScreen: `style.css`, `style.conf`, K3D mark, Tektur font |
 | `lib/vostok_config.sh` | shared config-setup library (sourced by `install_vostok.sh` and `configure_vostok.sh`) |
 | `templates/` | blank electronics config without boards and drivers (`electronics_blank.cfg`), board presets (`boards/`) and driver presets (`drivers/`) |
 | `tools/` | `gen_electronics.py` (electronics config generator), `mcu_merge.py` (adds `[mcu]` sections, `--set` for `canbus_uuid`), `can_uuid.py` (canbus_uuid from the chip UID), `pin_conflicts.py` (finds duplicated pins), `gen_configs.sh` (firmware build configs) |

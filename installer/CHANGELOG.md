@@ -4,6 +4,12 @@
 
 Текущая версия записана в файле `VERSION` (`-V`/`--version` у всех скриптов). Описание: [README.md](README.md).
 
+## 1.2d — 2026-10-12
+
+- Тема K3D VOSTOK для KlipperScreen: `install_klipperscreen_theme.sh` и `klipperscreen-theme/` (палитра k3d.tech/vostok, знак K3D на заставке, шрифт Tektur из каталога `fonts/`, лицензия OFL). Каталог `styles/vostok` собирается из иконок `material-dark`, шрифт ставится в `~/.local/share/fonts`, тема включается в `KlipperScreen.conf`.
+- Установщик ставит её вместе с темой Fluidd, если `~/KlipperScreen` есть; пропуск: `--skip-theme`.
+- Опции: `--ks-dir`, `--printer-data`, `--no-activate`, `--force`, `--uninstall`, `--dry-run`.
+
 ## 1.2c — 2026-10-10
 
 - Платы голов по умолчанию прошиваются «на столе»: katapult и Klipper за один сеанс DFU по USB, без 24 В и CAN. Способ выбирается в диалоге или `--heads-flash dfu|can`; вариант «Klipper по CAN» оставлен для собранного принтера (установщик заранее предупреждает про 24 В и CAN-кабели).

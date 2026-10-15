@@ -17,7 +17,8 @@
 #   6. скачивает vostok_configuration и вписывает найденные MCU в printer.cfg
 #      (существующий конфиг VOSTOK: меняются только электроника, [mcu] и include; пустой или чужой printer.cfg считается чистой установкой);
 #   7. ставит кнопку обновления в Fluidd (install_fluidd_button.sh);
-#   8. ставит тему K3D VOSTOK в Fluidd (install_fluidd_theme.sh).
+#   8. ставит тему K3D VOSTOK в Fluidd (install_fluidd_theme.sh) и, если есть KlipperScreen,
+#      в него (install_klipperscreen_theme.sh).
 #
 # Запускать от обычного пользователя в терминале (sudo спросит пароль один раз).
 # Подробности: README.md, ./install_vostok.sh --help
@@ -123,7 +124,7 @@ usage() {
   --skip-flash          не прошивать MCU
   --skip-config         не трогать конфиг принтера
   --skip-button         не ставить кнопку обновления в Fluidd
-  --skip-theme          не ставить тему K3D VOSTOK в Fluidd
+  --skip-theme          не ставить тему K3D VOSTOK в Fluidd и KlipperScreen
   --skip-board ПЛАТА    не прошивать плату, уже прошитую раньше: alps, alps0, alps1, main или heads
                         (можно повторять). Без этой опции установщик сам предложит пропустить платы,
                         на которых уже стоит Klipper текущей версии
@@ -1524,9 +1525,18 @@ stage_button() {
 
 stage_theme() {
     step "Тема K3D VOSTOK в Fluidd"
-    if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] $INSTALL_DIR/install_fluidd_theme.sh -y"; return 0; fi
+    if [[ $DRY_RUN -eq 1 ]]; then
+        info "[dry-run] $INSTALL_DIR/install_fluidd_theme.sh -y"
+        [[ -d $HOME/KlipperScreen/styles ]] && info "[dry-run] $INSTALL_DIR/install_klipperscreen_theme.sh -y"
+        return 0
+    fi
     "$INSTALL_DIR/install_fluidd_theme.sh" -y \
         || { warn "тему установить не удалось; позже: $INSTALL_DIR/install_fluidd_theme.sh"; FINISH_RC=1; }
+    if [[ -d $HOME/KlipperScreen/styles ]]; then
+        step "Тема K3D VOSTOK в KlipperScreen"
+        "$INSTALL_DIR/install_klipperscreen_theme.sh" -y \
+            || { warn "тему KlipperScreen установить не удалось; позже: $INSTALL_DIR/install_klipperscreen_theme.sh"; FINISH_RC=1; }
+    fi
 }
 
 print_summary() {

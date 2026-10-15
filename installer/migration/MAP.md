@@ -8,9 +8,9 @@
 |---|---|---|---|
 | `usage` | 104 |  | todo |
 | `parse_args` | 153 |  | todo |
-| `pause_hw` | 198 |  | todo |
-| `run` | 211 |  | todo |
-| `start_sudo` | 215 |  | todo |
+| `pause_hw` | 198 | ui.pause_hw (ответ возвращается строкой, TMP_ANS не нужен) | done |
+| `run` | 211 | system.Runner.run | done |
+| `start_sudo` | 215 | system.Runner.sudo_keepalive | done |
 | `cleanup` | 224 |  | todo |
 | `stage_preflight` | 236 |  | todo |
 | `env_item` | 264 |  | todo |
@@ -88,14 +88,14 @@
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `log_to_file` | 80 |  | todo |
-| `info` | 84 |  | todo |
-| `ok` | 85 |  | todo |
-| `warn` | 86 |  | todo |
-| `die` | 87 |  | todo |
-| `step` | 88 |  | todo |
+| `log_to_file` | 80 | ui.log | done |
+| `info` | 84 | ui.info | done |
+| `ok` | 85 | ui.ok | done |
+| `warn` | 86 | ui.warn | done |
+| `die` | 87 | ui.die (VostokError; печать в cli.main) | done |
+| `step` | 88 | ui.step | done |
 | `usage` | 90 |  | todo |
-| `confirm` | 114 |  | todo |
+| `confirm` | 114 | ui.confirm | done |
 | `mr_get` | 146 |  | todo |
 | `json_get` | 149 |  | todo |
 | `check_moonraker` | 158 |  | todo |
@@ -106,14 +106,14 @@
 | `cfg_mcus` | 234 |  | todo |
 | `cfg_mcu_versions` | 250 |  | todo |
 | `add_mcu` | 269 |  | todo |
-| `devices_lookup` | 297 |  | todo |
+| `devices_lookup` | 297 | state.DevicesFile.lookup | done |
 | `can_iface_up` | 302 |  | todo |
 | `add_can_mcu` | 304 |  | todo |
 | `discover_mcus` | 327 |  | todo |
 | `host_version` | 374 |  | todo |
 | `norm_version` | 376 |  | todo |
-| `state_get` | 378 |  | todo |
-| `state_set` | 379 |  | todo |
+| `state_get` | 378 | state.FlashedLog.get | done |
+| `state_set` | 379 | state.FlashedLog.set | done |
 | `print_mcus` | 387 |  | todo |
 | `pending_commits` | 421 |  | todo |
 | `post_update_checks` | 427 |  | todo |
@@ -121,8 +121,8 @@
 | `update_host` | 473 |  | todo |
 | `build_firmware` | 493 |  | todo |
 | `klipper_units` | 518 |  | todo |
-| `sctl` | 524 |  | todo |
-| `can_manage_services` | 530 |  | todo |
+| `sctl` | 524 | system.Runner.systemctl | done |
+| `can_manage_services` | 530 | system.can_manage_services | done |
 | `services` | 535 |  | todo |
 | `wait_for_device` | 547 |  | todo |
 | `flash_can` | 559 |  | todo |
@@ -135,10 +135,10 @@
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `have_tty` | 28 |  | todo |
-| `need_tty` | 29 |  | todo |
-| `ask_yn` | 32 |  | todo |
-| `ask_choice` | 43 |  | todo |
+| `have_tty` | 28 | ui.have_tty | done |
+| `need_tty` | 29 | ui.need_tty | done |
+| `ask_yn` | 32 | ui.ask_yn | done |
+| `ask_choice` | 43 | ui.ask_choice | done |
 | `prev_keys` | 64 |  | todo |
 | `byid_find` | 71 |  | todo |
 | `dfu_count` | 77 |  | todo |
@@ -146,7 +146,7 @@
 | `family_name` | 92 |  | todo |
 | `uid_addr` | 104 |  | todo |
 | `dfu_read_uid` | 112 |  | todo |
-| `can_uuid_from_serial` | 126 |  | todo |
+| `can_uuid_from_serial` | 126 | can_uuid.can_uuid(bytes.fromhex(serial)) | done |
 | `bridge_usb_serial` | 131 |  | todo |
 | `show_usb_state` | 140 |  | todo |
 | `mb` | 158 |  | todo |
@@ -178,42 +178,42 @@
 | `stock_electronics` | 425 |  | todo |
 | `elec_named_board` | 437 |  | todo |
 | `el_for_board` | 449 |  | todo |
-| `cfg_state` | 472 |  | todo |
+| `cfg_state` | 472 | cfgfile.cfg_state | done |
 | `find_reference` | 479 |  | todo |
 | `gen_custom_electronics` | 508 |  | todo |
 | `print_gen_warnings` | 554 |  | todo |
-| `merge_mcus_into_cfg` | 577 |  | todo |
+| `merge_mcus_into_cfg` | 577 | cfgfile.merge_mcus (логика и .bak; сообщения info/ok/warn по Result - у вызывающего, A4) | done |
 | `el_matches` | 608 |  | todo |
 | `pick_electronics` | 618 |  | todo |
 | `sync_head_names` | 694 |  | todo |
 | `mcu_blocks` | 708 |  | todo |
 | `local_cfg_root` | 725 |  | todo |
 | `stage_config` | 736 |  | todo |
-| `report_pin_conflicts` | 884 |  | todo |
-| `module_state` | 894 |  | todo |
+| `report_pin_conflicts` | 884 | cfgfile.pin_conflicts (вывод предупреждения - у вызывающего, A4) | done |
+| `module_state` | 894 | cfgfile.module_state | done |
 | `module_wanted` | 901 |  | todo |
-| `module_add_include` | 915 |  | todo |
+| `module_add_include` | 915 | cfgfile.module_add_include | done |
 | `stage_modules` | 929 |  | todo |
 
 ## lib/boards.sh
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `_board_err` | 30 |  | todo |
-| `_board_file` | 32 |  | todo |
-| `_board_parse` | 39 |  | todo |
-| `_board_parse_file` | 52 |  | todo |
-| `boards_preload` | 87 |  | todo |
-| `board_load` | 96 |  | todo |
-| `board_field` | 104 |  | todo |
-| `boards_list` | 109 |  | todo |
-| `board_resolve` | 119 |  | todo |
-| `_boards_by` | 131 |  | todo |
-| `boards_for_chip` | 138 |  | todo |
-| `boards_for_family` | 139 |  | todo |
-| `board_has_bridge` | 141 |  | todo |
-| `board_cfg` | 146 |  | todo |
-| `board_by_cfg` | 159 |  | todo |
+| `_board_err` | 30 | boards.BoardError (текст `boards: …`) | done |
+| `_board_file` | 32 | boards.Registry.get (путь <boards_dir>/<id>.board) | done |
+| `_board_parse` | 39 | boards.Registry.get (кэш в Registry) | done |
+| `_board_parse_file` | 52 | boards.parse_board_file | done |
+| `boards_preload` | 87 |  | dropped(ленивый кэш Registry, предзагрузка не нужна) |
+| `board_load` | 96 | boards.Registry.get -> Board | done |
+| `board_field` | 104 | boards.Board.field | done |
+| `boards_list` | 109 | boards.Registry.list / ids | done |
+| `board_resolve` | 119 | boards.Registry.resolve | done |
+| `_boards_by` | 131 | boards.Registry._by | done |
+| `boards_for_chip` | 138 | boards.Registry.for_chip | done |
+| `boards_for_family` | 139 | boards.Registry.for_family | done |
+| `board_has_bridge` | 141 | boards.Registry.has_bridge | done |
+| `board_cfg` | 146 | boards.Registry.cfg_path | done |
+| `board_by_cfg` | 159 | boards.Registry.by_cfg | done |
 
 ## configure_vostok.sh
 
@@ -230,29 +230,29 @@
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `info` | 42 |  | todo |
-| `ok` | 43 |  | todo |
-| `warn` | 44 |  | todo |
-| `die` | 45 |  | todo |
-| `step` | 46 |  | todo |
+| `info` | 42 | ui.info | done |
+| `ok` | 43 | ui.ok | done |
+| `warn` | 44 | ui.warn | done |
+| `die` | 45 | ui.die (VostokError; печать в cli.main) | done |
+| `step` | 46 | ui.step | done |
 | `usage` | 48 |  | todo |
-| `confirm` | 67 |  | todo |
-| `run` | 76 |  | todo |
+| `confirm` | 67 | ui.confirm | done |
+| `run` | 76 | system.Runner.run | done |
 | `render_unit` | 102 |  | todo |
-| `can_manage_services` | 114 |  | todo |
+| `can_manage_services` | 114 | system.can_manage_services(allow_sudo=False) | done |
 | `restart_moonraker` | 118 |  | todo |
 
 ## install_fluidd_theme.sh
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `info` | 37 |  | todo |
-| `ok` | 38 |  | todo |
-| `warn` | 39 |  | todo |
-| `die` | 40 |  | todo |
-| `step` | 41 |  | todo |
+| `info` | 37 | ui.info | done |
+| `ok` | 38 | ui.ok | done |
+| `warn` | 39 | ui.warn | done |
+| `die` | 40 | ui.die (VostokError; печать в cli.main) | done |
+| `step` | 41 | ui.step | done |
 | `usage` | 43 |  | todo |
-| `confirm` | 64 |  | todo |
+| `confirm` | 64 | ui.confirm(need=False) | done |
 | `py` | 100 |  | todo |
 | `db_get_theme` | 103 |  | todo |
 | `db_theme_logo` | 111 |  | todo |
@@ -264,13 +264,13 @@
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `info` | 39 |  | todo |
-| `ok` | 40 |  | todo |
-| `warn` | 41 |  | todo |
-| `die` | 42 |  | todo |
-| `step` | 43 |  | todo |
+| `info` | 39 | ui.info | done |
+| `ok` | 40 | ui.ok | done |
+| `warn` | 41 | ui.warn | done |
+| `die` | 42 | ui.die (VostokError; печать в cli.main) | done |
+| `step` | 43 | ui.step | done |
 | `usage` | 45 |  | todo |
-| `confirm` | 63 |  | todo |
+| `confirm` | 63 | ui.confirm(need=False) | done |
 | `py` | 95 |  | todo |
 | `is_ours` | 98 |  | todo |
 | `edit_ks_conf` | 103 |  | todo |
@@ -294,16 +294,16 @@
 | файл | куда | статус |
 |---|---|---|
 | `tools/gen_electronics.py` | `vostok/electronics.py` (A4) | todo |
-| `tools/mcu_merge.py` | `vostok/cfgfile.py` (A1) | todo |
-| `tools/pin_conflicts.py` | `vostok/cfgfile.py` (A1) | todo |
-| `tools/can_uuid.py` | `vostok/electronics.py`/`hardware.py` (A1) | todo |
+| `tools/mcu_merge.py` | `vostok/cfgfile.py` (A1): list_mcus, merge_mcus, set_canbus_uuid | done (старый файл пока не тронут) |
+| `tools/pin_conflicts.py` | `vostok/cfgfile.py` (A1): pin_conflicts | done (старый файл пока не тронут) |
+| `tools/can_uuid.py` | `vostok/can_uuid.py` (A1, отдельный модуль, не electronics/hardware) | done (старый файл пока не тронут) |
 
 ## Встроенный Python в bash (heredoc / py -c)
 
 | где | куда | статус |
 |---|---|---|
 | `install_vostok.sh` kiauh_set_fork_repo | `host.py` (A5) | todo |
-| `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` (A1) | todo |
+| `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1) | done (heredoc в bash пока на месте) |
 | `update_klipper_mcu.sh` json_get/cfg_mcus/cfg_mcu_versions | `update.py` (A2) | todo |
 | `install_fluidd_theme.sh` py -c (db_get_theme, edit_fluidd_cfg, preset_json) | `integrations.py` (A3) | todo |
 | `install_klipperscreen_theme.sh` edit_ks_conf/current_theme | `integrations.py` (A3) | todo |

@@ -1,0 +1,312 @@
+@@@@ CASE help/configure_vostok
+$ configure_vostok.sh --help
+# rc=0
+Использование: configure_vostok.sh [опции]
+
+Настройка конфига принтера без установки и прошивки.
+
+  --main ПЛАТА          главная плата: id или алиас из реестра, список: install_vostok.sh --list-boards
+                        (h723, f446 и др.; иначе определит по printer.cfg/железу или спросит)
+  --heads none|v1.3|v2|ebb42  платы голов по CAN (иначе определит по printer.cfg или спросит)
+  --alps 0|1|2          число датчиков ALPS (иначе определит или спросит)
+  --config-source standard|user|generate|skip  источник конфига электроники: корень main, user_configs,
+                        сгенерировать свой (шаблон без плат и драйверов) или пропустить редактирование
+                        (только дописать недостающие [mcu] в существующий printer.cfg); иначе спросит
+  --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (для standard/user)
+  --drivers СПЕК        драйверы для generate: all=2130|2208|2209|2240|5160|5160plus или список по моторам
+                        x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209 (иначе спросит; с -y как в стоке)
+  --reference ФАЙЛ|none эталон для пинов и параметров. По умолчанию ваш текущий electronics-файл
+                        (активный include в printer.cfg), при чистой установке стоковый main (H723).
+                        none - не использовать эталон
+  --modules ИМЕНА       дополнительные модули без вопроса: chamber_heater, all или none (через запятую)
+  --printer-data DIR    каталог printer_data (по умолчанию ~/printer_data)
+  --dry-run             показать, что будет сделано, ничего не менять
+  -y, --yes             не задавать вопросов, где есть ответ по умолчанию
+  -V, --version         показать версию установщика
+  -h, --help            эта справка
+
+Переменные окружения: PRINTER_DATA, VOSTOK_CFG_LOCAL (0 - всегда скачивать конфигурацию, ПУТЬ - свой каталог).
+$ configure_vostok.sh -V
+# rc=0
+VOSTOK installer 1.3a
+$ configure_vostok.sh --no-such-option
+# rc=1
+Использование: configure_vostok.sh [опции]
+
+Настройка конфига принтера без установки и прошивки.
+
+  --main ПЛАТА          главная плата: id или алиас из реестра, список: install_vostok.sh --list-boards
+                        (h723, f446 и др.; иначе определит по printer.cfg/железу или спросит)
+  --heads none|v1.3|v2|ebb42  платы голов по CAN (иначе определит по printer.cfg или спросит)
+  --alps 0|1|2          число датчиков ALPS (иначе определит или спросит)
+  --config-source standard|user|generate|skip  источник конфига электроники: корень main, user_configs,
+                        сгенерировать свой (шаблон без плат и драйверов) или пропустить редактирование
+                        (только дописать недостающие [mcu] в существующий printer.cfg); иначе спросит
+  --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (для standard/user)
+  --drivers СПЕК        драйверы для generate: all=2130|2208|2209|2240|5160|5160plus или список по моторам
+                        x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209 (иначе спросит; с -y как в стоке)
+  --reference ФАЙЛ|none эталон для пинов и параметров. По умолчанию ваш текущий electronics-файл
+                        (активный include в printer.cfg), при чистой установке стоковый main (H723).
+                        none - не использовать эталон
+  --modules ИМЕНА       дополнительные модули без вопроса: chamber_heater, all или none (через запятую)
+  --printer-data DIR    каталог printer_data (по умолчанию ~/printer_data)
+  --dry-run             показать, что будет сделано, ничего не менять
+  -y, --yes             не задавать вопросов, где есть ответ по умолчанию
+  -V, --version         показать версию установщика
+  -h, --help            эта справка
+
+Переменные окружения: PRINTER_DATA, VOSTOK_CFG_LOCAL (0 - всегда скачивать конфигурацию, ПУТЬ - свой каталог).
+ОШИБКА: неизвестная опция: --no-such-option
+@@@@ CASE help/install_fluidd_button
+$ install_fluidd_button.sh --help
+# rc=0
+Использование: install_fluidd_button.sh [опции]
+
+  --printer-data DIR  каталог printer_data (по умолчанию ~/printer_data)
+  --flash-args "..."  аргументы update_klipper_mcu.sh для кнопки (по умолчанию пусто:
+                      обновить ветку klipper через git и прошить MCU; например
+                      "--no-update --force-flash" = только перепрошить все MCU)
+  --with-macro        создать mcu_update.cfg с макросом MCU_UPDATE
+  --uninstall         удалить сервис, строку в moonraker.asvc и sudoers-файл
+  --dry-run           ничего не менять, показать unit и план действий
+  -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
+  -h, --help          эта справка
+
+Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, MOONRAKER_URL.
+$ install_fluidd_button.sh -V
+# rc=0
+VOSTOK installer 1.3a
+$ install_fluidd_button.sh --no-such-option
+# rc=1
+Использование: install_fluidd_button.sh [опции]
+
+  --printer-data DIR  каталог printer_data (по умолчанию ~/printer_data)
+  --flash-args "..."  аргументы update_klipper_mcu.sh для кнопки (по умолчанию пусто:
+                      обновить ветку klipper через git и прошить MCU; например
+                      "--no-update --force-flash" = только перепрошить все MCU)
+  --with-macro        создать mcu_update.cfg с макросом MCU_UPDATE
+  --uninstall         удалить сервис, строку в moonraker.asvc и sudoers-файл
+  --dry-run           ничего не менять, показать unit и план действий
+  -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
+  -h, --help          эта справка
+
+Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, MOONRAKER_URL.
+ОШИБКА: неизвестная опция: --no-such-option
+@@@@ CASE help/install_fluidd_theme
+$ install_fluidd_theme.sh --help
+# rc=0
+Использование: install_fluidd_theme.sh [опции]
+
+  --printer-data DIR  каталог printer_data (по умолчанию ~/printer_data)
+  --fluidd-dir DIR    каталог Fluidd (по умолчанию ~/fluidd)
+  --no-activate       только добавить пресет и файлы, тему не включать
+  --logo-copy         положить логотип ещё и в каталог Fluidd и брать его оттуда (нужно, если
+                      Moonraker требует авторизацию и логотип из config не грузится;
+                      после обновления Fluidd запустите скрипт снова)
+  --force             перезаписать изменённый custom.css и сменить уже выбранную другую тему
+  --uninstall         удалить пресет и файлы темы, вернуть тему Fluidd по умолчанию
+  --dry-run           ничего не менять, только показать план
+  -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
+  -h, --help          эта справка
+
+Переменные окружения: PRINTER_DATA, FLUIDD_DIR, MOONRAKER_URL.
+$ install_fluidd_theme.sh -V
+# rc=0
+VOSTOK installer 1.3a
+$ install_fluidd_theme.sh --no-such-option
+# rc=1
+Использование: install_fluidd_theme.sh [опции]
+
+  --printer-data DIR  каталог printer_data (по умолчанию ~/printer_data)
+  --fluidd-dir DIR    каталог Fluidd (по умолчанию ~/fluidd)
+  --no-activate       только добавить пресет и файлы, тему не включать
+  --logo-copy         положить логотип ещё и в каталог Fluidd и брать его оттуда (нужно, если
+                      Moonraker требует авторизацию и логотип из config не грузится;
+                      после обновления Fluidd запустите скрипт снова)
+  --force             перезаписать изменённый custom.css и сменить уже выбранную другую тему
+  --uninstall         удалить пресет и файлы темы, вернуть тему Fluidd по умолчанию
+  --dry-run           ничего не менять, только показать план
+  -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
+  -h, --help          эта справка
+
+Переменные окружения: PRINTER_DATA, FLUIDD_DIR, MOONRAKER_URL.
+ОШИБКА: неизвестная опция: --no-such-option
+@@@@ CASE help/install_klipperscreen_theme
+$ install_klipperscreen_theme.sh --help
+# rc=0
+Использование: install_klipperscreen_theme.sh [опции]
+
+  --ks-dir DIR        каталог KlipperScreen (по умолчанию ~/KlipperScreen)
+  --printer-data DIR  каталог printer_data (по умолчанию ~/printer_data)
+  --no-activate       только установить тему и шрифт, в KlipperScreen.conf не писать
+  --force             перезаписать чужой каталог styles/vostok и сменить уже выбранную другую тему
+  --uninstall         удалить тему и шрифт, вернуть тему material-dark
+  --dry-run           ничего не менять, только показать план
+  -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
+  -h, --help          эта справка
+
+Переменные окружения: PRINTER_DATA, KS_DIR, FONT_DIR.
+$ install_klipperscreen_theme.sh -V
+# rc=0
+VOSTOK installer 1.3a
+$ install_klipperscreen_theme.sh --no-such-option
+# rc=1
+Использование: install_klipperscreen_theme.sh [опции]
+
+  --ks-dir DIR        каталог KlipperScreen (по умолчанию ~/KlipperScreen)
+  --printer-data DIR  каталог printer_data (по умолчанию ~/printer_data)
+  --no-activate       только установить тему и шрифт, в KlipperScreen.conf не писать
+  --force             перезаписать чужой каталог styles/vostok и сменить уже выбранную другую тему
+  --uninstall         удалить тему и шрифт, вернуть тему material-dark
+  --dry-run           ничего не менять, только показать план
+  -y, --yes           не задавать вопросов
+  -V, --version       показать версию установщика
+  -h, --help          эта справка
+
+Переменные окружения: PRINTER_DATA, KS_DIR, FONT_DIR.
+ОШИБКА: неизвестная опция: --no-such-option
+@@@@ CASE help/install_vostok
+$ install_vostok.sh --help
+# rc=0
+Использование: install_vostok.sh [опции]
+
+  --main ПЛАТА          главная плата: id из реестра boards/ или алиас (h723, f446 - Octopus Pro; список: --list-boards),
+                        иначе определит по подключённому железу/спросит
+  --list-boards         показать платы реестра (id, чип, наличие моста USB-CAN, проверена ли на железе) и выйти
+  --heads none|v1.3|v2|ebb42  платы голов по CAN: нет, Fysetc H36 v1.3/v2, BTT EBB42 (иначе спросит);
+                        с платами голов главная плата прошивается мостом USB-CAN. --h36 - то же, прежнее имя
+  --alps 0|1|2          сколько датчиков ALPS подключено по USB (иначе определит/спросит)
+  --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (иначе предложит по железу)
+  --config-source standard|user|generate|skip  откуда брать конфиг: корень main, user_configs, сгенерировать свой
+                        (шаблон без плат и драйверов) или пропустить редактирование (только дописать
+                        недостающие [mcu] в существующий printer.cfg); иначе спросит
+  --drivers СПЕК        драйверы для --config-source generate: all=2130|2208|2209|2240|5160|5160plus или список по моторам
+                        x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209 (e0/e1 при платах голов не нужны);
+                        без опции спросит в диалоге, с -y возьмёт драйверы стокового конфига
+  --only-detect         только определить подключённые MCU и показать план, ничего не менять
+  --dry-run             показать все шаги и команды, ничего не менять
+  --reference ФАЙЛ|none эталон пинов и параметров для сгенерированного конфига: по умолчанию ваш текущий
+                        electronics-файл, при чистой установке стоковый main (H723); none - без эталона
+  --modules ИМЕНА       дополнительные модули без вопроса: chamber_heater, all или none
+  --skip-software       не ставить пакеты/KIAUH/Klipper/Moonraker/Fluidd (уже стоят)
+  --skip-flash          не прошивать MCU
+  --skip-config         не трогать конфиг принтера
+  --skip-button         не ставить кнопку обновления в Fluidd
+  --skip-theme          не ставить тему K3D VOSTOK в Fluidd и KlipperScreen
+  --skip-board ПЛАТА    не прошивать плату, уже прошитую раньше: alps, alps0, alps1, main или heads
+                        (можно повторять). Без этой опции установщик сам предложит пропустить платы,
+                        на которых уже стоит Klipper текущей версии
+  --reflash             не предлагать пропуск, прошить все платы заново
+  --main-flash dfu|katapult  способ прошивки главной платы: katapult и Klipper сразу по DFU (рекомендуется,
+                        по умолчанию с -y) или katapult по DFU, затем Klipper через katapult (иначе спросит)
+  --heads-flash dfu|can способ прошивки плат голов: dfu - "на столе", katapult и Klipper сразу по DFU через USB,
+                        24 В и CAN не нужны (по умолчанию, в том числе с -y); can - katapult по DFU, Klipper по CAN
+                        (для собранного принтера, нужны 24 В и CAN-кабели). Иначе спросит
+  --check-can           только прочитать canbus_uuid плат с шины CAN (нужны 24 В и CAN-кабели) и вписать
+                        в devices.tsv и printer.cfg вместо вычисленных/ЗАПОЛНИТЕ; ничего не прошивает
+  --upgrade             выполнить apt upgrade перед установкой
+  -y, --yes             не задавать вопросов, где есть ответ по умолчанию (шаги с железом всё равно ждут Enter)
+  -V, --version         показать версию установщика
+  -h, --help            эта справка
+
+Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, KIAUH_DIR, CAN_IFACE (can0).
+$ install_vostok.sh -V
+# rc=0
+VOSTOK installer 1.3a
+$ install_vostok.sh --no-such-option
+# rc=1
+Использование: install_vostok.sh [опции]
+
+  --main ПЛАТА          главная плата: id из реестра boards/ или алиас (h723, f446 - Octopus Pro; список: --list-boards),
+                        иначе определит по подключённому железу/спросит
+  --list-boards         показать платы реестра (id, чип, наличие моста USB-CAN, проверена ли на железе) и выйти
+  --heads none|v1.3|v2|ebb42  платы голов по CAN: нет, Fysetc H36 v1.3/v2, BTT EBB42 (иначе спросит);
+                        с платами голов главная плата прошивается мостом USB-CAN. --h36 - то же, прежнее имя
+  --alps 0|1|2          сколько датчиков ALPS подключено по USB (иначе определит/спросит)
+  --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (иначе предложит по железу)
+  --config-source standard|user|generate|skip  откуда брать конфиг: корень main, user_configs, сгенерировать свой
+                        (шаблон без плат и драйверов) или пропустить редактирование (только дописать
+                        недостающие [mcu] в существующий printer.cfg); иначе спросит
+  --drivers СПЕК        драйверы для --config-source generate: all=2130|2208|2209|2240|5160|5160plus или список по моторам
+                        x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209 (e0/e1 при платах голов не нужны);
+                        без опции спросит в диалоге, с -y возьмёт драйверы стокового конфига
+  --only-detect         только определить подключённые MCU и показать план, ничего не менять
+  --dry-run             показать все шаги и команды, ничего не менять
+  --reference ФАЙЛ|none эталон пинов и параметров для сгенерированного конфига: по умолчанию ваш текущий
+                        electronics-файл, при чистой установке стоковый main (H723); none - без эталона
+  --modules ИМЕНА       дополнительные модули без вопроса: chamber_heater, all или none
+  --skip-software       не ставить пакеты/KIAUH/Klipper/Moonraker/Fluidd (уже стоят)
+  --skip-flash          не прошивать MCU
+  --skip-config         не трогать конфиг принтера
+  --skip-button         не ставить кнопку обновления в Fluidd
+  --skip-theme          не ставить тему K3D VOSTOK в Fluidd и KlipperScreen
+  --skip-board ПЛАТА    не прошивать плату, уже прошитую раньше: alps, alps0, alps1, main или heads
+                        (можно повторять). Без этой опции установщик сам предложит пропустить платы,
+                        на которых уже стоит Klipper текущей версии
+  --reflash             не предлагать пропуск, прошить все платы заново
+  --main-flash dfu|katapult  способ прошивки главной платы: katapult и Klipper сразу по DFU (рекомендуется,
+                        по умолчанию с -y) или katapult по DFU, затем Klipper через katapult (иначе спросит)
+  --heads-flash dfu|can способ прошивки плат голов: dfu - "на столе", katapult и Klipper сразу по DFU через USB,
+                        24 В и CAN не нужны (по умолчанию, в том числе с -y); can - katapult по DFU, Klipper по CAN
+                        (для собранного принтера, нужны 24 В и CAN-кабели). Иначе спросит
+  --check-can           только прочитать canbus_uuid плат с шины CAN (нужны 24 В и CAN-кабели) и вписать
+                        в devices.tsv и printer.cfg вместо вычисленных/ЗАПОЛНИТЕ; ничего не прошивает
+  --upgrade             выполнить apt upgrade перед установкой
+  -y, --yes             не задавать вопросов, где есть ответ по умолчанию (шаги с железом всё равно ждут Enter)
+  -V, --version         показать версию установщика
+  -h, --help            эта справка
+
+Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, KIAUH_DIR, CAN_IFACE (can0).
+ОШИБКА: неизвестная опция: --no-such-option
+@@@@ CASE help/update_klipper_mcu
+$ update_klipper_mcu.sh --help
+# rc=0
+Использование: update_klipper_mcu.sh [опции]
+
+  --list              показать найденные MCU, конфиги сборки и версии, ничего не менять
+  --no-update         не обновлять хост (KIAUH), только собрать и прошить MCU
+  --no-flash          обновить только хост, прошивки MCU не трогать
+  --force-flash       прошить все MCU, даже если версии уже совпадают с хостом
+  --git-update        обновить хост без KIAUH (git fast-forward + pip, без sudo);
+                      включается сам, если нет терминала (кнопка в Fluidd)
+  -V, --version       показать версию установщика
+  --ignore-moonraker  продолжить, если Moonraker недоступен (статус печати и
+                      секции [mcu*] из printer.cfg не проверяются)
+  -y, --yes           не задавать вопросов
+  -h, --help          эта справка
+
+Переменные окружения (значения по умолчанию в скобках):
+  KLIPPER_DIR ($HOME/klipper)  KATAPULT_DIR ($HOME/katapult)  KIAUH_DIR ($HOME/kiauh)
+  KLIPPY_ENV ($HOME/klippy-env)  PRINTER_DATA ($HOME/printer_data)
+  MOONRAKER_URL (http://localhost:7125)  CONFIGS_DIR ($скрипт/configs)
+  BOARDS_DIR ($скрипт/boards)  DEVICES_FILE ($скрипт/devices.tsv)  BYID_DIR (/dev/serial/by-id)
+$ update_klipper_mcu.sh -V
+# rc=0
+VOSTOK installer 1.3a
+$ update_klipper_mcu.sh --no-such-option
+# rc=1
+Использование: update_klipper_mcu.sh [опции]
+
+  --list              показать найденные MCU, конфиги сборки и версии, ничего не менять
+  --no-update         не обновлять хост (KIAUH), только собрать и прошить MCU
+  --no-flash          обновить только хост, прошивки MCU не трогать
+  --force-flash       прошить все MCU, даже если версии уже совпадают с хостом
+  --git-update        обновить хост без KIAUH (git fast-forward + pip, без sudo);
+                      включается сам, если нет терминала (кнопка в Fluidd)
+  -V, --version       показать версию установщика
+  --ignore-moonraker  продолжить, если Moonraker недоступен (статус печати и
+                      секции [mcu*] из printer.cfg не проверяются)
+  -y, --yes           не задавать вопросов
+  -h, --help          эта справка
+
+Переменные окружения (значения по умолчанию в скобках):
+  KLIPPER_DIR ($HOME/klipper)  KATAPULT_DIR ($HOME/katapult)  KIAUH_DIR ($HOME/kiauh)
+  KLIPPY_ENV ($HOME/klippy-env)  PRINTER_DATA ($HOME/printer_data)
+  MOONRAKER_URL (http://localhost:7125)  CONFIGS_DIR ($скрипт/configs)
+  BOARDS_DIR ($скрипт/boards)  DEVICES_FILE ($скрипт/devices.tsv)  BYID_DIR (/dev/serial/by-id)
+ОШИБКА: неизвестная опция: --no-such-option

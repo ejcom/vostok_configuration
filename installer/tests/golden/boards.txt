@@ -1,0 +1,82 @@
+@@@@ CASE boards/bad_args
+$ install_vostok.sh --main bogus --only-detect
+# rc=1
+ОШИБКА: --main: неизвестная плата 'bogus'. Доступные: fly-c8 (flyc8, fly-c6, flyc6), manta-m8p-v1.0 (m8p-v1.0), manta-m8p-v1.1 (m8p-v1.1), manta-m8p-v2.0 (m8p-v2.0), octopus-pro-f429 (f429), octopus-pro-f446 (f446), octopus-pro-h723 (h723), spider-v2-f446 (spider-v2, spider-v2.x), spider-v3-f446 (spider-f446), spider-v3-h723 (spider-h723). Список с описанием: install_vostok.sh --list-boards
+$ install_vostok.sh --heads bogus --only-detect
+# rc=1
+ОШИБКА: --heads: none, v1.3, v2 или ebb42
+$ install_vostok.sh --heads
+# rc=1
+ОШИБКА: --heads требует аргумент
+$ install_vostok.sh --alps 7 --only-detect
+# rc=1
+ОШИБКА: --alps: 0, 1 или 2
+$ install_vostok.sh --config-source bogus --only-detect
+# rc=1
+ОШИБКА: --config-source: standard, user, generate или skip
+$ install_vostok.sh --main-flash bogus --only-detect
+# rc=1
+ОШИБКА: --main-flash: dfu или katapult
+$ install_vostok.sh --skip-board bogus --only-detect
+# rc=1
+ОШИБКА: --skip-board: alps, alps0, alps1, main или heads
+$ configure_vostok.sh --main bogus
+# rc=1
+ОШИБКА: --main: неизвестная плата 'bogus'. Доступные: fly-c8 (flyc8, fly-c6, flyc6), manta-m8p-v1.0 (m8p-v1.0), manta-m8p-v1.1 (m8p-v1.1), manta-m8p-v2.0 (m8p-v2.0), octopus-pro-f429 (f429), octopus-pro-f446 (f446), octopus-pro-h723 (h723), spider-v2-f446 (spider-v2, spider-v2.x), spider-v3-f446 (spider-f446), spider-v3-h723 (spider-h723). Список с описанием: install_vostok.sh --list-boards
+$ configure_vostok.sh --heads bogus
+# rc=1
+ОШИБКА: --heads: none, v1.3, v2 или ebb42
+$ configure_vostok.sh --alps 9
+# rc=1
+ОШИБКА: --alps: 0, 1 или 2
+$ configure_vostok.sh --printer-data <CASE>/no-such-dir
+# rc=1
+
+== Настройка конфига VOSTOK (версия 1.3a) ==
+Каталог конфига: <CASE>/no-such-dir/config
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+Главная плата:
+  1) Mellow FLY-C8 (fly-c8)
+  2) BTT Manta M8P v1.0 (manta-m8p-v1.0)
+  3) BTT Manta M8P v1.1 (manta-m8p-v1.1)
+  4) BTT Manta M8P v2.0 (manta-m8p-v2.0)
+  5) BTT Octopus Pro v1.0 F429 (octopus-pro-f429)
+  6) Octopus Pro F446 (octopus-pro-f446)
+  7) Octopus Pro v1.1 H723 (octopus-pro-h723)
+  8) Fysetc Spider v2.x (spider-v2-f446)
+  9) Fysetc Spider v3.0 F446 (spider-v3-f446)
+  10) Fysetc Spider v3.0 H723 (spider-v3-h723)
+<INSTALL>/lib/vostok_config.sh: line 53: /dev/tty: No such device or address
+<INSTALL>/lib/vostok_config.sh: line 54: ans: unbound variable
+Платы голов по CAN (при их наличии Octopus станет мостом USB-CAN):
+  1) нет (пассивная плата, например fly miniAB)
+  2) Fysetc H36 v1.3
+  3) Fysetc H36 v2
+  4) BTT EBB42
+<INSTALL>/lib/vostok_config.sh: line 53: /dev/tty: No such device or address
+<INSTALL>/lib/vostok_config.sh: line 54: ans: unbound variable
+@@@@ CASE boards/list_boards
+$ install_vostok.sh --list-boards
+# rc=0
+id                   chip         can  ok   название [роль] (алиасы)
+alps                 stm32f072xb  -    yes  ALPS [alps]
+ebb42                stm32g0b1xx  -    no   BTT EBB42 [head]
+fly-c8               stm32f407xx  bus  no   Mellow FLY-C8 [main] (flyc8 fly-c6 flyc6)
+h36-v1.3             stm32g0b1xx  -    no   Fysetc H36 v1.3 [head] (v1.3)
+h36-v2               stm32g431xx  -    no   Fysetc H36 v2 [head] (v2)
+manta-m8p-v1.0       stm32g0b1xx  -    no   BTT Manta M8P v1.0 [main] (m8p-v1.0)
+manta-m8p-v1.1       stm32g0b1xx  bus  no   BTT Manta M8P v1.1 [main] (m8p-v1.1)
+manta-m8p-v2.0       stm32h723xx  bus  no   BTT Manta M8P v2.0 [main] (m8p-v2.0)
+octopus-pro-f429     stm32f429xx  bus  no   BTT Octopus Pro v1.0 F429 [main] (f429)
+octopus-pro-f446     stm32f446xx  bus  no   Octopus Pro F446 [main] (f446)
+octopus-pro-h723     stm32h723xx  bus  yes  Octopus Pro v1.1 H723 [main] (h723)
+spider-v2-f446       stm32f446xx  -    no   Fysetc Spider v2.x [main] (spider-v2 spider-v2.x)
+spider-v3-f446       stm32f446xx  bus  no   Fysetc Spider v3.0 F446 [main] (spider-f446)
+spider-v3-h723       stm32h723xx  bus  no   Fysetc Spider v3.0 H723 [main] (spider-h723)
+
+can: bus - у платы есть режим USB-CAN моста (нужен для плат голов по CAN); ok: yes - проверена на железе, no - только по документации.
+Выбор главной платы: install_vostok.sh --main <id|алиас>.

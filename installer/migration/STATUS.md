@@ -6,7 +6,7 @@
 
 | агент | ветка | статус | последний коммит | открытые вопросы | дата |
 |---|---|---|---|---|---|
-| A0 harness | py/harness | todo | | | |
+| A0 harness | py/harness | review | см. git log py/harness | 5 вопросов в reports/harness.md (нумерация A–H, 10 главных плат, требования к хосту) | 2026-10-15 |
 | A1 core | py/core | todo | | | |
 | A2 update | py/update | todo | | | |
 | A3 integrations | py/integrations | todo | | | |
@@ -34,3 +34,4 @@
 ## Решения / продолжить с
 - 2026-10-15: план утверждён пользователем; публичные команды и флаги не меняются, `python3 -m vostok` — внутренняя деталь обёрток. Слияние `py-migration` → `add-installer` только после S5 и по явному одобрению; push/PR делает пользователь.
 - 2026-10-15: на старте ветка `add-installer` содержит незакоммиченных изменений: нет (проверено `git status`).
+- 2026-10-15 (A0): dry-run/--only-detect install_vostok.sh sudo-пароль не требуют и вне tmp не пишут при env PRINTER_DATA/LOG_FILE/DEVICES_FILE/BUILD_DIR/FIRMWARE_DIR/HOME/BYID_DIR; но preflight делает git ls-remote (нужна сеть; в harness заглушка), а show_usb_state читает /dev/serial/by-id хоста в обход BYID_DIR (нормализуется). Подробности: reports/harness.md.

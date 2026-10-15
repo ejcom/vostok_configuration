@@ -12,4 +12,6 @@
 ./configure_vostok.sh --config-source generate --drivers all=2209 --modules chamber_heater
 ```
 
+`--main` принимает любую плату реестра (`id` или алиас, список: `./install_vostok.sh --list-boards`). Стоковый main есть только у Octopus Pro H723; для новых плат стокового конфига электроники нет, доступны только `--config-source generate` (шаблон без пинов) и `user` (ваш файл из `user_configs/`).
+
 Главное правило: если у вас уже есть свой `electronics_*.cfg`, он всегда основа (пины и параметры берутся из него); стоковый main используется только при чистой установке. Полное описание, таблицы пресетов, имена файлов, модули, резервные копии и справочник опций: **[CONFIGURATOR.md](../CONFIGURATOR.md)**. Лог: `~/printer_data/logs/vostok_configure.log`.

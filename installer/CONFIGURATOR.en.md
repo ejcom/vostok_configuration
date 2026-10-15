@@ -64,7 +64,7 @@ Order of sources:
 
 1. the options `--main`, `--heads`, `--alps`;
 2. the existing `printer.cfg` and the files it includes:
-   - mainboard: `stm32h723xx` / `stm32f446xx` in the `serial` of the `[mcu]` section, or `_h723_` / `_f446_` in the name of the included electronics file;
+   - mainboard: the chip in the `serial` of the `[mcu]` section (`stm32h723xx`, `stm32f446xx`, etc.) or the board marker (`ELEC_PATTERN` from `boards/*.board`; `_h723_` / `_f446_` for the Octopus Pro) in the name of the included electronics file; for files of the new boards created by the generator the board is identified by the name `electronics_<board id with _ instead of ->_…`; if several boards share the chip and the file name does not decide, it asks;
    - toolhead boards: a `[mcu T0_EBB]` section → EBB42; `[mcu T0CB]` → H36 (v2 if the electronics file name contains `H36v2`, otherwise v1.3); with only a USB `[mcu]` there are no toolhead boards;
    - ALPS: the number of `[mcu alps…]` sections (at most two);
 3. `/dev/serial/by-id` (`usb-Klipper_stm32h723xx_…`, `usb-Klipper_stm32f072xb_…`) and DFU mode;
@@ -106,7 +106,7 @@ The reference is chosen automatically:
 
 1. the active `[include electronics_*.cfg]` in `~/printer_data/config/printer.cfg`, if the file exists: this is your config;
 2. otherwise, if the mainboard is the H723, the stock main from the repository root;
-3. otherwise (F446 without its own config) there is no reference: pins stay empty, parameters take their defaults.
+3. otherwise (F446 and boards without a stock main, without your own config) there is no reference: pins stay empty, parameters take their defaults.
 
 `--reference FILE` sets another reference, `--reference none` turns the reference off completely. The configurator tells which file it took at the start of generation.
 
@@ -259,7 +259,7 @@ Example: with heads without toolhead boards the head thermistors sit on `PF4`/`P
 
 | Option | Purpose |
 |---|---|
-| `--main h723\|f446` | mainboard (otherwise detected or asked) |
+| `--main <id\|alias>` | mainboard: any from the `boards/` registry (`h723`, `f446`, `fly-c8`, etc.; list: `install_vostok.sh --list-boards`), otherwise detected or asked |
 | `--heads none\|v1.3\|v2\|ebb42` | CAN toolhead boards |
 | `--alps 0\|1\|2` | number of ALPS sensors |
 | `--config-source standard\|user\|generate\|skip` | electronics config source |
@@ -298,6 +298,7 @@ The script exits with code 1 on an error (no `python3`, no `printer_data` direct
 
 ## Limitations
 
+- **New boards** (other than the Octopus Pro): they have no stock main and no Octopus pin presets. Only `--config-source generate` (a template without pins, `--template none` of `gen_electronics.py`; the board name goes into the header) and `user` are available. If the reference is the electronics of a different board, the configurator warns and asks whether to take pins from it (default: no).
 - **H723.** Taking pins from the stock main and from the MOTOR4/MOTOR5 table is designed for the Octopus Pro v1.1 H723. For the F446 without its own config pins stay empty (the head pin table also applies to the F446, it comes from F446 configs).
 - **The head pin table is not checked** against the Octopus Pro v1.1 H723 documentation: check it against your wiring. Check the `dir_pin` sign and the motor directions after the first start.
 - **`SAVE_CONFIG` is not carried over** only on a clean install over a foreign or empty `printer.cfg` (see above).

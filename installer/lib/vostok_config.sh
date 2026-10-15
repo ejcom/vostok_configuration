@@ -6,7 +6,9 @@
 : "${DRY_RUN:=0}" "${ONLY_DETECT:=0}"
 OPT_MAIN=${OPT_MAIN:-}; OPT_HEADS=${OPT_HEADS:-}; OPT_ALPS=${OPT_ALPS:-}
 OPT_ELECTRONICS=${OPT_ELECTRONICS:-}; OPT_CONFIG_SOURCE=${OPT_CONFIG_SOURCE:-}; OPT_DRIVERS=${OPT_DRIVERS:-}
-MAIN=${MAIN:-}; HEADS=${HEADS:-}; ALPS_COUNT=${ALPS_COUNT:-0}; MODE=${MODE:-}
+MAIN_BOARD=${MAIN_BOARD:-}   # id главной платы из реестра boards/ (основная переменная)
+MAIN=${MAIN:-}               # чип главной платы (stm32h723xx...), берётся из реестра
+HEADS=${HEADS:-}; ALPS_COUNT=${ALPS_COUNT:-0}; MODE=${MODE:-}
 RES_MAIN_SERIAL=${RES_MAIN_SERIAL:-}; RES_BRIDGE_UUID=${RES_BRIDGE_UUID:-}
 RES_HEAD_UUID=("${RES_HEAD_UUID[@]:-}" ""); RES_HEAD_UUID=("${RES_HEAD_UUID[0]:-}" "${RES_HEAD_UUID[1]:-}")
 RES_ALPS_SERIAL=("${RES_ALPS_SERIAL[0]:-}" "${RES_ALPS_SERIAL[1]:-}")
@@ -18,6 +20,8 @@ OPT_MODULES=${OPT_MODULES:-}       # chamber_heater|all|none (через зап�
 : "${VOSTOK_CFG_LOCAL:=auto}"
 : "${VOSTOK_CFG_TARBALL:=https://codeload.github.com/dmitry-sorkin/vostok_configuration/tar.gz/refs/heads/main}"
 : "${INSTALL_DIR:=$SCRIPT_DIR}"
+# Реестр плат (boards/*.board): подписи, чипы, имена конфигов сборки, подсказки DFU
+declare -F board_load >/dev/null || source "$INSTALL_DIR/lib/boards.sh"
 
 # ------------------------------------------------------------------ интерактив
 
@@ -85,11 +89,15 @@ dfu_family() {
     shopt -u nocasematch
 }
 
-family_name() {
+family_name() { # семейство -> "STM32xx (платы семейства из реестра)"
+    local name id list=""
     case $1 in
-        f0) echo "STM32F0 (ALPS)" ;; f4) echo "STM32F4 (Octopus Pro F446)" ;;
-        h7) echo "STM32H7 (Octopus Pro H723)" ;; g) echo "STM32G0/G4 (Fysetc H36 / BTT EBB42)" ;; *) echo "не определён" ;;
+        f0) name="STM32F0" ;; f4) name="STM32F4" ;; h7) name="STM32H7" ;; g) name="STM32G0/G4" ;; *) echo "не определён"; return ;;
     esac
+    for id in $(boards_list); do
+        [[ $(board_field "$id" FAMILY) == "$1" ]] && list+="${list:+ / }$(board_field "$id" LABEL)"
+    done
+    echo "$name${list:+ ($list)}"
 }
 
 # Адрес 12-байтного UID чипа по семейству (ROM-загрузчик отдаёт его по DFU)
@@ -144,29 +152,148 @@ show_usb_state() {
     fi
 }
 
+# ---------------------------------------------------------------- реестр плат: главная плата
+
+# Поле главной платы из реестра (LABEL, CHIP, FAMILY, DFU_HINT ...)
+mb() { board_field "$MAIN_BOARD" "$1"; }
+
+# Выбрать главную плату по id: MAIN_BOARD (id) и MAIN (чип)
+set_main_board() { # id
+    MAIN_BOARD=$1
+    MAIN=$(board_field "$1" CHIP)
+}
+
+# Главные платы с алиасами для сообщений: "octopus-pro-h723 (h723), ..."
+main_boards_hint() {
+    local id out="" al
+    for id in $(boards_list main); do
+        al=$(board_field "$id" ALIASES)
+        out+="${out:+, }$id${al:+ (${al// /, })}"
+    done
+    printf '%s' "$out"
+}
+
+# --main ИМЯ (id или алиас) -> id главной платы; на неизвестное имя - понятная ошибка
+main_board_from_opt() { # имя
+    local id role
+    id=$(board_resolve "$1" 2>/dev/null) || die "--main: неизвестная плата '$1'. Доступные: $(main_boards_hint). Список с описанием: install_vostok.sh --list-boards"
+    role=$(board_field "$id" ROLE)
+    [[ $role == main ]] || die "--main: '$1' - не главная плата ($id, роль $role). Доступные: $(main_boards_hint)"
+    printf '%s' "$id"
+}
+
+# Таблица плат реестра для --list-boards
+print_boards() {
+    local id al
+    printf '%-20s %-12s %-4s %-3s  %s\n' id chip can ok "название [роль] (алиасы)"
+    for id in $(boards_list); do
+        al=$(board_field "$id" ALIASES)
+        printf '%-20s %-12s %-4s %-3s  %s [%s]%s\n' "$id" "$(board_field "$id" CHIP)" \
+            "$(board_has_bridge "$id" && echo bus || echo -)" "$(board_field "$id" VERIFIED)" \
+            "$(board_field "$id" LABEL)" "$(board_field "$id" ROLE)" "${al:+ ($al)}"
+    done
+    printf '\ncan: bus - у платы есть режим USB-CAN моста (нужен для плат голов по CAN); ok: yes - проверена на железе, no - только по документации.\n'
+    printf 'Выбор главной платы: install_vostok.sh --main <id|алиас>.\n'
+}
+
+# Главная плата из прошлого devices.tsv (запись bridge/usb главной платы), иначе пусто
+prev_main_board() {
+    local k cfg role r id kind
+    [[ -f ${DEVICES_FILE:-} ]] || return 0
+    while IFS=$'\t' read -r k cfg role; do
+        [[ $role == bridge || $role == usb ]] || continue
+        r=$(board_by_cfg "$cfg") || continue
+        read -r id kind <<<"$r"
+        [[ $(board_field "$id" ROLE 2>/dev/null) == main ]] && { printf '%s' "$id"; return 0; }
+    done <"$DEVICES_FILE"
+    return 0
+}
+
+# Платы-кандидаты по подключённому железу: чип из usb-*<чип>_* в by-id, иначе семейство единственного
+# устройства в DFU. Сначала проверенные, при равенстве - по чипу в обратном порядке (H7 раньше F4).
+main_candidates() {
+    local id chip fam seen=" " chips=()
+    for id in $(boards_list main); do
+        chip=$(board_field "$id" CHIP)
+        [[ $seen == *" $chip "* ]] && continue
+        seen+="$chip "
+        [[ -n $(byid_find "usb-*${chip}_*") ]] && chips+=("$chip")
+    done
+    {
+        if [[ ${#chips[@]} -gt 0 ]]; then
+            for chip in "${chips[@]}"; do boards_for_chip "$chip" main; done
+        elif [[ $(dfu_count) -eq 1 ]]; then
+            fam=$(dfu_family)
+            [[ $fam == unknown ]] || boards_for_family "$fam" main
+        fi
+    } | while read -r id; do
+        printf '%s %s %s\n' "$([[ $(board_field "$id" VERIFIED) == yes ]] && echo 0 || echo 1)" "$(board_field "$id" CHIP)" "$id"
+    done | sort -k1,1 -k2,2r -k3,3 | cut -d' ' -f3
+}
+
+# Выбор платы из списка id в диалоге: печатает id. По умолчанию def.
+ask_board() { # вопрос def_id id...
+    local q=$1 def=$2 id i ans deflbl="" labels=() ids=(); shift 2
+    ids=("$@")
+    for id in "${ids[@]}"; do
+        labels+=("$(board_field "$id" LABEL) ($id)")
+        [[ $id == "$def" ]] && deflbl=${labels[-1]}
+    done
+    ans=$(ask_choice "$q" "${deflbl:-${labels[0]}}" "${labels[@]}")
+    for i in "${!labels[@]}"; do
+        [[ ${labels[$i]} == "$ans" ]] && { printf '%s' "${ids[$i]}"; return; }
+    done
+    printf '%s' "$def"
+}
+
+detect_main_board() {
+    local cands=() ids=() prev id def asked=0
+    mapfile -t cands < <(main_candidates)
+    prev=$(prev_main_board)
+    if [[ -n $OPT_MAIN ]]; then
+        id=$(main_board_from_opt "$OPT_MAIN") || exit 1
+        set_main_board "$id"
+        return 0
+    fi
+    ids=("${cands[@]}")
+    [[ ${#ids[@]} -gt 0 ]] || mapfile -t ids < <(boards_list main)
+    def=${ids[0]}
+    if [[ ${#cands[@]} -eq 0 ]]; then
+        def=$(board_resolve h723 2>/dev/null || echo "$def")
+        [[ -n $prev ]] && def=$prev
+    else
+        for id in "${ids[@]}"; do [[ $id == "$prev" ]] && def=$prev; done
+    fi
+    if [[ $ONLY_DETECT -eq 1 && ${#cands[@]} -ge 1 ]] && { [[ ${#cands[@]} -eq 1 ]] || ! have_tty; }; then
+        id=$def
+    elif [[ $ASSUME_YES -eq 1 ]]; then
+        id=$def
+        if [[ ${#cands[@]} -gt 1 && $id != "$prev" && $DRY_RUN -eq 0 ]]; then
+            die "на найденном чипе возможны платы: ${cands[*]}. Без вопросов (-y) выбрать нельзя, укажите --main <id> (список: --list-boards)"
+        fi
+    else
+        id=$(ask_board "Главная плата:" "$def" "${ids[@]}"); asked=1
+    fi
+    if [[ $asked -eq 0 && ${#cands[@]} -gt 1 && $id != "$prev" ]]; then
+        info "На найденном чипе возможны платы: ${cands[*]}; выбрана $id (уточните: --main <id>)"
+    fi
+    set_main_board "$id"
+}
+
+# Плата без USB-CAN моста не подходит для схемы с платами голов: отказ до прошивки
+check_main_bridge() {
+    [[ $HEADS == none ]] && return 0
+    board_has_bridge "$MAIN_BOARD" && return 0
+    die "у $(main_label) нет USB-CAN моста: платы голов по CAN к ней подключить нельзя. Нужен отдельный USB-CAN адаптер (установщик его не поддерживает) или запуск без плат голов: --heads none"
+}
+
 detect_hardware() {
     step "Определение подключённых MCU"
     show_usb_state
 
     # Главная плата
-    local guess="" alps_guess heads_guess ans
-    if   [[ -n $(byid_find 'usb-*stm32h723xx_*') ]]; then guess=h723
-    elif [[ -n $(byid_find 'usb-*stm32f446xx_*') ]]; then guess=f446
-    elif [[ $(dfu_count) -eq 1 ]]; then
-        case $(dfu_family) in h7) guess=h723 ;; f4) guess=f446 ;; esac
-    fi
-    local main_ans=$OPT_MAIN
-    if [[ -z $main_ans ]]; then
-        if [[ $ONLY_DETECT -eq 1 && -n $guess ]]; then
-            main_ans=$guess
-        else
-            ans=$(ask_choice "Главная плата:" "${guess:-h723}" "h723" "f446")
-            main_ans=$ans
-        fi
-    fi
-    # Подписи вариантов
-    [[ -n $main_ans ]] || { warn "главная плата не определена, принимаю h723 (укажите --main f446, если у вас F446)"; main_ans=h723; }
-    case $main_ans in f446) MAIN=stm32f446xx ;; *) MAIN=stm32h723xx ;; esac
+    local alps_guess heads_guess ans
+    detect_main_board
 
     # Платы голов
     heads_guess=none
@@ -176,16 +303,19 @@ detect_hardware() {
         if [[ $ONLY_DETECT -eq 1 ]]; then
             HEADS=$heads_guess
         else
-            local def_lbl="нет (пассивная плата, например fly miniAB)"
-            [[ $heads_guess != none ]] && def_lbl="Fysetc H36 v2"
-            ans=$(ask_choice "Платы голов по CAN (при их наличии Octopus станет мостом USB-CAN):" "$def_lbl" \
-                "нет (пассивная плата, например fly miniAB)" "Fysetc H36 v1.3" "Fysetc H36 v2" "BTT EBB42")
-            case $ans in
-                "Fysetc H36 v1.3") HEADS=v1.3 ;; "Fysetc H36 v2") HEADS=v2 ;; "BTT EBB42") HEADS=ebb42 ;; *) HEADS=none ;;
-            esac
+            local def_lbl="нет (пассивная плата, например fly miniAB)" opts=() hv
+            opts=("$def_lbl")
+            for hv in v1.3 v2 ebb42; do opts+=("$(board_field "$(head_board_id "$hv")" LABEL)"); done
+            [[ $heads_guess != none ]] && def_lbl=$(board_field "$(head_board_id "$heads_guess")" LABEL)
+            ans=$(ask_choice "Платы голов по CAN (при их наличии $(main_short) станет мостом USB-CAN):" "$def_lbl" "${opts[@]}")
+            HEADS=none
+            for hv in v1.3 v2 ebb42; do
+                [[ $ans == "$(board_field "$(head_board_id "$hv")" LABEL)" ]] && HEADS=$hv
+            done
         fi
     fi
     set_head_names
+    check_main_bridge
 
     # ALPS
     alps_guess=$(byid_find 'usb-*stm32f072xb_*' | wc -l)
@@ -201,29 +331,37 @@ detect_hardware() {
     if [[ $HEADS == none ]]; then MODE=usb; else MODE=bridge; fi
 }
 
-main_label() { [[ $MAIN == stm32h723xx ]] && echo "Octopus Pro v1.1 H723" || echo "Octopus Pro F446"; }
+main_label() { mb LABEL; }
+# Короткое имя платы для сообщений про мост: "Octopus", "Manta", "Spider", "FLY-C8"
+main_short() { local l; l=$(main_label); l=${l#BTT }; l=${l#Fysetc }; l=${l#Mellow }; printf '%s' "${l%% *}"; }
 alps_side() { [[ $1 -eq 0 ]] && echo "левый (T0)" || echo "правый (T1)"; }
 HEAD_MCU=(T0CB T1CB)   # имена секций [mcu ...] плат голов (уточняются по electronics-файлу)
-set_head_names() { if [[ $HEADS == ebb42 ]]; then HEAD_MCU=(T0_EBB T1_EBB); else HEAD_MCU=(T0CB T1CB); fi; }
+# id платы головы в реестре по значению HEADS (v1.3|v2|ebb42; none - пусто)
+head_board_id() { # [HEADS]
+    local h=${1:-$HEADS}
+    [[ $h == none || -z $h ]] && return 0
+    board_resolve "$h"
+}
+hb() { board_field "$(head_board_id)" "$1"; }
+set_head_names() {
+    local names=""
+    [[ $HEADS == none || -z $HEADS ]] || names=$(hb HEAD_NAMES)
+    names=${names:-T0CB,T1CB}
+    HEAD_MCU=("${names%%,*}" "${names##*,}")
+}
 head_side() { [[ $1 -eq 0 ]] && echo "левая (${HEAD_MCU[0]})" || echo "правая (${HEAD_MCU[1]})"; }
-head_label() {
-    case $HEADS in
-        v1.3) echo "Fysetc H36 v1.3" ;; v2) echo "Fysetc H36 v2" ;; ebb42) echo "BTT EBB42" ;; *) echo "платы голов" ;;
-    esac
-}
-head_chip() { [[ $HEADS == v2 ]] && echo stm32g431xx || echo stm32g0b1xx; }
+head_label() { if [[ $HEADS == none || -z $HEADS ]]; then echo "платы голов"; else hb LABEL; fi; }
+head_chip() { hb CHIP; }
 head_cfg_name() { # имя файла конфига сборки (общее для Klipper и katapult)
-    case $HEADS in v1.3) echo stm32g0b1xx-can.config ;; v2) echo stm32g431xx-can.config ;; ebb42) echo stm32g0b1xx-ebb42-can.config ;; esac
+    [[ $HEADS == none || -z $HEADS ]] && return 0
+    basename "$(board_cfg "$(head_board_id)" can)"
 }
-head_dfu_hint() {
-    if [[ $HEADS == ebb42 ]]; then echo "зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET)"
-    else echo "зажмите BOOT0, нажмите RST, отпустите BOOT0"; fi
-}
+head_dfu_hint() { hb DFU_HINT; }
 
 klipper_cfg_for_main() {
-    if [[ $MODE == bridge ]]; then echo "$CONFIGS_DIR/${MAIN}-canbridge.config"; else echo "$CONFIGS_DIR/${MAIN}.config"; fi
+    if [[ $MODE == bridge ]]; then board_cfg "$MAIN_BOARD" bridge; else board_cfg "$MAIN_BOARD" usb; fi
 }
-katapult_cfg_for_main() { echo "$KATAPULT_CONFIGS/${MAIN}.config"; }
+katapult_cfg_for_main() { board_cfg "$MAIN_BOARD" katapult; }
 
 # ---------------------------------------------------------------- этап 6: конфигурация
 
@@ -279,19 +417,47 @@ drivers_wizard() {
     DRIVERS_SPEC=$spec
 }
 
-# Стоковый main-файл электроники (для H723 - с _h723_ в имени) из корня конфигов
+# Стоковый main-файл электроники (для платы с ELEC_PATTERN=_h723_ - с _h723_ в имени) из корня конфигов
 stock_electronics() { # корень
     local f first=""
     for f in "$1"/electronics_*.cfg; do
         [[ -f $f ]] || continue
         [[ -n $first ]] || first=$f
-        if [[ $MAIN == stm32h723xx && $f == *_h723_* ]]; then printf '%s' "$f"; return; fi
+        if [[ $(mb ELEC_PATTERN) == _h723_ && $f == *_h723_* ]]; then printf '%s' "$f"; return; fi
     done
     printf '%s' "$first"
 }
 
+# Плата, для которой генератор создал electronics-файл с таким именем (electronics_<id с _>_...); у плат
+# со старыми именами (CFG == чип, Octopus) имя файла другое и они сюда не попадают. Печатает id или ничего.
+elec_named_board() { # имя_файла
+    local f=$1 id bf
+    for id in $(boards_list main); do
+        bf=$(board_field "$id" CFG)
+        [[ $bf != "$(board_field "$id" CHIP)" && $f == electronics_${bf//-/_}_* ]] && { printf '%s' "$id"; return 0; }
+    done
+    return 0
+}
+
+# Электроника с таким именем сделана под выбранную плату? Имя содержит ELEC_PATTERN платы или часть имени
+# файла, которую даёт генератор (id платы с _ вместо -). Файл другой известной платы (по её ELEC_PATTERN) - нет.
+# Имя без признаков какой-либо платы у платы с ELEC_PATTERN считается своим (как было раньше).
+el_for_board() { # имя_файла
+    local f=$1 pat id other named
+    named=$(elec_named_board "$f")
+    [[ -z $named ]] || { [[ $named == "$MAIN_BOARD" ]]; return; }
+    pat=$(mb ELEC_PATTERN)
+    [[ -n $pat && $f == *$pat* ]] && return 0
+    [[ -n $pat ]] || return 1
+    for id in $(boards_list main); do
+        other=$(board_field "$id" ELEC_PATTERN)
+        [[ -n $other && $id != "$MAIN_BOARD" && $f == *$other* ]] && return 1
+    done
+    return 0
+}
+
 # Эталон для подстановки пинов и параметров: свой конфиг пользователя (активный include electronics_*.cfg в printer.cfg)
-# всегда основа; стоковый main - только при чистой установке (своего конфига нет), для H723.
+# всегда основа (если он не от другой платы); стоковый main - только при чистой установке, для платы с ELEC_PATTERN=_h723_.
 # Результат: REF_CFG (путь или пусто) и REF_KIND (user|stock|none)
 REF_CFG=""; REF_KIND=none
 CFG_STATE=""   # none|blank|foreign|vostok: состояние printer.cfg (выставляет stage_config)
@@ -316,9 +482,18 @@ find_reference() { # корень
     fi
     if [[ -f $cfg && ${CFG_STATE:-vostok} == vostok ]]; then
         inc=$(sed -n 's/^[[:space:]]*\[include[[:space:]]\+\(electronics_[^]]*\.cfg\)\].*/\1/p' "$cfg" | head -n 1)
-        if [[ -n $inc && -f $PRINTER_CFG_DIR/$inc ]]; then REF_CFG=$PRINTER_CFG_DIR/$inc; REF_KIND=user; return 0; fi
+        if [[ -n $inc && -f $PRINTER_CFG_DIR/$inc ]]; then
+            if el_for_board "$inc"; then
+                REF_CFG=$PRINTER_CFG_DIR/$inc; REF_KIND=user; return 0
+            fi
+            warn "Ваш текущий конфиг электроники $inc сделан не под $(main_label): пины моторов и драйверов в нём, скорее всего, другие."
+            if have_tty && ask_yn "Взять пины и параметры из $inc?" n; then
+                REF_CFG=$PRINTER_CFG_DIR/$inc; REF_KIND=user; return 0
+            fi
+            info "Пины из $inc не берутся (чтобы взять: --reference $PRINTER_CFG_DIR/$inc)"
+        fi
     fi
-    if [[ $MAIN == stm32h723xx ]]; then
+    if [[ $(mb ELEC_PATTERN) == _h723_ ]]; then
         stock=$(stock_electronics "$1")
         [[ -n $stock ]] && { REF_CFG=$stock; REF_KIND=stock; }
     fi
@@ -327,12 +502,21 @@ find_reference() { # корень
 
 # Генерирует electronics_*.cfg по шаблону. Аргументы: корень_конфигов каталог_вывода
 gen_custom_electronics() { # корень каталог_вывода; имя файла по образцу user_configs - в GEN_NAME
-    local root=$1 outdir=$2 main_std res extra=() line
+    local root=$1 outdir=$2 main_std res extra=() line board_args=()
     main_std=$(stock_electronics "$root")
     find_reference "$root"
     [[ -d $TEMPLATES_DIR ]] || die "нет каталога шаблонов: $TEMPLATES_DIR"
-    [[ $MAIN == stm32h723xx ]] && extra+=(--octopus-extruders)
-    [[ $HEADS == none ]] && extra+=(--octopus-heads)
+    if [[ $(mb TEMPLATE) == octopus_pro ]]; then
+        [[ $(mb ELEC_PATTERN) == _h723_ ]] && extra+=(--octopus-extruders)
+        [[ $HEADS == none ]] && extra+=(--octopus-heads)
+    fi
+    # Платы со старыми именами файлов (CFG = чип, Octopus Pro): прежние значения генератора, иначе id и название платы
+    if [[ $(mb CFG) == "$(mb CHIP)" ]]; then
+        board_args=(--main "$(board_field "$MAIN_BOARD" ALIASES | cut -d' ' -f1)")
+    else
+        board_args=(--main "$MAIN_BOARD" --board-name "$(mb LABEL)" --board-file "${MAIN_BOARD//-/_}")
+    fi
+    board_args+=(--template "$(mb TEMPLATE | sed 's/^$/none/')")
     case $REF_KIND in
         user) info "Основа - ваш текущий конфиг электроники: $REF_CFG (пины и параметры берутся из него)" ;;
         stock) info "Чистая установка: пины и параметры моторов берутся из стокового конфига main ($(basename "$REF_CFG"))" ;;
@@ -340,7 +524,7 @@ gen_custom_electronics() { # корень каталог_вывода; имя ф
     esac
     res=$(python3 -I "$INSTALL_DIR/tools/gen_electronics.py" --templates "$TEMPLATES_DIR" --ref-cfg "$REF_CFG" --main-cfg "$main_std" \
         --heads "$HEADS" --head-names "${HEAD_MCU[0]},${HEAD_MCU[1]}" --alps "$ALPS_COUNT" \
-        --drivers "$DRIVERS_SPEC" --main "$([[ $MAIN == stm32h723xx ]] && echo h723 || echo f446)" "${extra[@]}" \
+        --drivers "$DRIVERS_SPEC" "${board_args[@]}" "${extra[@]}" \
         --out-dir "$outdir") || die "не удалось сгенерировать конфиг электроники"
     GEN_NAME=$(sed -n 's/^NAME\t//p' <<<"$res")
     [[ -n $GEN_NAME ]] || die "генератор не вернул имя файла"
@@ -412,9 +596,11 @@ SRC_LBL_SKIP="Пропустить редактирование конфига"
 
 el_matches() { # имя: подходит ли файл под выбранные главную плату и платы голов
     local f=$1 chip_pat head_pat=""
-    [[ $MAIN == stm32h723xx ]] && chip_pat="_h723_" || chip_pat="_f446_"
-    [[ $f == *$chip_pat* ]] || return 1
-    case $HEADS in v1.3) head_pat="H36v1.3" ;; v2) head_pat="H36v2" ;; ebb42) head_pat="ebb42" ;; esac
+    chip_pat=$(mb ELEC_PATTERN)
+    [[ -n $chip_pat && $f == *$chip_pat* ]] || return 1
+    local named; named=$(elec_named_board "$f")
+    [[ -z $named || $named == "$MAIN_BOARD" ]] || return 1
+    [[ $HEADS == none || -z $HEADS ]] || head_pat=$(hb ELEC_PATTERN)
     [[ -z $head_pat || $f == *$head_pat* ]]
 }
 
@@ -432,7 +618,7 @@ pick_electronics() { # корень_архива allow_skip(0|1)
     fi
 
     # Источник
-    local labs=() def_lbl
+    local labs=() def_lbl any_match=0
     [[ ${#std[@]} -gt 0 ]] && labs+=("$SRC_LBL_STD")
     [[ ${#usr[@]} -gt 0 ]] && labs+=("$SRC_LBL_USR")
     labs+=("$SRC_LBL_GEN")
@@ -441,11 +627,14 @@ pick_electronics() { # корень_архива allow_skip(0|1)
         EL_SRC=$OPT_CONFIG_SOURCE
         [[ $EL_SRC == skip && $allow_skip -eq 0 ]] && die "--config-source skip: printer.cfg ещё не существует, пропускать нечего"
     else
-        def_src=user
-        for f in "${std[@]}"; do el_matches "$f" && def_src=standard; done
+        def_src=user; any_match=0
+        for f in "${std[@]}"; do el_matches "$f" && { def_src=standard; any_match=1; }; done
+        for f in "${usr[@]}"; do el_matches "$f" && any_match=1; done
         [[ ${#std[@]} -eq 0 ]] && def_src=user
         [[ ${#usr[@]} -eq 0 ]] && def_src=standard
+        # ни один готовый файл не сделан под эту плату: по умолчанию свой конфиг, чужую распиновку не предлагаем
         if [[ $allow_skip -eq 1 ]]; then def_lbl=$SRC_LBL_SKIP
+        elif [[ $any_match -eq 0 ]]; then def_lbl=$SRC_LBL_GEN
         elif [[ $def_src == standard && ${#std[@]} -gt 0 ]]; then def_lbl=$SRC_LBL_STD
         elif [[ ${#usr[@]} -gt 0 ]]; then def_lbl=$SRC_LBL_USR
         else def_lbl=$SRC_LBL_GEN; fi
@@ -479,7 +668,10 @@ pick_electronics() { # корень_архива allow_skip(0|1)
         names+=("$f")
         [[ -z $def_file ]] && el_matches "$f" && def_file=${labels[-1]}
     done
-    [[ -n $def_file ]] || def_file=${labels[0]}
+    if [[ -z $def_file ]]; then
+        [[ $ASSUME_YES -eq 0 ]] || die "в $EL_SRC нет electronics-файла под $(main_label): выберите файл вручную или используйте --config-source generate"
+        def_file=${labels[0]}
+    fi
     ans=$(ask_choice "Файл электроники (распиновка плат):" "$def_file" "${labels[@]}")
     for k in "${!labels[@]}"; do
         [[ ${labels[$k]} == "$ans" ]] && EL_NAME=${names[$k]}

@@ -1,0 +1,31 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
+LABEL="Octopus Pro v1.1 H723"
+ROLE="main"
+CHIP="stm32h723xx"
+FAMILY="h7"
+MACH="STM32H723"
+CLOCK="25M"
+APP_OFFSET="20000"
+USB="PA11_PA12"
+CAN="PD0_PD1"
+CAN_KIND="cmenu"
+# PD12 - вентилятор по проводке VOSTOK: в режиме моста и в katapult его держим выключенным
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS="PD12"
+KATAPULT_INITIAL_PINS="PD12"
+KATAPULT_LED="PA13"
+KATAPULT_DOUBLE_RESET="y"
+# CFG - основа имён файлов; старое имя оставлено, чтобы не ломать уже записанные devices.tsv
+CFG="stm32h723xx"
+ALIASES="h723"
+DFU_HINT="поставьте джампер BOOT0 и нажмите RESET (после прошивки джампер снять)"
+DFU_HOW="jumper"
+ELEC_PATTERN="_h723_"
+TEMPLATE="octopus_pro"
+HEAD_NAMES=""
+VERIFIED="yes"
+DOC="https://k3d.tech/vostok/manual/electronics/firmware/"
+NOTE="Основная плата гайда VOSTOK."

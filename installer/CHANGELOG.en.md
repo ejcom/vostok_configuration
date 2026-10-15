@@ -4,6 +4,18 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.3 — 2026-10-15
+
+- Board registry: `boards/*.board` (one file per board: chip, crystal, application offset, CAN pins, DFU hint, whether verified on hardware) and `lib/boards.sh`. Labels, build configs, DFU hints and checks in the installer come from the registry instead of being tied to the chip.
+- New mainboards: BTT Octopus Pro v1.0 F429, BTT Manta M8P v1.0 / v1.1 / v2.0, Fysetc Spider v3.0 H723 / v3.0 F446 / v2.x, Mellow FLY-C8 (aliases `fly-c6`, `flyc6`). **None of the new boards are verified on hardware**: the parameters come from the manufacturers' documentation, and the installer warns about this in the plan.
+- `--main` accepts ids and aliases (`h723`, `f446` work as before); `--list-boards` prints the registry. If several boards share the chip, the installer asks (default: the board from the previous `devices.tsv`, otherwise the verified one). Without questions (`-y`), with several possible boards and no `devices.tsv` entry, the installer stops and asks for `--main <id>`: it must not silently flash a board with another board's config.
+- Refusal before flashing for boards without a USB-CAN bridge (M8P v1.0, Spider v2.x) when CAN toolhead boards are requested.
+- `tools/gen_configs.sh` is built from the registry; options `--board ID`, `--check` (compare with `configs/`), `--build` (build all configs). Configs of the new boards: `configs/<id>.config`, `configs/<id>-canbridge.config`, `configs/katapult/<id>.config`; the config names of the earlier boards are unchanged.
+- `update_klipper_mcu.sh` takes a USB MCU's config from `devices.tsv` (by serial number) and shows the board name in `--list`.
+- `tools/gen_electronics.py`: `--board-name`, `--board-file`, `--template octopus_pro|none`. For boards without a stock config the configurator offers `generate` (template without pins) by default and never substitutes another board's (Octopus) pinout by default. `update_klipper_mcu.sh` ignores a `devices.tsv` entry whose config is built for another chip and warns when a board on a chip with several variants is missing from `devices.tsv`.
+- A warning about unverified boards with a list in `docs/hardware.en.md` and `docs/tested.en.md`. The Octopus Pro F446 and the H36 v1.3/v2 and EBB42 toolhead boards are marked as not verified on hardware (F446 and H36 were wrongly listed as verified); only the Octopus Pro H723 and ALPS are verified.
+- Documentation: the board table in `docs/hardware.en.md`, the "How to add a board" section in `docs/build-configs.en.md`.
+
 ## 1.2d — 2026-10-12
 
 - K3D VOSTOK theme for KlipperScreen: `install_klipperscreen_theme.sh` and `klipperscreen-theme/` (k3d.tech/vostok palette, the K3D mark on the splash screen, Tektur font from `fonts/`, OFL license). `styles/vostok` is assembled from the `material-dark` icons, the font goes to `~/.local/share/fonts`, the theme is enabled in `KlipperScreen.conf`.

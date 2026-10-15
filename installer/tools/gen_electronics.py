@@ -320,8 +320,8 @@ def driver_groups(drv, needed):
     return sorted(((n, d) for d, n in cnt.items()), key=lambda x: (-x[0], x[1]))
 
 
-def config_name(main, heads, groups):
-    parts = ["electronics", BOARD_FILE[main]] + ["%dx%s" % (n, DRIVER_TOKEN[d]) for n, d in groups]
+def config_name(board_file, heads, groups):
+    parts = ["electronics", board_file] + ["%dx%s" % (n, DRIVER_TOKEN[d]) for n, d in groups]
     if heads != "none":
         parts.append(HEAD_FILE[heads])
     return "_".join(parts) + ".cfg"
@@ -338,12 +338,23 @@ def main():
     ap.add_argument("--head-names", default="T0CB,T1CB")
     ap.add_argument("--alps", type=int, default=0)
     ap.add_argument("--drivers", default="")
-    ap.add_argument("--main", default="h723", choices=["h723", "f446"])
+    ap.add_argument("--main", default="h723", help="id платы из реестра boards/ или h723|f446 (старые значения)")
+    ap.add_argument("--board-name", default="", help="название платы для заголовка (иначе запасное для h723/f446)")
+    ap.add_argument("--board-file", default="", help="часть имени файла (иначе запасная для h723/f446)")
+    ap.add_argument("--template", default="octopus_pro", choices=["octopus_pro", "none"],
+                    help="пресет пинов главной платы; none - без пинов Octopus (--octopus-* игнорируются)")
     ap.add_argument("--out", default="", help="выходной файл (иначе имя по образцу user_configs в каталоге --out-dir)")
     ap.add_argument("--out-dir", default="")
     ap.add_argument("--octopus-heads", action="store_true",
                     help="без плат голов взять пины голов (нагреватель, термистор, вентилятор, концевики X/W, зонд) с разъёмов Octopus Pro")
     a = ap.parse_args()
+
+    board_name = a.board_name or BOARD_NAMES.get(a.main)
+    board_file = a.board_file or BOARD_FILE.get(a.main)
+    if not board_name or not board_file:
+        ap.error("для платы %r нужны --board-name и --board-file" % a.main)
+    if a.template == "none":
+        a.octopus_heads = a.octopus_extruders = False
 
     t = Path(a.templates)
     names = a.head_names.split(",")
@@ -357,7 +368,8 @@ def main():
     blocks = split_blocks(text)
     new_drivers, new_extras = [], []
 
-    apply_overlay(blocks, parse_overlay((t / "boards/octopus_pro.cfg").read_text(encoding="utf-8"), {}), new_drivers, new_extras)
+    if a.template == "octopus_pro":
+        apply_overlay(blocks, parse_overlay((t / "boards/octopus_pro.cfg").read_text(encoding="utf-8"), {}), new_drivers, new_extras)
 
     if a.heads == "none" and a.octopus_heads and (t / "boards/octopus_heads.cfg").is_file():
         apply_overlay(blocks, parse_overlay((t / "boards/octopus_heads.cfg").read_text(encoding="utf-8"), {}),
@@ -487,9 +499,12 @@ def main():
 
     warns.extend(resolve_table_conflicts(blocks + new_extras + drv_blocks))
     groups = driver_groups(drv, needed)
-    name = a.out and Path(a.out).name or config_name(a.main, a.heads, groups)
+    name = a.out and Path(a.out).name or config_name(board_file, a.heads, groups)
     result = render(blocks)
-    result = (result.replace("{BOARD}", BOARD_NAMES[a.main]).replace("{HEADS}", HEAD_TITLE[a.heads])
+    heads_title = HEAD_TITLE[a.heads]
+    if a.heads == "none" and a.template == "none":
+        heads_title = "нет (головы подключены к основной плате)"
+    result = (result.replace("{BOARD}", board_name).replace("{HEADS}", heads_title)
               .replace("{DRIVERS}", ", ".join("%dx %s" % (n, DRIVER_TITLE[d]) for n, d in groups)
                        + ("" if a.heads == "none" else " (драйверы экструдеров на платах голов)")))
     result = result.replace(";;DRIVERS;;", "\n".join(drv_text).rstrip("\n"))

@@ -7,6 +7,8 @@
 #
 # MCU находятся автоматически (секции [mcu*] из printer.cfg через Moonraker и
 # все /dev/serial/by-id/usb-Klipper_*), конфиг сборки выбирается по типу чипа:
+#   devices.tsv по серийному номеру  (его создаёт install_vostok.sh; так выбираются и конфиги
+#                                     плат на том же чипе, например Fysetc Spider v3 H723), иначе
 #   configs/<серийный_номер>.config  (для конкретной платы), иначе
 #   configs/<чип>.config             (например stm32h723xx.config)
 # MCU с canbus_uuid (платы голов H36/EBB, Octopus в режиме моста USB-CAN) прошиваются
@@ -50,6 +52,12 @@ LOG_FILE=${LOG_FILE:-$PRINTER_DATA/logs/klipper_mcu_update.log}
 # ключ(uuid или серийный номер)<TAB>конфиг сборки (относительно configs/)<TAB>роль(bridge|can|usb)
 CAN_IFACE=${CAN_IFACE:-can0}
 DEVICES_FILE=${DEVICES_FILE:-$SCRIPT_DIR/devices.tsv}
+# Каталог by-id, где ищутся USB-MCU (для тестов можно подменить)
+BYID_DIR=${BYID_DIR:-/dev/serial/by-id}
+# Реестр плат (boards/*.board): подписи плат по конфигу из devices.tsv
+BOARDS_DIR=${BOARDS_DIR:-$SCRIPT_DIR/boards}
+# shellcheck source=lib/boards.sh
+source "$SCRIPT_DIR/lib/boards.sh"
 GCODE_SHELL_ASSET=${GCODE_SHELL_ASSET:-$KIAUH_DIR/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py}
 
 DO_UPDATE=1
@@ -99,6 +107,7 @@ usage() {
   KLIPPER_DIR ($HOME/klipper)  KATAPULT_DIR ($HOME/katapult)  KIAUH_DIR ($HOME/kiauh)
   KLIPPY_ENV ($HOME/klippy-env)  PRINTER_DATA ($HOME/printer_data)
   MOONRAKER_URL (http://localhost:7125)  CONFIGS_DIR ($скрипт/configs)
+  BOARDS_DIR ($скрипт/boards)  DEVICES_FILE ($скрипт/devices.tsv)  BYID_DIR (/dev/serial/by-id)
 EOF
 }
 
@@ -258,7 +267,7 @@ for name, o in s.items():
 }
 
 add_mcu() { # имя путь происхождение(cfg|usb)
-    local name=$1 path=$2 origin=$3 chip serial cfg order real i
+    local name=$1 path=$2 origin=$3 chip serial cfg order real i rel role c
     real=$(readlink -f "$path" 2>/dev/null || echo "$path")
     for i in "${!MCU_PATH[@]}"; do
         [[ $(readlink -f "${MCU_PATH[$i]}" 2>/dev/null || echo "${MCU_PATH[$i]}") == "$real" ]] && return 0
@@ -268,11 +277,15 @@ add_mcu() { # имя путь происхождение(cfg|usb)
         SKIPPED+=("$name ($path): не /dev/serial/by-id/usb-Klipper_*, тип чипа неизвестен")
         return 0
     fi
-    cfg=""
-    if [[ -f $CONFIGS_DIR/$serial.config ]]; then
-        cfg=$CONFIGS_DIR/$serial.config
-    elif [[ -f $CONFIGS_DIR/$chip.config ]]; then
-        cfg=$CONFIGS_DIR/$chip.config
+    cfg=""; rel=""
+    IFS=$'\t' read -r rel role < <(devices_lookup "$serial") || true
+    # конфиг должен быть под чип устройства: устаревшая запись devices.tsv не должна подсунуть чужую прошивку
+    for c in "${rel:-}" "$serial.config" "$chip.config"; do
+        [[ -n $c && -f $CONFIGS_DIR/$c ]] && grep -q "^CONFIG_MCU=\"$chip\"\$" "$CONFIGS_DIR/$c" || continue
+        cfg=$CONFIGS_DIR/$c; break
+    done
+    if [[ -n $cfg && -z ${rel:-} && $cfg == "$CONFIGS_DIR/$chip.config" && $(boards_for_chip "$chip" main | wc -l) -gt 1 ]]; then
+        warn "$name: serial $serial нет в devices.tsv, на чипе $chip бывают разные платы; беру $chip.config ($(board_field "$(board_by_cfg "$chip.config" | cut -d' ' -f1)" LABEL)). Если плата другая, добавьте serial в devices.tsv"
     fi
     # Порядок прошивки: сначала MCU вне printer.cfg, потом дополнительные, главный [mcu] последним
     if [[ $origin == usb ]]; then order=1; elif [[ $name == mcu ]]; then order=3; else order=2; fi
@@ -332,11 +345,11 @@ discover_mcus() {
         fi
     done < <(cfg_mcus)
 
-    for dev in /dev/serial/by-id/usb-Klipper_*; do
+    for dev in "$BYID_DIR"/usb-Klipper_*; do
         [[ -e $dev ]] || continue
         add_mcu "(не в printer.cfg)" "$dev" usb
     done
-    for dev in /dev/serial/by-id/usb-katapult_*; do
+    for dev in "$BYID_DIR"/usb-katapult_*; do
         [[ -e $dev ]] || continue
         SKIPPED+=("$(basename "$dev"): устройство в режиме загрузчика katapult, прошейте вручную: flashtool.py -d $dev -f <bin>")
     done
@@ -384,6 +397,15 @@ print_mcus() {
                 "$( [[ -n ${MCU_CFG[$i]} ]] && basename "${MCU_CFG[$i]}" || echo '-- нет --' )" "${MCU_PATH[$i]}"
         done
     fi
+    # Подпись платы из реестра, если конфиг известен реестру (из devices.tsv); для обычного
+    # <чип>.config (Octopus, ALPS) строку не добавляем, чтобы вывод не менялся
+    local bid bkind
+    for i in "${!MCU_NAME[@]}"; do
+        [[ -n ${MCU_CFG[$i]} && $(basename "${MCU_CFG[$i]}") != "${MCU_CHIP[$i]}.config" ]] || continue
+        read -r bid bkind < <(board_by_cfg "${MCU_CFG[$i]}") || continue
+        board_load "$bid" 2>/dev/null || continue
+        info "Плата ${MCU_NAME[$i]}: $B_LABEL ($bkind)"
+    done
     for i in "${!SKIPPED[@]}"; do
         info "Пропущено: ${SKIPPED[$i]}"
     done

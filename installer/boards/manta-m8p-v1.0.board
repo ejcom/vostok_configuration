@@ -1,0 +1,30 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
+LABEL="BTT Manta M8P v1.0"
+ROLE="main"
+CHIP="stm32g0b1xx"
+FAMILY="g"
+MACH="STM32G0B1"
+CLOCK="8M"
+APP_OFFSET="2000"
+USB="PA11_PA12"
+# CAN у v1.0: BTT мост USB-CAN не поддерживает
+CAN=""
+CAN_KIND=""
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS=""
+KATAPULT_INITIAL_PINS=""
+KATAPULT_LED=""
+KATAPULT_DOUBLE_RESET="y"
+CFG="manta-m8p-v1.0"
+ALIASES="m8p-v1.0"
+DFU_HINT="MCU стоит на одной плате с CB1/CM4, USB к нему внутренний: зажмите BOOT, нажмите RESET, отпустите BOOT"
+DFU_HOW="button"
+ELEC_PATTERN=""
+TEMPLATE=""
+HEAD_NAMES=""
+VERIFIED="no"
+DOC="https://github.com/bigtreetech/Manta-M8P (V1.0_V1.1, README)"
+NOTE="Моста USB-CAN нет: платы голов по CAN не поддерживаются."

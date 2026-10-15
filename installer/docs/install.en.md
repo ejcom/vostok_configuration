@@ -25,14 +25,14 @@ Keep the clone where it is: the update button runs the scripts from it. When the
 
 1. Checks and packages (`apt`: git, dfu-util, gcc-arm-none-eabi, python3-serial, etc.).
 2. KIAUH → Klipper (`dmbutyugin/klipper` fork, `generic-cartesian` branch), Moonraker, Fluidd; the `gcode_shell_command` extension; katapult. If `~/klipper` exists but is not the fork, it offers to switch it.
-3. Detects the boards (`/dev/serial/by-id`, DFU mode, USB-CAN bridge), asks about what cannot be detected (mainboard, toolhead boards, number of ALPS) and shows the plan.
+3. Detects the boards (`/dev/serial/by-id`, DFU mode, USB-CAN bridge), asks about what cannot be detected (mainboard, toolhead boards, number of ALPS) and shows the plan. If several registry boards share the detected chip (for example H723 on the Octopus Pro, Manta M8P v2.0 and Spider v3), it asks which one you have; the default is the board from the previous `devices.tsv`, otherwise the one verified on hardware; with `-y` and no `devices.tsv` entry the installer stops here and requires `--main <id>`. For boards without a USB-CAN bridge combined with CAN toolhead boards the installer refuses before flashing (use `--heads none`); for boards not verified on hardware the plan carries a warning.
 4. With toolhead boards, configures `can0` (`/etc/network/interfaces.d/can0`, 1 Mbit, `txqueuelen 128`).
 5. Flashes the boards one by one and tells you what to do by hand at each step:
    - **ALPS**: BOOT + RESET → DFU → katapult → Klipper;
    - **toolhead boards** — method of your choice (`--heads-flash`):
      - **`dfu` — "on the bench" (the default, also with `-y`)**: one board at a time, connected over USB only, BOOT0/BOOT + RESET → DFU → katapult and Klipper in a single session. No 24 V and no CAN needed, so every board can be flashed before it goes into the printer. The `canbus_uuid` cannot be queried without a bus, so the installer reads the chip UID over DFU and computes `canbus_uuid` with the same algorithm as the firmware; the bridge UUID is computed from the Octopus USB serial. These values go to `printer.cfg` and `devices.tsv` but are **not verified on the bus**: after installing the electronics in the printer, apply 24 V and run `./install_vostok.sh --check-can` (see below). If the UID could not be read, `printer.cfg` keeps `ЗАПОЛНИТЕ`;
      - **`can` — for an assembled printer**: BOOT0/BOOT + RESET → DFU → katapult, then Klipper over CAN, verified with `canbus_query.py`. **A 24 V supply and CAN connections of the toolhead boards and the Octopus are required** — the installer warns about this before flashing starts;
-   - **Octopus**: BOOT0 jumper + RESET → DFU. Method of your choice: **katapult and Klipper together over DFU in one session (recommended, the default)** or katapult over DFU and then Klipper through katapult (then remove the jumper). Klipper is for USB or the USB→CAN bridge.
+   - **mainboard** (the Octopus as an example): BOOT0 jumper + RESET → DFU; some boards enter DFU with buttons or a different jumper — the installer prints the hint for the selected board, see the [table](hardware.en.md#mainboards). Method of your choice: **katapult and Klipper together over DFU in one session (recommended, the default)** or katapult over DFU and then Klipper through katapult (then remove the jumper). Klipper is for USB or the USB→CAN bridge.
 
    If flashing a board fails, a menu offers: retry, flash katapult and Klipper together over DFU, flash again via DFU (katapult) and Klipper through katapult, flash only Klipper directly over DFU, skip the board or abort. It works for every board.
 
@@ -51,7 +51,8 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 
 | Option | Purpose |
 |---|---|
-| `--main h723\|f446` | mainboard (otherwise detected/asked) |
+| `--main <id\|alias>` | mainboard: an id from the `boards/` registry or an alias (`h723`, `f446` — Octopus Pro, as before; the others are in the [table](hardware.en.md#mainboards)); otherwise detected/asked |
+| `--list-boards` | print the registry boards (id, chip, USB-CAN bridge, verified on hardware) and exit |
 | `--heads none\|v1.3\|v2\|ebb42` | toolhead boards (`--h36` is the old name) |
 | `--heads-flash dfu\|can` | how to flash toolhead boards: `dfu` — "on the bench", katapult and Klipper over USB without 24 V or CAN (the default, also with `-y`); `can` — katapult over DFU, Klipper over CAN (24 V and CAN cables required) |
 | `--check-can` | after installing the electronics in the printer: read `canbus_uuid` from the CAN bus (24 V required), compare with the computed values, fix `devices.tsv` and `printer.cfg`, restart Klipper; flashes nothing |
@@ -68,7 +69,7 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 | `--skip-board BOARD` | do not flash an already flashed board: `alps`, `alps0`, `alps1`, `main` or `heads` (repeatable) |
 | `--reflash` | do not offer to skip, flash every board again |
 | `--upgrade` | `apt upgrade` before installing |
-| `-V`, `--version` | print the installer version (current: 1.2d, file `VERSION`) |
+| `-V`, `--version` | print the installer version (current: 1.3, file `VERSION`) |
 | `-y` | no questions where a default exists (hardware steps still wait for Enter) |
 
 Log: `~/printer_data/logs/vostok_install.log`. The installation is repeatable: finished stages are skipped.

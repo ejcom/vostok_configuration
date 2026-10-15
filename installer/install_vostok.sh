@@ -9,7 +9,7 @@
 #   3. определяет подключённые MCU, спрашивает про отсутствующее (платы голов, ALPS) и показывает план;
 #   4. при наличии плат голов настраивает CAN-интерфейс can0 (1 Мбит, txqueuelen 128);
 #   5. прошивает katapult и Klipper: ALPS (F072, DFU), платы голов Fysetc H36 или BTT EBB42,
-#      Octopus Pro H723/F446 (USB или мост USB->CAN); в нужные моменты просит перевести
+#      главная плата из реестра boards/ (Octopus Pro H723/F446, Manta M8P, Spider, FLY-C8 ...; USB или мост USB->CAN); в нужные моменты просит перевести
 #      плату в DFU и что-то нажать/переключить. Платы голов - на выбор:
 #        dfu (по умолчанию) - "на столе": katapult и Klipper сразу по DFU через USB, без 24 В и CAN;
 #          canbus_uuid вычисляется по UID чипа, после установки в принтер его проверяют (--check-can);
@@ -56,7 +56,7 @@ PRINTER_CFG_DIR=$PRINTER_DATA/config
 DEVICES_FILE=${DEVICES_FILE:-$INSTALL_DIR/devices.tsv}
 
 # Ответы пользователя (можно задать опциями, иначе спросим)
-OPT_MAIN=""          # h723|f446
+OPT_MAIN=""          # id платы из реестра boards/ или алиас (h723, f446, ...)
 OPT_HEADS=""           # none|v1.3|v2|ebb42
 OPT_ALPS=""          # 0|1|2
 OPT_ELECTRONICS=""   # имя electronics_*.cfg
@@ -74,15 +74,16 @@ OPT_SKIP_BOARDS=()   # alps|alps0|alps1|main|heads: не прошивать (у�
 OPT_REFLASH=0        # не предлагать пропуск плат, уже прошитых текущей версией
 BYID_DIR=${BYID_DIR:-/dev/serial/by-id}
 
-MAIN=""              # stm32h723xx|stm32f446xx
+MAIN=""              # чип главной платы (из реестра по MAIN_BOARD)
+MAIN_BOARD=""        # id главной платы (boards/<id>.board)
 HEADS=""               # none|v1.3|v2
 ALPS_COUNT=0
 MODE=""              # usb|bridge
 SUDO_KEEPALIVE_PID=""
 
 # Результаты прошивки (для devices.tsv и printer.cfg)
-RES_MAIN_SERIAL=""   # режим usb: серийный номер Octopus
-RES_BRIDGE_UUID=""   # режим bridge: canbus_uuid Octopus
+RES_MAIN_SERIAL=""   # режим usb: серийный номер главной платы
+RES_BRIDGE_UUID=""   # режим bridge: canbus_uuid главной платы
 RES_HEAD_UUID=("" "")  # платы голов T0, T1
 RES_ALPS_SERIAL=("" "")
 
@@ -104,9 +105,11 @@ usage() {
     cat <<'EOF'
 Использование: install_vostok.sh [опции]
 
-  --main h723|f446      главная плата: Octopus Pro H723 или Octopus Pro F446 (иначе определит/спросит)
+  --main ПЛАТА          главная плата: id из реестра boards/ или алиас (h723, f446 - Octopus Pro; список: --list-boards),
+                        иначе определит по подключённому железу/спросит
+  --list-boards         показать платы реестра (id, чип, наличие моста USB-CAN, проверена ли на железе) и выйти
   --heads none|v1.3|v2|ebb42  платы голов по CAN: нет, Fysetc H36 v1.3/v2, BTT EBB42 (иначе спросит);
-                        с платами голов Octopus прошивается мостом USB-CAN. --h36 - то же, прежнее имя
+                        с платами голов главная плата прошивается мостом USB-CAN. --h36 - то же, прежнее имя
   --alps 0|1|2          сколько датчиков ALPS подключено по USB (иначе определит/спросит)
   --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (иначе предложит по железу)
   --config-source standard|user|generate|skip  откуда брать конфиг: корень main, user_configs, сгенерировать свой
@@ -158,6 +161,7 @@ parse_args() {
             --modules) [[ $# -ge 2 ]] || die "--modules требует аргумент"; OPT_MODULES=$2; shift ;;
             --alps) [[ $# -ge 2 ]] || die "--alps требует аргумент"; OPT_ALPS=$2; shift ;;
             --electronics) [[ $# -ge 2 ]] || die "--electronics требует аргумент"; OPT_ELECTRONICS=$2; shift ;;
+            --list-boards) print_boards; exit 0 ;;
             --only-detect) ONLY_DETECT=1 ;;
             --dry-run) DRY_RUN=1 ;;
             --skip-software) SKIP_SOFTWARE=1 ;;
@@ -178,7 +182,7 @@ parse_args() {
         esac
         shift
     done
-    case $OPT_MAIN in ""|h723|f446) ;; *) die "--main: h723 или f446" ;; esac
+    [[ -z $OPT_MAIN ]] || main_board_from_opt "$OPT_MAIN" >/dev/null
     case $OPT_HEADS in ""|none|v1.3|v2|ebb42) ;; *) die "--heads: none, v1.3, v2 или ebb42" ;; esac
     case $OPT_CONFIG_SOURCE in ""|standard|user|generate|skip) ;; *) die "--config-source: standard, user, generate или skip" ;; esac
     case $OPT_MAIN_FLASH in ""|dfu|katapult) ;; *) die "--main-flash: dfu или katapult" ;; esac
@@ -389,7 +393,7 @@ check_hw_requirements() {
     kernel_can_support || rc=$?
     case $rc in
         0) env_item ok "ядро $(uname -r) поддерживает CAN и USB-CAN адаптеры (gs_usb)" ;;
-        1) env_item bad "ядро $(uname -r) собрано без CAN (нужны CONFIG_CAN, CONFIG_CAN_RAW, CONFIG_CAN_GS_USB): Octopus в режиме моста USB-CAN работать не сможет. Нужно ядро с поддержкой CAN (gs_usb) либо сборка без плат голов по CAN: --heads none" ;;
+        1) env_item bad "ядро $(uname -r) собрано без CAN (нужны CONFIG_CAN, CONFIG_CAN_RAW, CONFIG_CAN_GS_USB): $(main_short) в режиме моста USB-CAN работать не сможет. Нужно ядро с поддержкой CAN (gs_usb) либо сборка без плат голов по CAN: --heads none" ;;
         *) env_item warn "не удалось определить поддержку CAN в ядре (нет /proc/config.gz и /boot/config-*); проверьте: modinfo gs_usb" ;;
     esac
     command -v ip >/dev/null && env_item ok "ip (iproute2)" || env_item bad "нет ip (пакет iproute2): интерфейс can0 настроить нельзя"
@@ -541,7 +545,7 @@ choose_heads_flash() {
     ans=$(ask_choice "Как прошивать платы голов?" "$w_dfu" "$w_dfu" "$w_can")
     if [[ $ans == "$w_can" ]]; then
         HEADS_WAY=can
-        warn "Для прошивки по CAN понадобятся источник 24 В (питание Octopus и плат голов) и подключение плат по CAN (CAN_H/CAN_L, терминаторы 120 Ом)."
+        warn "Для прошивки по CAN понадобятся источник 24 В (питание $(main_short) и плат голов) и подключение плат по CAN (CAN_H/CAN_L, терминаторы 120 Ом)."
     else
         HEADS_WAY=dfu
         info "Платы голов прошиваются по USB по одной. canbus_uuid будет вычислен по UID чипа; после установки электроники в принтер его нужно проверить (install_vostok.sh --check-can, нужны 24 В)."
@@ -552,6 +556,9 @@ print_plan() {
     info ""
     info "План установки:"
     info "  Главная плата: $(main_label), режим: $([[ $MODE == bridge ]] && echo 'мост USB-CAN (по гайду)' || echo 'USB')"
+    if [[ $(mb VERIFIED) != yes ]]; then
+        warn "$(main_label) не проверена на железе: конфиги прошивки составлены по документации производителя ($(mb DOC)). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику."
+    fi
     if [[ $HEADS == none ]]; then
         info "  Платы голов: нет"
     else
@@ -571,12 +578,12 @@ print_plan() {
             info "  $n. $(head_label) (обе, по очереди): katapult через DFU по USB"; n=$((n + 1))
         fi
     fi
-    info "  $n. $(main_label): katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: $([[ $MODE == bridge ]] && echo 'USB-CAN мост' || echo USB)"; n=$((n + 1))
+    info "  $n. $(main_label): katapult и Klipper по DFU ($(main_dfu_short); можно выбрать katapult по DFU + Klipper через katapult), режим: $([[ $MODE == bridge ]] && echo 'USB-CAN мост' || echo USB)"; n=$((n + 1))
     if [[ $HEADS != none ]]; then
         if [[ $HEADS_WAY == dfu ]]; then
             info "  $n. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)"; n=$((n + 1))
         else
-            info "  $n. $(head_label) (обе, по очереди): Klipper по CAN. ВНИМАНИЕ: нужны источник 24 В и подключение плат голов и Octopus по CAN"; n=$((n + 1))
+            info "  $n. $(head_label) (обе, по очереди): Klipper по CAN. ВНИМАНИЕ: нужны источник 24 В и подключение плат голов и $(main_short) по CAN"; n=$((n + 1))
         fi
     fi
     info "  $n. Прошивки собираются из $CONFIGS_DIR и $KATAPULT_CONFIGS"
@@ -868,8 +875,8 @@ EOF
 # в начале флеша не затрагивается; с ним katapult и Klipper пишутся за один сеанс DFU (рекомендуемый способ).
 # Katapult запускает приложение со смещения CONFIG_FLASH_APPLICATION_ADDRESS.
 # Серийный номер результата в FLASHED_SERIAL (для моста пустой). 0 = прошито, 1 = ошибка.
-dfu_flash_klipper() { # подпись конфиг чип семейство bridge(0 USB|1 мост|2 только CAN) [katapult_cfg [режим make|guide]]
-    local label=$1 cfg=$2 chip=$3 fam=$4 bridge=$5 kcfg=${6:-} kmode=${7:-guide} addr bin before f i dev="" kbin="" kkey
+dfu_flash_klipper() { # подпись конфиг чип семейство bridge(0 USB|1 мост|2 только CAN) [katapult_cfg [режим make|guide [вход_в_DFU]]]
+    local label=$1 cfg=$2 chip=$3 fam=$4 bridge=$5 kcfg=${6:-} kmode=${7:-guide} dfu_how=${8:-джампер BOOT0 или кнопка BOOT, затем RESET} addr bin before f i dev="" kbin="" kkey
     FLASHED_SERIAL=""; FLASHED_UUID=""
     addr=$(sed -n 's/^CONFIG_FLASH_APPLICATION_ADDRESS=\(.*\)$/\1/p' "$cfg")
     [[ -n $addr ]] || { warn "в $(basename "$cfg") нет CONFIG_FLASH_APPLICATION_ADDRESS"; return 1; }
@@ -884,9 +891,9 @@ dfu_flash_klipper() { # подпись конфиг чип семейство br
     build_fw_safe "$cfg" "$chip" || return 1
     bin=${BUILT_BIN[$cfg]:-}
     if [[ -n $kcfg ]]; then
-        pause_hw "$label: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу $addr)."
+        pause_hw "$label: переведите плату в DFU ($dfu_how) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу $addr)."
     else
-        pause_hw "$label: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. Katapult в начале флеша не затрагивается; Klipper запишется по адресу $addr."
+        pause_hw "$label: переведите плату в DFU ($dfu_how) и нажмите Enter. Katapult в начале флеша не затрагивается; Klipper запишется по адресу $addr."
     fi
     if [[ $DRY_RUN -eq 1 ]]; then
         [[ -n $kcfg ]] && info "[dry-run] dfu-util -a 0 -s 0x08000000$([[ $kmode == guide ]] && echo ':mass-erase:force') -D $kkey/katapult.bin"
@@ -925,11 +932,11 @@ dfu_flash_klipper() { # подпись конфиг чип семейство br
     fi
     if [[ $bridge -eq 2 ]]; then
         rm -f "$before"
-        pause_hw "Снимите джампер BOOT0 (если ставили) и отключите USB от $label. Дальше плата подключается только по CAN (она запустится от питания 24 В в принтере)."
+        pause_hw "Выйдите из режима DFU (снимите джампер BOOT0, если ставили; кнопки BOOT/BT0 отпустите) и отключите USB от $label. Дальше плата подключается только по CAN (она запустится от питания 24 В в принтере)."
         ok "$label: katapult и Klipper записаны по DFU (дальше доступна только по CAN)"
         return 0
     fi
-    pause_hw "Снимите джампер BOOT0 (если ставили) и нажмите RESET на $label. Если плата не запустилась, нажмите RESET ещё раз."
+    pause_hw "Выйдите из режима DFU (снимите джампер BOOT0, если ставили; кнопки BOOT/BT0 отпустите) и нажмите RESET на $label. Если плата не запустилась, нажмите RESET ещё раз."
     if [[ $bridge -eq 1 ]]; then
         rm -f "$before"
         bring_up_can || { warn "после прошивки моста не появился рабочий интерфейс $CAN_IFACE"; return 1; }
@@ -1158,7 +1165,7 @@ stage_flash_heads_katapult() {
     [[ $HEADS == none ]] && return 0
     heads_try_skip && return 0
     local i
-    warn "Вариант «Klipper по CAN»: на следующих этапах понадобятся источник 24 В и подключение плат голов и Octopus по CAN. Для прошивки на столе по USB используйте --heads-flash dfu."
+    warn "Вариант «Klipper по CAN»: на следующих этапах понадобятся источник 24 В и подключение плат голов и $(main_short) по CAN. Для прошивки на столе по USB используйте --heads-flash dfu."
     for ((i = 0; i < 2; i++)); do
         step "$(head_label): katapult, плата $(head_side "$i")"
         cat <<EOF
@@ -1302,33 +1309,33 @@ stage_flash_heads_klipper() {
     local i uuids n
     if [[ $DRY_RUN -eq 0 ]] && ! ip link show "$CAN_IFACE" >/dev/null 2>&1; then
         warn "интерфейса $CAN_IFACE нет (мост USB-CAN не работает): платы голов по CAN не прошиваю"
-        FLASH_FAILED+=("$(head_label): не прошиты по CAN (нет $CAN_IFACE; прошейте Octopus и запустите установку снова)")
+        FLASH_FAILED+=("$(head_label): не прошиты по CAN (нет $CAN_IFACE; прошейте $(main_short) и запустите установку снова)")
         return 0
     fi
     step "UUID моста ($(main_label))"
-    info "Для этого этапа подайте питание 24 В на Octopus и платы голов и подключите CAN-кабели по схеме из гайда."
+    info "Для этого этапа подайте питание 24 В на $(main_short) и платы голов и подключите CAN-кабели по схеме из гайда."
     if [[ $DRY_RUN -eq 1 ]]; then
-        info "[dry-run] canbus_query.py $CAN_IFACE -> UUID Octopus"
+        info "[dry-run] canbus_query.py $CAN_IFACE -> UUID $(main_short)"
         RES_BRIDGE_UUID=000000000000
     elif [[ -n $RES_BRIDGE_UUID ]]; then
-        info "UUID Octopus (мост) известен: $RES_BRIDGE_UUID"
+        info "UUID $(main_short) (мост) известен: $RES_BRIDGE_UUID"
     else
         check_can_health || true
         uuids=$(can_uuids Klipper)
         n=$(grep -c . <<<"$uuids" || true)
         if [[ $n -gt 1 ]]; then
-            pause_hw "На шине несколько устройств с Klipper. Отключите CAN-кабель от обеих плат голов (должен остаться только Octopus) и нажмите Enter."
+            pause_hw "На шине несколько устройств с Klipper. Отключите CAN-кабель от обеих плат голов (должен остаться только $(main_short)) и нажмите Enter."
             uuids=$(can_uuids Klipper)
             n=$(grep -c . <<<"$uuids" || true)
         fi
         if [[ $n -ne 1 ]]; then
             warn "ожидался один UUID на шине, найдено: $n"
             info "Проверьте: ip -s -d link show $CAN_IFACE; $KLIPPY_ENV/bin/python $KLIPPER_DIR/scripts/canbus_query.py $CAN_IFACE"
-            FLASH_FAILED+=("Octopus: UUID моста не определён (впишите canbus_uuid в [mcu] вручную)")
+            FLASH_FAILED+=("$(main_short): UUID моста не определён (впишите canbus_uuid в [mcu] вручную)")
         else
             RES_BRIDGE_UUID=$uuids
             state_set "$RES_BRIDGE_UUID" "$(host_version)"
-            ok "UUID Octopus (мост): $RES_BRIDGE_UUID"
+            ok "UUID $(main_short) (мост): $RES_BRIDGE_UUID"
             save_devices quiet
         fi
     fi
@@ -1345,14 +1352,46 @@ stage_flash_heads_klipper() {
     if [[ $DRY_RUN -eq 0 ]]; then
         pause_hw "Подключите CAN-кабелем обе платы голов вместе и нажмите Enter для проверки шины."
         uuids=$(can_uuids Klipper); n=$(grep -c . <<<"$uuids" || true)
-        info "На шине устройств с Klipper: $n (ожидается 3: Octopus и две платы голов)"
+        info "На шине устройств с Klipper: $n (ожидается 3: $(main_short) и две платы голов)"
         check_can_health || true
     fi
 }
 
 # ---------------------------------------------------------------- главная плата
 
-# 0 = Octopus пропущен (уже прошит), 1 = прошивать
+# Тексты входа в DFU главной платы. Для Octopus (джампер BOOT0, DFU_HINT начинается с "поставьте джампер BOOT0 и нажмите RESET")
+# остаются прежние формулировки, для остальных плат подсказка берётся из реестра (DFU_HINT, DFU_HOW).
+main_dfu_std() { [[ $(mb DFU_HOW) == jumper && $(mb DFU_HINT) == "поставьте джампер BOOT0 и нажмите RESET"* ]]; }
+
+main_dfu_short() { # кратко, для плана
+    if main_dfu_std; then echo "джампер BOOT0"
+    elif [[ $(mb DFU_HOW) == jumper ]]; then echo "джампер или перемычка BOOT, затем RESET"
+    else echo "кнопки BOOT и RESET"; fi
+}
+
+main_dfu_enter_text() { # запрос перед прошивкой katapult
+    if main_dfu_std; then echo "поставьте джампер BOOT0 и нажмите RESET (после прошивки katapult джампер нужно будет снять)"
+    else mb DFU_HINT; fi
+}
+
+main_dfu_after_text() { # после прошивки katapult по DFU
+    local twice="ДВАЖДЫ быстро нажмите RESET на $(main_label) (одиночный RESET после прошивки по DFU может не запустить katapult)."
+    if main_dfu_std; then echo "Снимите джампер BOOT0 с $(main_label) и ДВАЖДЫ быстро нажмите RESET (одиночный RESET после прошивки по DFU может не запустить katapult)."
+    elif [[ $(mb DFU_HOW) == jumper ]]; then echo "Верните джампер или перемычку входа в DFU в исходное положение и $twice"
+    else echo "Отпустите кнопку входа в DFU и $twice"; fi
+}
+
+main_dfu_mode_text() { # строка "Режим DFU: ..." перед прошивкой
+    if main_dfu_std; then echo "установите джампер на BOOT0, нажмите RESET (кнопка на плате)"
+    else mb DFU_HINT; fi
+}
+
+main_dfu_klipper_how() { # вход в DFU в запросе dfu_flash_klipper
+    if main_dfu_std; then echo "джампер BOOT0 или кнопка BOOT, затем RESET"
+    else mb DFU_HINT; fi
+}
+
+# 0 = главная плата пропущена (уже прошита), 1 = прошивать
 main_try_skip() {
     local forced=0 s u
     board_opt_skipped main && forced=1
@@ -1363,12 +1402,16 @@ main_try_skip() {
             [[ $forced -eq 1 ]] || return 1
             warn "--skip-board main: usb-Klipper_${MAIN}_* не найден, serial неизвестен (впишите [mcu] вручную)"
         elif [[ $forced -eq 0 ]]; then
+            # serial записан в devices.tsv за другой платой на этом чипе: пропуск не предлагаем
+            local known
+            known=$(awk -F'\t' -v k="$s" '$1 == k {print $2; exit}' <<<"${PREV_DEVICES:-}")
+            [[ -z $known || $known == "$(basename "$(board_cfg "$MAIN_BOARD" usb)")" ]] || return 1
             version_ok "$s" || return 1
             ask_yn "$(main_label): найден $s, Klipper $(host_version) уже установлен. Пропустить прошивку?" y || return 1
         fi
         RES_MAIN_SERIAL=$s
     else
-        u=$(prev_keys "${MAIN}-canbridge.config" | head -n 1)
+        u=$(prev_keys "$(basename "$(board_cfg "$MAIN_BOARD" bridge)")" | head -n 1)
         if [[ $forced -eq 0 ]]; then
             [[ -n $u ]] || return 1
             can_iface_up || return 1
@@ -1386,16 +1429,16 @@ main_try_skip() {
 }
 
 try_main() { # фаза
-    local phase=$1 kcfg fcfg bridge=0 fam=h7
+    local phase=$1 kcfg fcfg bridge=0 fam
     kcfg=$(katapult_cfg_for_main); fcfg=$(klipper_cfg_for_main)
     [[ $MODE == bridge ]] && bridge=1
-    [[ $MAIN == stm32f446xx ]] && fam=f4
+    fam=$(mb FAMILY)
     if [[ $phase == dfuk || $phase == dfuall ]]; then
         BOARD_PHASE=$phase
         if [[ $phase == dfuall ]]; then
-            dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" "$kcfg" guide || return 1
+            dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" "$kcfg" guide "$(main_dfu_klipper_how)" || return 1
         else
-            dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" || return 1
+            dfu_flash_klipper "$(main_label)" "$fcfg" "$MAIN" "$fam" "$bridge" "" guide "$(main_dfu_klipper_how)" || return 1
         fi
         if [[ $MODE == usb ]]; then RES_MAIN_SERIAL=$FLASHED_SERIAL; else set_bridge_uuid; fi
         return 0
@@ -1404,8 +1447,7 @@ try_main() { # фаза
     if [[ $phase == full ]]; then
         BOARD_PHASE=full
         enter_katapult "$(main_label)" "$MAIN" "$fam" "$kcfg" guide \
-            "поставьте джампер BOOT0 и нажмите RESET (после прошивки katapult джампер нужно будет снять)" \
-            "Снимите джампер BOOT0 с $(main_label) и ДВАЖДЫ быстро нажмите RESET (одиночный RESET после прошивки по DFU может не запустить katapult)." \
+            "$(main_dfu_enter_text)" "$(main_dfu_after_text)" \
             || return 1
         BOARD_DEV=$NEW_KATAPULT_DEV
     fi
@@ -1425,7 +1467,7 @@ stage_flash_main() {
     esac
     cat <<EOF
 Подключите $(main_label) USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
-Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Режим DFU: $(main_dfu_mode_text).
 Другие платы в режиме DFU быть не должны.
 EOF
     if [[ $way == "$m_dfu" ]]; then
@@ -1466,10 +1508,10 @@ save_devices() { # [quiet]
     local quiet=${1:-} lines="" i k keys=" "
     add_dev() { [[ -n $1 ]] || return 0; lines+="$1"$'\t'"$2"$'\t'"$3"$'\n'; keys+="$1 "; }
     if [[ $MODE == bridge ]]; then
-        add_dev "$RES_BRIDGE_UUID" "${MAIN}-canbridge.config" bridge
+        add_dev "$RES_BRIDGE_UUID" "$(basename "$(board_cfg "$MAIN_BOARD" bridge)")" bridge
         for i in 0 1; do add_dev "${RES_HEAD_UUID[$i]}" "$(head_cfg_name)" can; done
     else
-        add_dev "$RES_MAIN_SERIAL" "${MAIN}.config" usb
+        add_dev "$RES_MAIN_SERIAL" "$(basename "$(board_cfg "$MAIN_BOARD" usb)")" usb
     fi
     for ((i = 0; i < ALPS_COUNT; i++)); do add_dev "${RES_ALPS_SERIAL[$i]}" stm32f072xb.config usb; done
     if [[ $quiet == quiet && -n $PREV_DEVICES ]]; then
@@ -1597,7 +1639,7 @@ check_can_uuids() {
     local uuids n u i slot rc=0 bad=() free=() cfg=$PRINTER_CFG_DIR/printer.cfg
     local -a exp want_name
     step "canbus_uuid на шине $CAN_IFACE"
-    info "Нужны питание 24 В и подключённые по CAN Octopus и платы голов."
+    info "Нужны питание 24 В и подключённые по CAN $(main_short) и платы голов."
     if [[ $DRY_RUN -eq 1 ]]; then info "[dry-run] canbus_query.py $CAN_IFACE, сверка с devices.tsv, запись в printer.cfg"; return 0; fi
     if ! bring_up_can; then
         warn "интерфейса $CAN_IFACE нет: мост USB-CAN не подключён к хосту или не прошит"
@@ -1605,7 +1647,7 @@ check_can_uuids() {
     fi
     check_can_health || true
     uuids=$(can_uuids Klipper); n=$(grep -c . <<<"$uuids" || true)
-    info "На шине устройств с Klipper: $n (ожидается 3: Octopus и две платы голов)"
+    info "На шине устройств с Klipper: $n (ожидается 3: $(main_short) и две платы голов)"
     [[ $n -gt 0 ]] && while IFS= read -r u; do info "  $u"; done <<<"$uuids"
     exp=("${RES_BRIDGE_UUID:-}" "${RES_HEAD_UUID[0]:-}" "${RES_HEAD_UUID[1]:-}")
     want_name=("mcu" "mcu ${HEAD_MCU[0]}" "mcu ${HEAD_MCU[1]}")
@@ -1636,14 +1678,14 @@ check_can_uuids() {
             exp[$slot]=${free[0]}
         else
             if [[ ${#bad[@]} -eq 3 ]]; then
-                pause_hw "Определим мост: отключите CAN-кабель от обеих плат голов (на шине должен остаться только Octopus) и нажмите Enter."
+                pause_hw "Определим мост: отключите CAN-кабель от обеих плат голов (на шине должен остаться только $(main_short)) и нажмите Enter."
                 u=$(can_uuids Klipper); n=$(grep -c . <<<"$u" || true)
-                if [[ $n -eq 1 ]]; then exp[0]=$u; else warn "ожидался один UUID (Octopus), найдено: $n"; return 1; fi
+                if [[ $n -eq 1 ]]; then exp[0]=$u; else warn "ожидался один UUID ($(main_short)), найдено: $n"; return 1; fi
                 free=(); while IFS= read -r u; do [[ -n $u && ${u,,} != "${exp[0],,}" ]] && free+=("$u"); done <<<"$uuids"
                 bad=(1 2)
             fi
             if [[ ${#free[@]} -eq 2 && ${#bad[@]} -eq 2 ]]; then
-                pause_hw "Подключите к Octopus по CAN ТОЛЬКО левую голову ${HEAD_MCU[0]} (правую отключите) и нажмите Enter."
+                pause_hw "Подключите к $(main_short) по CAN ТОЛЬКО левую голову ${HEAD_MCU[0]} (правую отключите) и нажмите Enter."
                 u=$(can_uuids Klipper | grep -vix "${exp[0]}" || true); n=$(grep -c . <<<"$u" || true)
                 if [[ $n -ne 1 ]]; then warn "ожидалась одна плата головы, найдено: $n"; return 1; fi
                 exp[1]=$u
@@ -1671,20 +1713,30 @@ check_can_uuids() {
 check_can_main() {
     step "Проверка canbus_uuid на шине CAN"
     [[ -f $DEVICES_FILE ]] && PREV_DEVICES=$(cat "$DEVICES_FILE")
-    local k cfg role heads=0 mk
+    local k cfg role heads=0 mk r id kind def
     MODE=bridge
     while IFS=$'\t' read -r k cfg role; do
         [[ -n $k ]] || continue
+        r=$(board_by_cfg "$cfg" 2>/dev/null) || r=""
+        read -r id kind <<<"$r"
         case $role in
-            bridge) RES_BRIDGE_UUID=$k; MAIN=${cfg%-canbridge.config} ;;
+            bridge) RES_BRIDGE_UUID=$k; [[ -z ${id:-} ]] || set_main_board "$id" ;;
             can)
                 RES_HEAD_UUID[$heads]=$k; heads=$((heads + 1))
-                case $cfg in
-                    stm32g0b1xx-ebb42-can.config) HEADS=ebb42 ;; stm32g431xx-can.config) HEADS=v2 ;; stm32g0b1xx-can.config) HEADS=v1.3 ;;
-                esac ;;
+                [[ -z ${id:-} ]] || HEADS=${id#h36-} ;;
         esac
     done <<<"${PREV_DEVICES:-}"
-    [[ -n $MAIN ]] || case $(ask_choice "Главная плата:" "${OPT_MAIN:-h723}" h723 f446) in f446) MAIN=stm32f446xx ;; *) MAIN=stm32h723xx ;; esac
+    if [[ -z $MAIN_BOARD ]]; then
+        if [[ -n $OPT_MAIN ]]; then
+            id=$(main_board_from_opt "$OPT_MAIN") || exit 1
+        else
+            def=$(board_resolve h723 2>/dev/null || true)
+            local bridge_boards=()
+            for id in $(boards_list main); do board_has_bridge "$id" && bridge_boards+=("$id"); done
+            id=$(ask_board "Главная плата:" "$def" "${bridge_boards[@]}")
+        fi
+        set_main_board "$id"
+    fi
     if [[ -z $HEADS || $HEADS == none ]]; then
         case $(ask_choice "Платы голов:" "v2" "v1.3" "v2" "ebb42") in v1.3) HEADS=v1.3 ;; ebb42) HEADS=ebb42 ;; *) HEADS=v2 ;; esac
     fi

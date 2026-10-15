@@ -8,6 +8,8 @@ A flashing error on one board does not stop the installation: a menu offers to r
 
 If `flashtool.py` cannot write Klipper through katapult, choose "Flash Klipper directly over DFU" in the menu: the board is put in DFU, Klipper is written at the application offset and katapult is left untouched.
 
+**Entering DFU.** On the Octopus Pro it is the BOOT0 jumper + RESET, but some boards differ: BOOT/BT0 + RESET/RST buttons (Manta M8P, Spider v3), a BT0-3.3V jumper (Spider v2.x), `sudo fly-flash -d c8 -u` or buttons (FLY-C8; DIP switches 1, 2 select the internal USB, 3, 4 the Type-C connector). The installer prints the hint for the selected board; a summary is in the [board table](hardware.en.md#mainboards). If the board does not show up in DFU (`lsusb` without `0483:df11`), check that the right board is selected (`--main <id>`, `--list-boards`).
+
 **RESET after DFU.** After flashing katapult over DFU, a single RESET may start the old firmware instead of katapult. Press RESET **twice in a row, quickly** (katapult blinks its LED slowly). If katapult is already on the board (for example after a previous attempt), answer `s` at the DFU prompt.
 
 **Toolhead boards "on the bench".** If a board is not visible over USB without 24 V, check whether it is powered from USB (jumper or power switch on the board). If the chip UID could not be read, the installer says so and `printer.cfg` keeps `ЗАПОЛНИТЕ`: after installing in the printer run `install_vostok.sh --check-can`. If `--check-can` does not find a board, check 24 V, CAN_H/CAN_L and the terminators (about 60 Ω between CAN_H and CAN_L with power off); the UUID found on the bus always wins over the computed one, and if it differs from `printer.cfg` the script asks whether to replace the value.

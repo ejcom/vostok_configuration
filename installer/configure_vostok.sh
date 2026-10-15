@@ -39,7 +39,8 @@ usage() {
 
 Настройка конфига принтера без установки и прошивки.
 
-  --main h723|f446      главная плата (иначе определит по printer.cfg/железу или спросит)
+  --main ПЛАТА          главная плата: id или алиас из реестра, список: install_vostok.sh --list-boards
+                        (h723, f446 и др.; иначе определит по printer.cfg/железу или спросит)
   --heads none|v1.3|v2|ebb42  платы голов по CAN (иначе определит по printer.cfg или спросит)
   --alps 0|1|2          число датчиков ALPS (иначе определит или спросит)
   --config-source standard|user|generate|skip  источник конфига электроники: корень main, user_configs,
@@ -83,10 +84,33 @@ parse_args() {
         esac
         shift
     done
-    case $OPT_MAIN in ""|h723|f446) ;; *) die "--main: h723 или f446" ;; esac
+    [[ -z $OPT_MAIN ]] || main_board_from_opt "$OPT_MAIN" >/dev/null
     case $OPT_HEADS in ""|none|v1.3|v2|ebb42) ;; *) die "--heads: none, v1.3, v2 или ebb42" ;; esac
     case $OPT_CONFIG_SOURCE in ""|standard|user|generate|skip) ;; *) die "--config-source: standard, user, generate или skip" ;; esac
     case $OPT_ALPS in ""|0|1|2) ;; *) die "--alps: 0, 1 или 2" ;; esac
+}
+
+# Главная плата по существующему конфигу: имя electronics-файла (ELEC_PATTERN платы или её id с _),
+# затем чип из [mcu] (прошлая плата из devices.tsv, иначе проверенная плата с этим чипом). Печатает id или ничего.
+guess_main_board() { # список_mcu include_electronics
+    local list=$1 inc=$2 id pat chip prev cand
+    id=$(elec_named_board "$inc")
+    [[ -z $id ]] || { printf '%s' "$id"; return 0; }
+    for id in $(boards_list main); do
+        pat=$(board_field "$id" ELEC_PATTERN)
+        [[ -n $pat && $inc == *"$pat"* ]] && { printf '%s' "$id"; return 0; }
+    done
+    prev=$(prev_main_board)
+    for id in $(boards_list main); do
+        chip=$(board_field "$id" CHIP)
+        grep -q "$chip" <<<"$list" || continue
+        if [[ -n $prev && $(board_field "$prev" CHIP) == "$chip" ]]; then printf '%s' "$prev"; return 0; fi
+        for cand in $(boards_for_chip "$chip" main); do
+            [[ $(board_field "$cand" VERIFIED) == yes ]] && { printf '%s' "$cand"; return 0; }
+        done
+        printf '%s' "$(boards_for_chip "$chip" main | head -n 1)"; return 0
+    done
+    return 0
 }
 
 # Подсказки по железу из существующего printer.cfg: заполняет OPT_MAIN/OPT_HEADS/OPT_ALPS, только если они не заданы
@@ -95,10 +119,7 @@ guess_from_printer_cfg() {
     [[ $(cfg_state "$cfg") == vostok ]] || return 0   # пустой или чужой printer.cfg (например, пример KIAUH) не источник подсказок
     list=$(python3 -I "$INSTALL_DIR/tools/mcu_merge.py" "$cfg" --list 2>/dev/null || true)
     inc=$(sed -n 's/^[[:space:]]*\[include[[:space:]]\+\(electronics_[^]]*\.cfg\)\].*/\1/p' "$cfg" | head -n 1)
-    if [[ -z $OPT_MAIN ]]; then
-        if grep -q 'stm32h723xx' <<<"$list$inc" || grep -q '_h723_' <<<"$inc"; then OPT_MAIN=h723
-        elif grep -q 'stm32f446xx' <<<"$list" || grep -q '_f446_' <<<"$inc"; then OPT_MAIN=f446; fi
-    fi
+    [[ -n $OPT_MAIN ]] || OPT_MAIN=$(guess_main_board "$list" "$inc")
     if [[ -z $OPT_HEADS ]]; then
         if grep -q '^mcu T0_EBB' <<<"$list"; then OPT_HEADS=ebb42
         elif grep -q '^mcu T0CB' <<<"$list"; then
@@ -136,7 +157,7 @@ collect_mcu_state() {
         [[ -n $f ]] && RES_MAIN_SERIAL=$(sed -n 's/^.*usb-Klipper_[^_]*_\(.*\)-if00$/\1/p' <<<"$f")
     fi
     if [[ $MODE == bridge ]]; then
-        [[ -n $RES_BRIDGE_UUID ]] || RES_BRIDGE_UUID=$(prev_keys "${MAIN}-canbridge.config" | head -n 1)
+        [[ -n $RES_BRIDGE_UUID ]] || RES_BRIDGE_UUID=$(prev_keys "$(basename "$(board_cfg "$MAIN_BOARD" bridge)")" | head -n 1)
         if [[ -z ${RES_HEAD_UUID[0]} || -z ${RES_HEAD_UUID[1]} ]]; then
             local u0="" u1=""
             { read -r u0; read -r u1; } < <(prev_keys "$(head_cfg_name)") || true

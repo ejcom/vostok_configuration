@@ -1,0 +1,30 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
+LABEL="Fysetc Spider v2.x"
+ROLE="main"
+CHIP="stm32f446xx"
+FAMILY="f4"
+MACH="STM32F446"
+CLOCK="12M"
+APP_OFFSET="8000"
+USB="PA11_PA12"
+# на плате нет CAN-трансивера
+CAN=""
+CAN_KIND=""
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS=""
+KATAPULT_INITIAL_PINS=""
+KATAPULT_LED=""
+KATAPULT_DOUBLE_RESET="y"
+CFG="spider-v2-f446"
+ALIASES="spider-v2 spider-v2.x"
+DFU_HINT="поставьте перемычку BT0 - 3.3V и нажмите RESET (после прошивки перемычку снять)"
+DFU_HOW="jumper"
+ELEC_PATTERN=""
+TEMPLATE=""
+HEAD_NAMES=""
+VERIFIED="no"
+DOC="klipper/config/generic-fysetc-spider.cfg; docs.vorondesign.com"
+NOTE="Моста USB-CAN нет: платы голов по CAN не поддерживаются."

@@ -3,3 +3,5 @@ package-lock.json
 installer/build/
 installer/firmware/
 installer/devices.tsv
+__pycache__/
+*.pyc

@@ -87,6 +87,8 @@ class Runner:
                 ui.log(line.rstrip("\n"))
             rc = proc.wait()
         finally:
+            if proc.stdout:
+                proc.stdout.close()
             if timer:
                 timer.cancel()
         return subprocess.CompletedProcess(argv, rc, "".join(lines), "")

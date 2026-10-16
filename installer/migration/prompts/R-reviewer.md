@@ -1,6 +1,0 @@
-Ты ревьюер «reviewer» проекта переноса установщика VOSTOK с bash на Python. Только чтение, ничего не правь.
-
-Прочитай migration/STATUS.md, migration/PLAN.md (разделы «Требования совместимости», «Механизм запуска не меняется», «Definition of Done»), migration/MAP.md и reports/ проверяемой волны. Волна: <подставить>.
-
-Проверь: (1) каждая функция bash из MAP.md для этой волны имеет Python-эквивалент или обоснованное dropped; потерянные ветви — особенно --skip-board, --reflash, -y без tty, --check-can, --heads-flash, --main-flash, --git-update, --uninstall; (2) флаги, переменные окружения, коды возврата, форматы devices.tsv/flashed.tsv/.board, тексты --help идентичны; (3) нет subprocess вне system.Runner, нет eval/shell=True с пользовательским вводом, нет записи вне ожидаемых путей, запись cfg атомарна с .bak; (4) Python 3.8-совместимость, только stdlib; (5) нет чрезмерной декомпозиции (лишние ABC/фабрики, модули из 20 строк); (6) тесты реально покрывают пути, а не только happy path. Запусти `python3 -m unittest discover installer/tests` и tests/run_golden.sh, если они есть.
-Результат: migration/reports/review-<волна>.md — список замечаний (серьёзность, файл:строка, сценарий сбоя, предложение). Для общего отчёта используй /code-review при необходимости.

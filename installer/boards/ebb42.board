@@ -1,8 +1,8 @@
-# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
-LABEL="BTT EBB42"
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
+LABEL="BTT EBB42/EBB36"
 ROLE="head"
 CHIP="stm32g0b1xx"
 FAMILY="g"
@@ -18,12 +18,12 @@ KATAPULT_INITIAL_PINS=""
 KATAPULT_LED=""
 KATAPULT_DOUBLE_RESET="y"
 CFG="stm32g0b1xx-ebb42"
-ALIASES=""
+ALIASES="ebb36"
 DFU_HINT="зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET)"
 DFU_HOW="button"
 ELEC_PATTERN="ebb42"
 TEMPLATE=""
 HEAD_NAMES="T0_EBB,T1_EBB"
-VERIFIED="no"
+VERIFIED="yes"
 DOC="документация BTT"
-NOTE="Загрузчик 8KiB по документации BTT, на железе не проверено."
+NOTE="Загрузчик 8KiB по документации BTT. EBB36 и EBB42 на одном чипе G0B1, прошивка общая; проверено пользователями на EBB36."

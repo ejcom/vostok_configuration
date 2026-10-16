@@ -37,13 +37,13 @@ $ install_vostok.sh --list-boards
 # rc=0
 id                   chip         can  ok   название [роль] (алиасы)
 alps                 stm32f072xb  -    yes  ALPS [alps]
-ebb42                stm32g0b1xx  -    no   BTT EBB42 [head]
+ebb42                stm32g0b1xx  -    yes  BTT EBB42/EBB36 [head] (ebb36)
 fly-c8               stm32f407xx  bus  no   Mellow FLY-C8 [main] (flyc8 fly-c6 flyc6)
-h36-v1.3             stm32g0b1xx  -    no   Fysetc H36 v1.3 [head] (v1.3)
-h36-v2               stm32g431xx  -    no   Fysetc H36 v2 [head] (v2)
+h36-v1.3             stm32g0b1xx  -    yes  Fysetc H36 v1.3 [head] (v1.3)
+h36-v2               stm32g431xx  -    yes  Fysetc H36 v2 [head] (v2)
 manta-m8p-v1.0       stm32g0b1xx  -    no   BTT Manta M8P v1.0 [main] (m8p-v1.0)
 manta-m8p-v1.1       stm32g0b1xx  bus  no   BTT Manta M8P v1.1 [main] (m8p-v1.1)
-manta-m8p-v2.0       stm32h723xx  bus  no   BTT Manta M8P v2.0 [main] (m8p-v2.0)
+manta-m8p-v2.0       stm32h723xx  bus  yes  BTT Manta M8P v2.0 [main] (m8p-v2.0)
 octopus-pro-f429     stm32f429xx  bus  no   BTT Octopus Pro v1.0 F429 [main] (f429)
 octopus-pro-f446     stm32f446xx  bus  no   Octopus Pro F446 [main] (f446)
 octopus-pro-h723     stm32h723xx  bus  yes  Octopus Pro v1.1 H723 [main] (h723)

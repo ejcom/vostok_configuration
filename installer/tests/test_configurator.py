@@ -115,12 +115,25 @@ class TestRank(Base):
         verified = [i for i in ranked if REG.get(i).verified == "yes"]
         self.assertEqual(ranked[:len(verified)], verified)
         self.assertEqual(ranked[0], "octopus-pro-h723")
+        self.assertEqual([REG.rank(i) for i in ranked], sorted(REG.rank(i) for i in ranked))
         rest = ranked[len(verified):]
         chips = [REG.get(i).chip for i in rest]
         self.assertEqual(chips, sorted(chips, reverse=True))
         for chip in set(chips):                      # внутри одного чипа - по id
             same = [i for i in rest if REG.get(i).chip == chip]
             self.assertEqual(same, sorted(same))
+
+    def test_guide_board_first_then_verified_then_rest(self):
+        ranked = cf.rank_main_boards(REG, REG.for_chip("stm32h723xx", "main"))
+        self.assertEqual(ranked, ["octopus-pro-h723", "manta-m8p-v2.0", "spider-v3-h723"])
+        # плата гайда первая, даже если стоит последней во входе
+        self.assertEqual(cf.rank_main_boards(REG, ["spider-v3-h723", "manta-m8p-v2.0", "octopus-pro-h723"])[0], "octopus-pro-h723")
+
+    def test_unverified_h7_before_verified_f4_is_not_allowed(self):
+        """Проверенная F4 выше непроверенной H7 (rank важнее чипа)."""
+        ids = ["spider-v3-h723"] + [i for i in REG.list("main") if REG.rank(i) == 1 and REG.get(i).chip != "stm32h723xx"]
+        if len(ids) > 1:
+            self.assertEqual(cf.rank_main_boards(REG, ids)[-1], "spider-v3-h723")
 
     def test_is_single_extension_point(self):
         """main_candidates и guess_main_board берут порядок у одной функции rank_main_boards."""
@@ -250,7 +263,7 @@ class TestHeadsAndAlps(Base):
 
         def fake_choice(q, default, options):
             seen.update(q=q, default=default, options=list(options))
-            return "BTT EBB42"
+            return "BTT EBB42/EBB36"
 
         r = FakeRunner({("ip", "link", "show", "can0"): (0, "")})
         with mock.patch.object(ui, "ask_choice", fake_choice):
@@ -258,7 +271,7 @@ class TestHeadsAndAlps(Base):
         self.assertEqual(res, "ebb42")
         self.assertEqual(seen["q"], "Платы голов по CAN (при их наличии Octopus станет мостом USB-CAN):")
         self.assertEqual(seen["default"], "Fysetc H36 v2")
-        self.assertEqual(seen["options"], ["нет (пассивная плата, например fly miniAB)", "Fysetc H36 v1.3", "Fysetc H36 v2", "BTT EBB42"])
+        self.assertEqual(seen["options"], ["нет (пассивная плата, например fly miniAB)", "Fysetc H36 v1.3", "Fysetc H36 v2", "BTT EBB42/EBB36"])
 
     def test_only_detect_heads_and_alps(self):
         self.touch_byid(ALPS1, ALPS2, "usb-Klipper_stm32f072xb_AAAA00000003-if00")

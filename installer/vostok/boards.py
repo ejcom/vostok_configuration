@@ -174,6 +174,12 @@ class Registry:
         """id плат этого семейства (h7, f4, f0 …), опционально по роли."""
         return self._by("FAMILY", family, role)
 
+    def rank(self, id: str) -> int:
+        """Порядок предложения платы (board_rank): 0 - плата гайда (board_resolve h723), 1 - VERIFIED=yes, 2 - остальные."""
+        if id == self.resolve("h723"):
+            return 0
+        return 1 if self.get(id).verified == "yes" else 2
+
     def has_bridge(self, id: str) -> bool:
         """Есть ли режим USB-CAN моста: ROLE=main, заданы USB и CAN."""
         b = self.get(id)

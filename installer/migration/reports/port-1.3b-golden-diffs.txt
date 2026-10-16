@@ -1,0 +1,852 @@
+=== boards/list_boards
+===== boards/list_boards: РАСХОЖДЕНИЕ
+--- эталон/boards/list_boards
++++ сейчас/boards/list_boards
+@@ -2,13 +2,13 @@
+ # rc=0
+ id                   chip         can  ok   название [роль] (алиасы)
+ alps                 stm32f072xb  -    yes  ALPS [alps]
+-ebb42                stm32g0b1xx  -    no   BTT EBB42 [head]
++ebb42                stm32g0b1xx  -    yes  BTT EBB42/EBB36 [head] (ebb36)
+ fly-c8               stm32f407xx  bus  no   Mellow FLY-C8 [main] (flyc8 fly-c6 flyc6)
+-h36-v1.3             stm32g0b1xx  -    no   Fysetc H36 v1.3 [head] (v1.3)
+-h36-v2               stm32g431xx  -    no   Fysetc H36 v2 [head] (v2)
++h36-v1.3             stm32g0b1xx  -    yes  Fysetc H36 v1.3 [head] (v1.3)
++h36-v2               stm32g431xx  -    yes  Fysetc H36 v2 [head] (v2)
+ manta-m8p-v1.0       stm32g0b1xx  -    no   BTT Manta M8P v1.0 [main] (m8p-v1.0)
+ manta-m8p-v1.1       stm32g0b1xx  bus  no   BTT Manta M8P v1.1 [main] (m8p-v1.1)
+-manta-m8p-v2.0       stm32h723xx  bus  no   BTT Manta M8P v2.0 [main] (m8p-v2.0)
++manta-m8p-v2.0       stm32h723xx  bus  yes  BTT Manta M8P v2.0 [main] (m8p-v2.0)
+ octopus-pro-f429     stm32f429xx  bus  no   BTT Octopus Pro v1.0 F429 [main] (f429)
+ octopus-pro-f446     stm32f446xx  bus  no   Octopus Pro F446 [main] (f446)
+ octopus-pro-h723     stm32h723xx  bus  yes  Octopus Pro v1.1 H723 [main] (h723)
+=== configure/C_existing_ebb42_dry
+===== configure/C_existing_ebb42_dry: РАСХОЖДЕНИЕ
+--- эталон/configure/C_existing_ebb42_dry
++++ сейчас/configure/C_existing_ebb42_dry
+@@ -8,7 +8,7 @@
+ Устройства в /dev/serial/by-id:
+   <список by-id хоста скрыт нормализацией>
+ Устройств в режиме DFU (0483:df11): 0
+-Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42, ALPS: 0
++Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42/EBB36, ALPS: 0
+ 
+ == Конфигурация принтера ==
+ Конфигурация берётся из локального клона: <REPO>
+=== configure/C_existing_ebb42_real
+===== configure/C_existing_ebb42_real: РАСХОЖДЕНИЕ
+--- эталон/configure/C_existing_ebb42_real
++++ сейчас/configure/C_existing_ebb42_real
+@@ -8,7 +8,7 @@
+ Устройства в /dev/serial/by-id:
+   <список by-id хоста скрыт нормализацией>
+ Устройств в режиме DFU (0483:df11): 0
+-Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42, ALPS: 0
++Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42/EBB36, ALPS: 0
+ 
+ == Конфигурация принтера ==
+ Конфигурация берётся из локального клона: <REPO>
+=== configure/G_user_clean_ebb42_dry
+===== configure/G_user_clean_ebb42_dry: РАСХОЖДЕНИЕ
+--- эталон/configure/G_user_clean_ebb42_dry
++++ сейчас/configure/G_user_clean_ebb42_dry
+@@ -8,7 +8,7 @@
+ Устройства в /dev/serial/by-id:
+   <список by-id хоста скрыт нормализацией>
+ Устройств в режиме DFU (0483:df11): 0
+-Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42, ALPS: 0
++Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42/EBB36, ALPS: 0
+ 
+ == Конфигурация принтера ==
+ Конфигурация берётся из локального клона: <REPO>
+=== configure/G_user_clean_ebb42_real
+===== configure/G_user_clean_ebb42_real: РАСХОЖДЕНИЕ
+--- эталон/configure/G_user_clean_ebb42_real
++++ сейчас/configure/G_user_clean_ebb42_real
+@@ -8,7 +8,7 @@
+ Устройства в /dev/serial/by-id:
+   <список by-id хоста скрыт нормализацией>
+ Устройств в режиме DFU (0483:df11): 0
+-Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42, ALPS: 0
++Главная плата: Octopus Pro v1.1 H723, платы голов: BTT EBB42/EBB36, ALPS: 0
+ 
+ == Конфигурация принтера ==
+ Конфигурация берётся из локального клона: <REPO>
+=== install_matrix/detect__fly-c8__ebb42
+===== install_matrix/detect__fly-c8__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__fly-c8__ebb42
++++ сейчас/install_matrix/detect__fly-c8__ebb42
+@@ -33,11 +33,11 @@
+ План установки:
+   Главная плата: Mellow FLY-C8, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Mellow FLY-C8 не проверена на железе: конфиги прошивки составлены по документации производителя (https://github.com/Mellow-3D/klipper-docs (docs/board/fly_C8)). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Mellow FLY-C8: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__manta-m8p-v1.1__ebb42
+===== install_matrix/detect__manta-m8p-v1.1__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__manta-m8p-v1.1__ebb42
++++ сейчас/install_matrix/detect__manta-m8p-v1.1__ebb42
+@@ -33,11 +33,11 @@
+ План установки:
+   Главная плата: BTT Manta M8P v1.1, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: BTT Manta M8P v1.1 не проверена на железе: конфиги прошивки составлены по документации производителя (https://github.com/bigtreetech/Manta-M8P (V1.0_V1.1, README); klipper/config/generic-bigtreetech-manta-m8p-v1.1.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. BTT Manta M8P v1.1: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__manta-m8p-v2.0__ebb42
+===== install_matrix/detect__manta-m8p-v2.0__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__manta-m8p-v2.0__ebb42
++++ сейчас/install_matrix/detect__manta-m8p-v2.0__ebb42
+@@ -32,12 +32,11 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: мост USB-CAN (по гайду)
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. BTT Manta M8P v2.0: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__manta-m8p-v2.0__none
+===== install_matrix/detect__manta-m8p-v2.0__none: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__manta-m8p-v2.0__none
++++ сейчас/install_matrix/detect__manta-m8p-v2.0__none
+@@ -32,7 +32,6 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: USB
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+   Платы голов: нет
+   ALPS: 0
+ 
+=== install_matrix/detect__manta-m8p-v2.0__v1.3
+===== install_matrix/detect__manta-m8p-v2.0__v1.3: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__manta-m8p-v2.0__v1.3
++++ сейчас/install_matrix/detect__manta-m8p-v2.0__v1.3
+@@ -32,7 +32,6 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: мост USB-CAN (по гайду)
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+   Платы голов: Fysetc H36 v1.3, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+=== install_matrix/detect__manta-m8p-v2.0__v2
+===== install_matrix/detect__manta-m8p-v2.0__v2: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__manta-m8p-v2.0__v2
++++ сейчас/install_matrix/detect__manta-m8p-v2.0__v2
+@@ -32,7 +32,6 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: мост USB-CAN (по гайду)
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+   Платы голов: Fysetc H36 v2, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+=== install_matrix/detect__octopus-pro-f429__ebb42
+===== install_matrix/detect__octopus-pro-f429__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__octopus-pro-f429__ebb42
++++ сейчас/install_matrix/detect__octopus-pro-f429__ebb42
+@@ -33,11 +33,11 @@
+ План установки:
+   Главная плата: BTT Octopus Pro v1.0 F429, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: BTT Octopus Pro v1.0 F429 не проверена на железе: конфиги прошивки составлены по документации производителя (klipper/config/generic-bigtreetech-octopus-pro-v1.0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. BTT Octopus Pro v1.0 F429: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__octopus-pro-f446__ebb42
+===== install_matrix/detect__octopus-pro-f446__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__octopus-pro-f446__ebb42
++++ сейчас/install_matrix/detect__octopus-pro-f446__ebb42
+@@ -33,11 +33,11 @@
+ План установки:
+   Главная плата: Octopus Pro F446, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Octopus Pro F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://k3d.tech/vostok/manual/electronics/firmware/). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Octopus Pro F446: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__octopus-pro-h723__ebb42
+===== install_matrix/detect__octopus-pro-h723__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__octopus-pro-h723__ebb42
++++ сейчас/install_matrix/detect__octopus-pro-h723__ebb42
+@@ -32,11 +32,11 @@
+ 
+ План установки:
+   Главная плата: Octopus Pro v1.1 H723, режим: мост USB-CAN (по гайду)
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__spider-v3-f446__ebb42
+===== install_matrix/detect__spider-v3-f446__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__spider-v3-f446__ebb42
++++ сейчас/install_matrix/detect__spider-v3-f446__ebb42
+@@ -33,11 +33,11 @@
+ План установки:
+   Главная плата: Fysetc Spider v3.0 F446, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Fysetc Spider v3.0 F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://docs.fysetc.com). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Fysetc Spider v3.0 F446: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/detect__spider-v3-h723__ebb42
+===== install_matrix/detect__spider-v3-h723__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/detect__spider-v3-h723__ebb42
++++ сейчас/install_matrix/detect__spider-v3-h723__ebb42
+@@ -33,11 +33,11 @@
+ План установки:
+   Главная плата: Fysetc Spider v3.0 H723, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Fysetc Spider v3.0 H723 не проверена на железе: конфиги прошивки составлены по документации производителя (https://docs.fysetc.com (spider-v30-h7), drklipper). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Fysetc Spider v3.0 H723: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+=== install_matrix/dry__fly-c8__ebb42
+===== install_matrix/dry__fly-c8__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__fly-c8__ebb42
++++ сейчас/install_matrix/dry__fly-c8__ebb42
+@@ -51,11 +51,11 @@
+ План установки:
+   Главная плата: Mellow FLY-C8, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Mellow FLY-C8 не проверена на железе: конфиги прошивки составлены по документации производителя (https://github.com/Mellow-3D/klipper-docs (docs/board/fly_C8)). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Mellow FLY-C8: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +73,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +122,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (Mellow FLY-C8): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__manta-m8p-v1.1__ebb42
+===== install_matrix/dry__manta-m8p-v1.1__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__manta-m8p-v1.1__ebb42
++++ сейчас/install_matrix/dry__manta-m8p-v1.1__ebb42
+@@ -51,11 +51,11 @@
+ План установки:
+   Главная плата: BTT Manta M8P v1.1, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: BTT Manta M8P v1.1 не проверена на железе: конфиги прошивки составлены по документации производителя (https://github.com/bigtreetech/Manta-M8P (V1.0_V1.1, README); klipper/config/generic-bigtreetech-manta-m8p-v1.1.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. BTT Manta M8P v1.1: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +73,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +122,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (BTT Manta M8P v1.1): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__manta-m8p-v2.0__ebb42
+===== install_matrix/dry__manta-m8p-v2.0__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__manta-m8p-v2.0__ebb42
++++ сейчас/install_matrix/dry__manta-m8p-v2.0__ebb42
+@@ -50,12 +50,11 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: мост USB-CAN (по гайду)
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. BTT Manta M8P v2.0: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +72,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +121,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (BTT Manta M8P v2.0): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__manta-m8p-v2.0__none
+===== install_matrix/dry__manta-m8p-v2.0__none: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__manta-m8p-v2.0__none
++++ сейчас/install_matrix/dry__manta-m8p-v2.0__none
+@@ -50,7 +50,6 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: USB
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+   Платы голов: нет
+   ALPS: 0
+ 
+=== install_matrix/dry__manta-m8p-v2.0__v1.3
+===== install_matrix/dry__manta-m8p-v2.0__v1.3: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__manta-m8p-v2.0__v1.3
++++ сейчас/install_matrix/dry__manta-m8p-v2.0__v1.3
+@@ -50,7 +50,6 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: мост USB-CAN (по гайду)
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+   Платы голов: Fysetc H36 v1.3, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+=== install_matrix/dry__manta-m8p-v2.0__v2
+===== install_matrix/dry__manta-m8p-v2.0__v2: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__manta-m8p-v2.0__v2
++++ сейчас/install_matrix/dry__manta-m8p-v2.0__v2
+@@ -50,7 +50,6 @@
+ 
+ План установки:
+   Главная плата: BTT Manta M8P v2.0, режим: мост USB-CAN (по гайду)
+-ВНИМАНИЕ: BTT Manta M8P v2.0 не проверена на железе: конфиги прошивки составлены по документации производителя (Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+   Платы голов: Fysetc H36 v2, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+=== install_matrix/dry__octopus-pro-f429__ebb42
+===== install_matrix/dry__octopus-pro-f429__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__octopus-pro-f429__ebb42
++++ сейчас/install_matrix/dry__octopus-pro-f429__ebb42
+@@ -51,11 +51,11 @@
+ План установки:
+   Главная плата: BTT Octopus Pro v1.0 F429, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: BTT Octopus Pro v1.0 F429 не проверена на железе: конфиги прошивки составлены по документации производителя (klipper/config/generic-bigtreetech-octopus-pro-v1.0.cfg). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. BTT Octopus Pro v1.0 F429: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +73,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +122,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (BTT Octopus Pro v1.0 F429): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__octopus-pro-f446__ebb42
+===== install_matrix/dry__octopus-pro-f446__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__octopus-pro-f446__ebb42
++++ сейчас/install_matrix/dry__octopus-pro-f446__ebb42
+@@ -51,11 +51,11 @@
+ План установки:
+   Главная плата: Octopus Pro F446, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Octopus Pro F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://k3d.tech/vostok/manual/electronics/firmware/). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Octopus Pro F446: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +73,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +122,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (Octopus Pro F446): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__octopus-pro-h723__ebb42
+===== install_matrix/dry__octopus-pro-h723__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__octopus-pro-h723__ebb42
++++ сейчас/install_matrix/dry__octopus-pro-h723__ebb42
+@@ -50,11 +50,11 @@
+ 
+ План установки:
+   Главная плата: Octopus Pro v1.1 H723, режим: мост USB-CAN (по гайду)
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -72,32 +72,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -121,8 +121,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (Octopus Pro v1.1 H723): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__spider-v3-f446__ebb42
+===== install_matrix/dry__spider-v3-f446__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__spider-v3-f446__ebb42
++++ сейчас/install_matrix/dry__spider-v3-f446__ebb42
+@@ -51,11 +51,11 @@
+ План установки:
+   Главная плата: Fysetc Spider v3.0 F446, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Fysetc Spider v3.0 F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://docs.fysetc.com). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Fysetc Spider v3.0 F446: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +73,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +122,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (Fysetc Spider v3.0 F446): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+=== install_matrix/dry__spider-v3-h723__ebb42
+===== install_matrix/dry__spider-v3-h723__ebb42: РАСХОЖДЕНИЕ
+--- эталон/install_matrix/dry__spider-v3-h723__ebb42
++++ сейчас/install_matrix/dry__spider-v3-h723__ebb42
+@@ -51,11 +51,11 @@
+ План установки:
+   Главная плата: Fysetc Spider v3.0 H723, режим: мост USB-CAN (по гайду)
+ ВНИМАНИЕ: Fysetc Spider v3.0 H723 не проверена на железе: конфиги прошивки составлены по документации производителя (https://docs.fysetc.com (spider-v30-h7), drklipper). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+-  Платы голов: BTT EBB42, 2 шт., CAN can0 1 Мбит
++  Платы голов: BTT EBB42/EBB36, 2 шт., CAN can0 1 Мбит
+   ALPS: 0
+ 
+ Шаги с железом:
+-  1. BTT EBB42 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
++  1. BTT EBB42/EBB36 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+   2. Fysetc Spider v3.0 H723: katapult и Klipper по DFU (кнопки BOOT и RESET; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+   3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+   4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@ -73,32 +73,32 @@
+ '
+ настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата левая (T0_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата левая (T0_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 левая (T0_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 левая (T0_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 левая (T0_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 левая (T0_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 левая (T0_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+ [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-ebb42-can-.bin
+ [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+ 
+-== BTT EBB42: katapult и Klipper по DFU, плата правая (T1_EBB) ==
++== BTT EBB42/EBB36: katapult и Klipper по DFU, плата правая (T1_EBB) ==
+ Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+-  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42 правая (T1_EBB) (остальные платы голов от USB отключите);
++  - подключите к хосту USB-кабелем ТОЛЬКО BTT EBB42/EBB36 правая (T1_EBB) (остальные платы голов от USB отключите);
+   - режим DFU: зажмите BOOT, нажмите RESET, отпустите BOOT (на старых ревизиях - перемычка BOOT0 + RESET);
+   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+ 
+-== katapult и Klipper по DFU за один сеанс -> BTT EBB42 правая (T1_EBB) ==
++== katapult и Klipper по DFU за один сеанс -> BTT EBB42/EBB36 правая (T1_EBB) ==
+ [dry-run] сборка katapult (stm32g0b1xx-ebb42-can)
+ 
+->>> BTT EBB42 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
++>>> BTT EBB42/EBB36 правая (T1_EBB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+ [dry-run] ожидание Enter
+ [dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-ebb42-can/katapult.bin
+ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+@@ -122,8 +122,8 @@
+ 
+ == canbus_uuid плат: проверка на шине ==
+   мост (Fysetc Spider v3.0 H723): 000000000000
+-  BTT EBB42 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
+-  BTT EBB42 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 левая (T0_EBB): 000000000000 (вычислен по UID чипа)
++  BTT EBB42/EBB36 правая (T1_EBB): 000000000000 (вычислен по UID чипа)
+ ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+ После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+ (она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).

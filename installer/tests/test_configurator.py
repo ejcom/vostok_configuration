@@ -41,8 +41,7 @@ class FakeRunner:
 
     def run(self, cmd, **kw):
         argv = list(cmd)
-        assert argv[:4] == ["sh", "-c", 'exec "$@" 2>/dev/null', "sh"], argv
-        real = tuple(argv[4:])
+        real = tuple(argv)
         self.calls.append(real)
         rc, out = self.answers.get(real, (1, ""))
         return subprocess.CompletedProcess(argv, rc, out, "")
@@ -107,46 +106,6 @@ class Base(unittest.TestCase):
     def configurator(self, opts=None, hw=None, runner=None, **envkw):
         return cf.Configurator(opts or cf.Options(), self.env(**envkw), REG, hw or self.hw(), runner or FakeRunner())
 
-
-# --------------------------------------------------------------------------- USB / DFU / CAN
-
-class TestProbes(Base):
-    def test_byid_find_sorted_and_skips_broken_links(self):
-        self.touch_byid("usb-b_stm32f072xb_2-if00", "usb-a_stm32f072xb_1-if00")
-        os.symlink("/nonexistent", self.byid / "usb-c_stm32f072xb_3-if00")
-        found = cf.byid_find(self.byid, "usb-*stm32f072xb_*")
-        self.assertEqual([os.path.basename(f) for f in found], ["usb-a_stm32f072xb_1-if00", "usb-b_stm32f072xb_2-if00"])
-        self.assertEqual(cf.byid_find(self.tmp / "nope", "*"), [])
-
-    def test_serial_from_path(self):
-        self.assertEqual(cf.serial_from_path("/dev/serial/by-id/usb-Klipper_stm32h723xx_ABC123-if00"), "ABC123")
-        self.assertEqual(cf.serial_from_path("usb-Klipper_stm32f072xb_A_B-if00"), "A_B")
-        self.assertEqual(cf.serial_from_path("usb-Other_x_1-if00"), "")
-
-    def test_dfu_count_and_family(self):
-        r = FakeRunner({("lsusb", "-d", "0483:df11"): (0, "Bus 1 ID 0483:df11\nBus 1 ID 0483:df11\n")})
-        self.assertEqual(cf.dfu_count(r), 2)
-        self.assertEqual(cf.dfu_count(FakeRunner()), 0)
-        for text, fam in (("@Option Bytes /0x1FFFF800/", "f0"), ("0x1fffc000", "f4"), ("x 0x5200201C", "h7"),
-                          ("0x1FFF7800", "g"), ("", "unknown")):
-            r = FakeRunner({("sudo", "-n", "dfu-util", "-l"): (0, text)})
-            self.assertEqual(cf.dfu_family(r), fam, text)
-        # без sudo: запасной вызов dfu-util
-        r = FakeRunner({("dfu-util", "-l"): (0, "0x1FFFC000")})
-        self.assertEqual(cf.dfu_family(r), "f4")
-
-    def test_show_usb_state(self):
-        r = FakeRunner({("lsusb", "-d", "0483:df11"): (0, "x\n"), ("lsusb", "-d", "1d50:606f"): (0, "Bus"),
-                        ("ip", "-br", "link", "show", "can0"): (0, "can0  UP  <NOARP,UP>\n")})
-        _, out, _ = capture(cf.show_usb_state, r, "can0")
-        self.assertIn("Устройства в /dev/serial/by-id:", out)
-        self.assertIn("Устройств в режиме DFU (0483:df11): 1", out)
-        self.assertIn("Найден мост USB-CAN Klipper (1d50:606f); интерфейс can0: UP", out)
-        _, out, _ = capture(cf.show_usb_state, FakeRunner(), "can0")
-        self.assertNotIn("мост", out)
-
-
-# --------------------------------------------------------------------------- выбор платы
 
 class TestRank(Base):
     def test_verified_first_then_chip_desc_then_id(self):

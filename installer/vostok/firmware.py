@@ -28,6 +28,15 @@ def host_version(klipper_dir, runner: Optional[Runner] = None) -> str:
     return (cp.stdout or "").rstrip("\n")
 
 
+def host_version_or_empty(klipper_dir, runner: Optional[Runner] = None) -> str:
+    """Как ``$(host_version)`` в bash: версия или пустая строка, если git describe не удался (сообщение git остаётся
+    на экране). Выполняется и в dry-run (запрос состояния)."""
+    runner = runner or Runner()
+    cp = runner.run(["git", "-C", str(klipper_dir), "describe", "--always", "--tags", "--long"],
+                    capture=True, check=False, readonly=True)
+    return (cp.stdout or "").rstrip("\n") if cp.returncode == 0 else ""
+
+
 def norm_version(v: str) -> str:
     """Убирает ``*`` (версия взята из журнала) и ``-dirty``."""
     if v.endswith("*"):
@@ -149,3 +158,55 @@ def request_bootloader_can(katapult_dir, iface: str, uuid: str, runner: Optional
     """Запрос загрузчика у моста по CAN: ``flashtool.py -i <iface> -u <uuid> -r``."""
     ui.log("flashtool -i %s -u %s -r (мост)" % (iface, uuid))
     return flashtool(katapult_dir, ["-i", iface, "-u", uuid, "-r"], runner)
+
+
+# ------------------------------------------------------------------ katapult и dfu-util (install_vostok.sh)
+
+def katapult_key(cfg) -> str:
+    """Ключ конфига katapult: имя файла без ``.config``."""
+    name = os.path.basename(str(cfg))
+    return name[:-len(".config")] if name.endswith(".config") else name
+
+
+def katapult_work_dir(build_dir, cfg) -> Path:
+    """Каталог сборки katapult для конфига: <build_dir>/katapult-<ключ>."""
+    return Path(build_dir) / ("katapult-" + katapult_key(cfg))
+
+
+def build_katapult(cfg, *, katapult_dir, build_dir, runner: Optional[Runner] = None) -> str:
+    """Собрать katapult вне репозитория; вернуть путь к katapult.bin (в dry-run - ожидаемый путь, без сборки).
+    Ошибки - VostokError с теми же текстами, что в bash."""
+    runner = runner or Runner()
+    cfg = str(cfg)
+    work = katapult_work_dir(build_dir, cfg)
+    key = katapult_key(cfg)
+    if not os.path.isfile(cfg):
+        raise VostokError("нет конфига katapult: %s (создайте: tools/gen_configs.sh)" % cfg)
+    binpath = work / "out" / "katapult.bin"
+    if runner.dry_run:
+        ui.info("[dry-run] сборка katapult (%s)" % key)
+        return str(binpath)
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(cfg, work / ".config")
+    ui.info("сборка katapult (%s) ..." % key)
+    log = work / "make.log"
+    mk = ["make", "-C", str(katapult_dir), "KCONFIG_CONFIG=%s" % (work / ".config"), "OUT=%s/" % (work / "out")]
+    if _make(runner, mk + ["olddefconfig"], log, append=False) != 0:
+        _tail(log, 20)
+        raise VostokError("olddefconfig katapult (%s) не удался" % key)
+    if _make(runner, mk + ["-j%d" % cpu_count()], log, append=True) != 0:
+        _tail(log, 30)
+        raise VostokError("сборка katapult (%s) не удалась, лог: %s" % (key, log))
+    if not binpath.is_file():
+        raise VostokError("сборка katapult (%s) не создала katapult.bin" % key)
+    ui.ok("katapult собран: %s (%d байт)" % (binpath, binpath.stat().st_size))
+    return str(binpath)
+
+
+def dfu_run(runner: Runner, argv: List[str], sudo: bool = False) -> bool:
+    """Запуск dfu-util (или make flash): вывод на экран и в журнал. Успехом считается запись данных
+    («Download done»), даже если dfu-util вернул ошибку get_status после 100%: плата к этому моменту уже перезагрузилась."""
+    cp = runner.run(argv, sudo=sudo, check=False, tee=True)
+    out = cp.stdout or ""
+    return "Download done" in out or "File downloaded successfully" in out

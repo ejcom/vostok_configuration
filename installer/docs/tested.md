@@ -12,7 +12,7 @@
 
 **Платы, не проверенные на железе:** главные — Octopus Pro F446, Octopus Pro v1.0 F429, Manta M8P v1.0 / v1.1 / v2.0, Spider v3.0 H723, Spider v3.0 F446, Spider v2.x, FLY-C8; платы голов — Fysetc H36 v1.3 и v2, BTT EBB42. Проверены только Octopus Pro v1.1 H723 и ALPS.
 
-**Новые платы реестра** (Octopus Pro F429, Manta M8P v1.0/v1.1/v2.0, Spider v3.0 H723/F446, Spider v2.x, FLY-C8) на железе не проверялись вовсе. Проверено только на хосте: сборка их конфигов Klipper и katapult (`tools/gen_configs.sh --check --build`), `--dry-run` и подбор параметров по документации производителей. Не проверено на железе:
+**Новые платы реестра** (Octopus Pro F429, Manta M8P v1.0/v1.1/v2.0, Spider v3.0 H723/F446, Spider v2.x, FLY-C8) на железе не проверялись вовсе. Проверено только на хосте: сборка их конфигов Klipper и katapult (`tools/gen_configs.py --check --build`), `--dry-run` и подбор параметров по документации производителей. Не проверено на железе:
 
 - вход в DFU (кнопки BOOT/BT0, перемычка у Spider v2.x, `fly-flash` и DIP-переключатели FLY-C8) и вся прошивка katapult и Klipper;
 - определение семейства по Option Bytes для F4 и G0/G4 и неразличимость плат на одном чипе (H723: Octopus, Manta v2.0, Spider v3.0);

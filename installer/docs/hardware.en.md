@@ -72,11 +72,11 @@ How to add your own board: [build-configs.en.md](build-configs.en.md#how-to-add-
 | `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `mcu-update.service.in` | Klipper and firmware update, the Fluidd button |
 | `install_fluidd_theme.sh`, `fluidd-theme/` | K3D VOSTOK theme for Fluidd: logo, `custom.css`, preset |
 | `install_klipperscreen_theme.sh`, `klipperscreen-theme/` | K3D VOSTOK theme for KlipperScreen: `style.css`, `style.conf`, K3D mark, Tektur font |
-| `lib/vostok_config.sh` | shared config-setup library (sourced by `install_vostok.sh` and `configure_vostok.sh`) |
+| `vostok/` | the Python package with all installer logic (stdlib only, Python 3.8+); the `*.sh` files in the root are thin wrappers over `python3 -m vostok <command>` |
 | `templates/` | blank electronics config without boards and drivers (`electronics_blank.cfg`), board presets (`boards/`) and driver presets (`drivers/`) |
-| `tools/` | `gen_electronics.py` (electronics config generator), `mcu_merge.py` (adds `[mcu]` sections, `--set` for `canbus_uuid`), `can_uuid.py` (canbus_uuid from the chip UID), `pin_conflicts.py` (finds duplicated pins), `gen_configs.sh` (firmware build configs from the `boards/` registry) |
+| `tools/` | `gen_electronics.py` (electronics config generator), `mcu_merge.py` (adds `[mcu]` sections, `--set` for `canbus_uuid`), `can_uuid.py` (canbus_uuid from the chip UID), `pin_conflicts.py` (finds duplicated pins); `mcu_merge.py`, `pin_conflicts.py`, `can_uuid.py` and `gen_electronics.py` are wrappers over the `vostok/` modules, `gen_configs.py` (firmware build configs from the `boards/` registry) |
 | `boards/` | board registry: one `<id>.board` file per board (build parameters, labels, DFU hints, whether verified on hardware) |
-| `lib/boards.sh` | registry reader (`board_load`, `board_resolve`, `board_cfg`, etc.), sourced by the scripts |
+| `tests/` | unit tests (`python3 -m unittest discover tests`) and golden output references (`tests/run_golden.sh`) |
 | `configs/` | Klipper and katapult build configs |
 | `docs/` | this documentation split by topic |
 | `VERSION`, `CHANGELOG.en.md` | installer version (`-V`/`--version` in every script) and the [changelog](../CHANGELOG.en.md) |

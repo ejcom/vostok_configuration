@@ -228,7 +228,7 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 
 ## Дополнительные модули и пересечения пинов
 
-Модули — файлы из корня репозитория, которые подключаются строкой `[include …]`. Сейчас один: **`chamber_heater.cfg`** («Подогрев термокамеры», Smart Chamber Heater). Добавить следующий — одна строка в `CFG_MODULES` в `lib/vostok_config.sh`.
+Модули — файлы из корня репозитория, которые подключаются строкой `[include …]`. Сейчас один: **`chamber_heater.cfg`** («Подогрев термокамеры», Smart Chamber Heater). Добавить следующий — одна строка в `CFG_MODULES` в `vostok/configurator.py`.
 
 Для каждого модуля, который ещё не подключён:
 
@@ -298,7 +298,7 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 
 ## Пресеты пинов других главных плат
 
-Поле `TEMPLATE` в `boards/<id>.board` (кроме `octopus_pro`) — имя файла `templates/boards/main/<имя>.cfg`; `tools/gen_configs.sh --check` проверяет, что файл существует. Роли распределены по порядку разъёмов: X, W, Y левый, Y правый, Z → драйверы 1–5, экструдеры T0/T1 (без плат голов) → 6–7; стол — штатный выход BED/HB, подсветка — свободный выход HE; хотэнды HE0/HE1 + T0/T1, FAN0/FAN1 — вентиляторы хотэндов, FAN2 — обдув модели, FAN3 — электроника; концевики: Y левый/правый — первые два STOP, X/W (без голов) — следующие два; зонд — разъём BLTouch. Полярности как в стоке: `!` у `enable_pin` и `[fan]`, `^` у концевиков. Знак `dir_pin` берётся из примера производителя (у Octopus Pro v1.0 — из `user_configs/`) и проверяется после запуска. Платы с пресетом не проверены на железе: блоки помечены СВЕРЬТЕ, а в шапке файла стоит таблица «оборудование → разъём».
+Поле `TEMPLATE` в `boards/<id>.board` (кроме `octopus_pro`) — имя файла `templates/boards/main/<имя>.cfg`; `tools/gen_configs.py --check` проверяет, что файл существует. Роли распределены по порядку разъёмов: X, W, Y левый, Y правый, Z → драйверы 1–5, экструдеры T0/T1 (без плат голов) → 6–7; стол — штатный выход BED/HB, подсветка — свободный выход HE; хотэнды HE0/HE1 + T0/T1, FAN0/FAN1 — вентиляторы хотэндов, FAN2 — обдув модели, FAN3 — электроника; концевики: Y левый/правый — первые два STOP, X/W (без голов) — следующие два; зонд — разъём BLTouch. Полярности как в стоке: `!` у `enable_pin` и `[fan]`, `^` у концевиков. Знак `dir_pin` берётся из примера производителя (у Octopus Pro v1.0 — из `user_configs/`) и проверяется после запуска. Платы с пресетом не проверены на железе: блоки помечены СВЕРЬТЕ, а в шапке файла стоит таблица «оборудование → разъём».
 
 Файл пресета состоит из секций-маркеров (строка `@@ИМЯ@@`); текст до первого маркера — шапка с источником пинов:
 
@@ -326,11 +326,10 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 
 | Файл | Роль |
 |---|---|
-| `configure_vostok.sh` | точка входа: разбор опций, определение железа, `stage_config` |
-| `lib/vostok_config.sh` | общая библиотека для `install_vostok.sh` и `configure_vostok.sh`: `detect_hardware`, `pick_electronics` (меню источника), `drivers_wizard`, `find_reference`, `gen_custom_electronics`, `print_gen_warnings`, `merge_mcus_into_cfg`, `stage_config`, `stage_modules` |
-| `tools/gen_electronics.py` | сборка файла: шаблон + пресеты + драйверы + эталон; вывод `NAME`, `FILL`, `EMPTY`, `WARN` |
-| `tools/mcu_merge.py` | дописывание `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`), режим `--list` |
-| `tools/pin_conflicts.py` | поиск повторяющихся пинов |
+| `configure_vostok.sh` | тонкая обёртка: `python3 -m vostok configure` |
+| `vostok/configurator.py` | настройка конфига для `install_vostok.sh` и `configure_vostok.sh`: `HardwareDetector` (определение железа), `Configurator` (`pick_electronics` - меню источника, `drivers_wizard`, `find_reference`, `gen_custom_electronics`, `print_gen_warnings`, `merge_mcus_into_cfg`, `stage_config`, `stage_modules`), `main` |
+| `vostok/electronics.py` | сборка файла: шаблон + пресеты + драйверы + эталон; вывод `NAME`, `FILL`, `EMPTY`, `WARN`; `tools/gen_electronics.py` - обёртка с прежним путём и флагами |
+| `vostok/cfgfile.py` | разбор `printer.cfg` с `[include]`, дописывание `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`, режим `--list`, `--set`), поиск повторяющихся пинов; `tools/mcu_merge.py` и `tools/pin_conflicts.py` - обёртки |
 | `templates/electronics_blank.cfg` | шаблон с пустыми пинами и маркерами `;;DRIVERS;;`, `;;EXTRAS;;` |
 | `templates/boards/*.cfg` | пресеты плат: `octopus_pro`, `octopus_extruders`, `octopus_heads`, `h36_v1.3`, `h36_v2`, `ebb42`, `alps` |
 | `templates/boards/main/*.cfg` | пресеты пинов других главных плат: `octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0` (формат и добавление: ниже) |
@@ -338,8 +337,8 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 
 Как расширять:
 
-- **Новый драйвер**: файл `templates/drivers/tmcNNNN.cfg` и строка в `DRIVER_TYPES`, `DRIVER_FILES`, `DRIVER_TOKEN`, `DRIVER_TITLE` в `gen_electronics.py`, пункт в `drv_pick` в `lib/vostok_config.sh`.
-- **Новая плата головы**: файл `templates/boards/<имя>.cfg` с блоками `@@T0@@`/`@@T1@@` и `{M}` вместо имени MCU, значение в `--heads` и функции `head_*` библиотеки.
-- **Новый модуль**: строка `"файл.cfg|Название"` в `CFG_MODULES` и сам файл в корне репозитория.
+- **Новый драйвер**: файл `templates/drivers/tmcNNNN.cfg` и строка в `DRIVER_TYPES`, `DRIVER_FILES`, `DRIVER_TOKEN`, `DRIVER_TITLE` в `vostok/electronics.py`, пункт в `Configurator.drv_pick` в `vostok/configurator.py`.
+- **Новая плата головы**: файл `templates/boards/<имя>.cfg` с блоками `@@T0@@`/`@@T1@@` и `{M}` вместо имени MCU, значение в `--heads` и методы `Hardware.head_*` в `vostok/configurator.py`.
+- **Новый модуль**: строка `"файл.cfg|Название"` в `CFG_MODULES` (`vostok/configurator.py`) и сам файл в корне репозитория.
 
-Как тестировать, не затрагивая рабочий конфиг: копируйте `~/printer_data` в временный каталог и запускайте с `--printer-data` или `PRINTER_DATA=`. Проверка генератора: запустить `gen_electronics.py` с `--out-dir` для всех сочетаний `--heads` и `--drivers` и разобрать результат `configparser` (как это делает Klipper).
+Как тестировать, не затрагивая рабочий конфиг: копируйте `~/printer_data` в временный каталог и запускайте с `--printer-data` или `PRINTER_DATA=`. Проверка генератора: запустить `tools/gen_electronics.py` с `--out-dir` для всех сочетаний `--heads` и `--drivers` и разобрать результат `configparser` (как это делает Klipper).

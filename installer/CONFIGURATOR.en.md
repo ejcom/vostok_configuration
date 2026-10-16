@@ -228,7 +228,7 @@ The list of empty pins is also printed at the end of the run, per section.
 
 ## Optional modules and pin conflicts
 
-Modules are files from the repository root that are enabled with an `[include …]` line. There is one now: **`chamber_heater.cfg`** (chamber heating, Smart Chamber Heater). Adding another is one line in `CFG_MODULES` in `lib/vostok_config.sh`.
+Modules are files from the repository root that are enabled with an `[include …]` line. There is one now: **`chamber_heater.cfg`** (chamber heating, Smart Chamber Heater). Adding another is one line in `CFG_MODULES` in `vostok/configurator.py`.
 
 For each module that is not yet enabled:
 
@@ -298,7 +298,7 @@ The script exits with code 1 on an error (no `python3`, no `printer_data` direct
 
 ## Pin presets of other main boards
 
-The `TEMPLATE` field of `boards/<id>.board` (other than `octopus_pro`) names the file `templates/boards/main/<name>.cfg`; `tools/gen_configs.sh --check` verifies that the file exists. Roles follow the connector order: X, W, left Y, right Y, Z → drivers 1–5, extruders T0/T1 (without head boards) → 6–7; the bed uses the stock BED/HB output, the light a free HE output; hotends HE0/HE1 + T0/T1, FAN0/FAN1 are the hotend fans, FAN2 the model fan, FAN3 the electronics fan; endstops: left/right Y are the first two STOP inputs, X/W (without head boards) the next two; the probe is the BLTouch connector. Polarities as in the stock config: `!` on `enable_pin` and `[fan]`, `^` on endstops. The `dir_pin` sign comes from the manufacturer's example (for the Octopus Pro v1.0, from `user_configs/`) and is checked after the first start. Boards with a preset are not verified on hardware: blocks carry the СВЕРЬТЕ ("check") note and the file header holds an "equipment → connector" table.
+The `TEMPLATE` field of `boards/<id>.board` (other than `octopus_pro`) names the file `templates/boards/main/<name>.cfg`; `tools/gen_configs.py --check` verifies that the file exists. Roles follow the connector order: X, W, left Y, right Y, Z → drivers 1–5, extruders T0/T1 (without head boards) → 6–7; the bed uses the stock BED/HB output, the light a free HE output; hotends HE0/HE1 + T0/T1, FAN0/FAN1 are the hotend fans, FAN2 the model fan, FAN3 the electronics fan; endstops: left/right Y are the first two STOP inputs, X/W (without head boards) the next two; the probe is the BLTouch connector. Polarities as in the stock config: `!` on `enable_pin` and `[fan]`, `^` on endstops. The `dir_pin` sign comes from the manufacturer's example (for the Octopus Pro v1.0, from `user_configs/`) and is checked after the first start. Boards with a preset are not verified on hardware: blocks carry the СВЕРЬТЕ ("check") note and the file header holds an "equipment → connector" table.
 
 A preset file consists of marker sections (a line `@@NAME@@`); the text before the first marker is a header naming the pin source:
 
@@ -326,11 +326,10 @@ The reference (the user's own config) always wins over the preset: the preset on
 
 | File | Role |
 |---|---|
-| `configure_vostok.sh` | entry point: option parsing, hardware detection, `stage_config` |
-| `lib/vostok_config.sh` | shared library for `install_vostok.sh` and `configure_vostok.sh`: `detect_hardware`, `pick_electronics` (source menu), `drivers_wizard`, `find_reference`, `gen_custom_electronics`, `print_gen_warnings`, `merge_mcus_into_cfg`, `stage_config`, `stage_modules` |
-| `tools/gen_electronics.py` | builds the file: template + presets + drivers + reference; prints `NAME`, `FILL`, `EMPTY`, `WARN` |
-| `tools/mcu_merge.py` | adds `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`), `--list` mode |
-| `tools/pin_conflicts.py` | finds duplicated pins |
+| `configure_vostok.sh` | thin wrapper: `python3 -m vostok configure` |
+| `vostok/configurator.py` | config setup for `install_vostok.sh` and `configure_vostok.sh`: `HardwareDetector` (hardware detection), `Configurator` (`pick_electronics` - the source menu, `drivers_wizard`, `find_reference`, `gen_custom_electronics`, `print_gen_warnings`, `merge_mcus_into_cfg`, `stage_config`, `stage_modules`), `main` |
+| `vostok/electronics.py` | builds the file: template + presets + drivers + reference; prints `NAME`, `FILL`, `EMPTY`, `WARN`; `tools/gen_electronics.py` is a wrapper with the old path and flags |
+| `vostok/cfgfile.py` | parses `printer.cfg` with its `[include]`s, adds `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`, `--list` mode, `--set`), finds duplicated pins; `tools/mcu_merge.py` and `tools/pin_conflicts.py` are wrappers |
 | `templates/electronics_blank.cfg` | template with empty pins and the markers `;;DRIVERS;;`, `;;EXTRAS;;` |
 | `templates/boards/*.cfg` | board presets: `octopus_pro`, `octopus_extruders`, `octopus_heads`, `h36_v1.3`, `h36_v2`, `ebb42`, `alps` |
 | `templates/boards/main/*.cfg` | pin presets of other main boards: `octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0` (format and how to add one: below) |
@@ -338,8 +337,8 @@ The reference (the user's own config) always wins over the preset: the preset on
 
 How to extend:
 
-- **A new driver**: a file `templates/drivers/tmcNNNN.cfg` and an entry in `DRIVER_TYPES`, `DRIVER_FILES`, `DRIVER_TOKEN`, `DRIVER_TITLE` in `gen_electronics.py`, an item in `drv_pick` in `lib/vostok_config.sh`.
-- **A new toolhead board**: a file `templates/boards/<name>.cfg` with `@@T0@@`/`@@T1@@` blocks and `{M}` instead of the MCU name, a value for `--heads` and the `head_*` functions of the library.
-- **A new module**: an `"file.cfg|Title"` entry in `CFG_MODULES` and the file itself in the repository root.
+- **A new driver**: a file `templates/drivers/tmcNNNN.cfg` and an entry in `DRIVER_TYPES`, `DRIVER_FILES`, `DRIVER_TOKEN`, `DRIVER_TITLE` in `vostok/electronics.py`, an item in `Configurator.drv_pick` in `vostok/configurator.py`.
+- **A new toolhead board**: a file `templates/boards/<name>.cfg` with `@@T0@@`/`@@T1@@` blocks and `{M}` instead of the MCU name, a value for `--heads` and the `Hardware.head_*` methods in `vostok/configurator.py`.
+- **A new module**: an `"file.cfg|Title"` entry in `CFG_MODULES` (`vostok/configurator.py`) and the file itself in the repository root.
 
-How to test without touching the working config: copy `~/printer_data` to a temporary directory and run with `--printer-data` or `PRINTER_DATA=`. To check the generator: run `gen_electronics.py` with `--out-dir` for all combinations of `--heads` and `--drivers` and parse the result with `configparser` (as Klipper does).
+How to test without touching the working config: copy `~/printer_data` to a temporary directory and run with `--printer-data` or `PRINTER_DATA=`. To check the generator: run `tools/gen_electronics.py` with `--out-dir` for all combinations of `--heads` and `--drivers` and parse the result with `configparser` (as Klipper does).

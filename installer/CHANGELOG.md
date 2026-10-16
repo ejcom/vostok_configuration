@@ -4,6 +4,15 @@
 
 Текущая версия записана в файле `VERSION` (`-V`/`--version` у всех скриптов). Описание: [README.md](README.md).
 
+## 1.4 — 2026-10-16
+
+Установщик перенесён с bash на Python 3.8+ (только стандартная библиотека). Команды, флаги, переменные окружения, тексты вывода, коды возврата и форматы файлов (`devices.tsv`, `*.board`, конфиги сборки) не изменились: `install_vostok.sh`, `configure_vostok.sh`, `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `install_fluidd_theme.sh`, `install_klipperscreen_theme.sh` остались точками входа и теперь запускают `python3 -m vostok <команда>`.
+
+- Вся логика лежит в пакете `vostok/`; удалены `lib/vostok_config.sh` и `lib/boards.sh`. `tools/gen_configs.sh` заменён на `tools/gen_configs.py` (те же опции `--force`, `--board`, `--check`, `--build`, те же 36 конфигов); `tools/gen_electronics.py`, `mcu_merge.py`, `pin_conflicts.py`, `can_uuid.py` сохранили путь и аргументы, но стали обёртками над `vostok/`.
+- Добавлены юнит-тесты (`python3 -m unittest discover tests`) и golden-эталоны вывода со старых скриптов (`tests/run_golden.sh`).
+- Отличия от 1.3a (мелкие): Moonraker и скачивание конфигурации идут через `urllib`, `curl` для них не вызывается; без терминала и без `-y` вопрос сразу даёт `ОШИБКА: нужен терминал…` вместо служебных сообщений bash (`/dev/tty: No such device`, `ans: unbound variable`), код выхода 1 как раньше; файлы (`devices.tsv`, `moonraker.asvc`, `mcu_update.cfg`, темы) записываются атомарно; сбой внешней команды и непредвиденная ошибка дают одну строку `ОШИБКА: …` вместо обрыва скрипта или traceback; `flash_can` для моста ищет katapult в `BYID_DIR`, а не в жёстком `/dev/serial/by-id`; временный каталог конфигуратора удаляется всегда; проверка «bash 4.4+» больше не нужна.
+- Требуется `python3` 3.8 или новее (на Debian 11 он есть); остальные требования прежние.
+
 ## 1.3a — 2026-10-15
 
 - Конфигуратор: пресеты пинов главных плат `templates/boards/main/` (`octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0`); поле `TEMPLATE` в `.board` указывает на пресет, `tools/gen_configs.sh --check` проверяет, что файл есть. Для этих плат `gen_electronics.py --template <имя>` подставляет моторы, сокеты и SPI драйверов, стол, вентиляторы, концевики, зонд, хотэнды (без плат голов) и таблицу «оборудование → разъём» в шапку; блоки помечены СВЕРЬТЕ. Платы не проверены на железе. Для Spider v2.x / v3.0 и FLY-C8 пресета нет: надёжного источника пинов не нашлось.

@@ -94,42 +94,42 @@
 | `warn` | 86 | ui.warn | done |
 | `die` | 87 | ui.die (VostokError; печать в cli.main) | done |
 | `step` | 88 | ui.step | done |
-| `usage` | 90 |  | todo |
+| `usage` | 90 | update.USAGE (+ update.parse_args) | done |
 | `confirm` | 114 | ui.confirm | done |
-| `mr_get` | 146 |  | todo |
-| `json_get` | 149 |  | todo |
-| `check_moonraker` | 158 |  | todo |
-| `check_not_printing` | 170 |  | todo |
-| `preflight` | 182 |  | todo |
-| `by_id_chip` | 230 |  | todo |
-| `by_id_serial` | 231 |  | todo |
-| `cfg_mcus` | 234 |  | todo |
-| `cfg_mcu_versions` | 250 |  | todo |
-| `add_mcu` | 269 |  | todo |
+| `mr_get` | 146 | update.Moonraker.fetch (urllib) | done |
+| `json_get` | 149 | update.Moonraker.get_json/status (JSON без eval) | done |
+| `check_moonraker` | 158 | update.Updater.check_moonraker | done |
+| `check_not_printing` | 170 | update.Updater.check_not_printing | done |
+| `preflight` | 182 | update.Updater.preflight | done |
+| `by_id_chip` | 230 | hardware.by_id_chip | done |
+| `by_id_serial` | 231 | hardware.by_id_serial | done |
+| `cfg_mcus` | 234 | update.Moonraker.mcu_sections | done |
+| `cfg_mcu_versions` | 250 | update.Moonraker.mcu_versions | done |
+| `add_mcu` | 269 | update.Updater.add_mcu (Mcu - dataclass) | done |
 | `devices_lookup` | 297 | state.DevicesFile.lookup | done |
-| `can_iface_up` | 302 |  | todo |
-| `add_can_mcu` | 304 |  | todo |
-| `discover_mcus` | 327 |  | todo |
-| `host_version` | 374 |  | todo |
-| `norm_version` | 376 |  | todo |
+| `can_iface_up` | 302 | hardware.can_iface_up | done |
+| `add_can_mcu` | 304 | update.Updater.add_can_mcu | done |
+| `discover_mcus` | 327 | update.Updater.discover_mcus | done |
+| `host_version` | 374 | firmware.host_version | done |
+| `norm_version` | 376 | firmware.norm_version | done |
 | `state_get` | 378 | state.FlashedLog.get | done |
 | `state_set` | 379 | state.FlashedLog.set | done |
-| `print_mcus` | 387 |  | todo |
-| `pending_commits` | 421 |  | todo |
-| `post_update_checks` | 427 |  | todo |
-| `update_host_git` | 445 |  | todo |
-| `update_host` | 473 |  | todo |
-| `build_firmware` | 493 |  | todo |
-| `klipper_units` | 518 |  | todo |
+| `print_mcus` | 387 | update.Updater.print_mcus | done |
+| `pending_commits` | 421 | update.Updater.pending_commits | done |
+| `post_update_checks` | 427 | update.Updater.post_update_checks | done |
+| `update_host_git` | 445 | update.Updater.update_host_git | done |
+| `update_host` | 473 | update.Updater.update_host | done |
+| `build_firmware` | 493 | firmware.build_firmware | done |
+| `klipper_units` | 518 | update.Updater.klipper_units | done |
 | `sctl` | 524 | system.Runner.systemctl | done |
 | `can_manage_services` | 530 | system.can_manage_services | done |
-| `services` | 535 |  | todo |
-| `wait_for_device` | 547 |  | todo |
-| `flash_can` | 559 |  | todo |
-| `flash_all` | 588 |  | todo |
-| `wait_for_klipper` | 634 |  | todo |
-| `verify_versions` | 654 |  | todo |
-| `main` | 681 |  | todo |
+| `services` | 535 | update.Updater.services | done |
+| `wait_for_device` | 547 | hardware.wait_for_device | done |
+| `flash_can` | 559 | update.Updater.flash_can (+ firmware.flash_can_node/request_bootloader_can, hardware.wait_for_katapult) | done |
+| `flash_all` | 588 | update.Updater.flash_all | done |
+| `wait_for_klipper` | 634 | update.Updater.wait_for_klipper | done |
+| `verify_versions` | 654 | update.Updater.verify_versions | done |
+| `main` | 681 | update.Updater.run / update.main | done |
 
 ## lib/vostok_config.sh
 
@@ -304,6 +304,6 @@
 |---|---|---|
 | `install_vostok.sh` kiauh_set_fork_repo | `host.py` (A5) | todo |
 | `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1) | done (heredoc в bash пока на месте) |
-| `update_klipper_mcu.sh` json_get/cfg_mcus/cfg_mcu_versions | `update.py` (A2) | todo |
+| `update_klipper_mcu.sh` json_get/cfg_mcus/cfg_mcu_versions | `update.Moonraker` (A2) | done |
 | `install_fluidd_theme.sh` py -c (db_get_theme, edit_fluidd_cfg, preset_json) | `integrations.py` (A3) | todo |
 | `install_klipperscreen_theme.sh` edit_ks_conf/current_theme | `integrations.py` (A3) | todo |

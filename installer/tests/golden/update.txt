@@ -1,0 +1,189 @@
+@@@@ CASE update/list_ambiguous_chip_board
+$ update_klipper_mcu.sh --list
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+ВНИМАНИЕ: (не в printer.cfg): serial UNKNOWNSERIAL1 нет в devices.tsv, на чипе stm32h723xx бывают разные платы; беру stm32h723xx.config (Octopus Pro v1.1 H723). Если плата другая, добавьте serial в devices.tsv
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+(не в printer.cfg) stm32h723xx   ?                          stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_UNKNOWNSERIAL1-if00
+Пропущено: mcu: устройство <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), нет конфига сборки (devices.tsv или configs/bcc1147e110d.config), прошивается вручную: flashtool.py -i can0 -u bcc1147e110d -f <bin>
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), нет конфига сборки (devices.tsv или configs/21ad41ca6772.config), прошивается вручную: flashtool.py -i can0 -u 21ad41ca6772 -f <bin>
+Пропущено: mcu alps: устройство <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+@@@@ CASE update/list_can_down
+$ update_klipper_mcu.sh --list
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+ВНИМАНИЕ: (не в printer.cfg): serial NOCFG0000001 нет в devices.tsv, на чипе stm32f446xx бывают разные платы; беру stm32f446xx.config (Octopus Pro F446). Если плата другая, добавьте serial в devices.tsv
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+mcu                  stm32h723xx   v0.12.0-1-g<SHA>         stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00
+mcu alps             stm32f072xb   v0.11.0-5-g<SHA>-dirty   stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00
+(не в printer.cfg) stm32f072xb   ?                          stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_CCCC00000003-if00
+(не в printer.cfg) stm32f446xx   ?                          stm32f446xx.config       <CASE>/byid/usb-Klipper_stm32f446xx_NOCFG0000001-if00
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: usb-katapult_stm32f446xx_DDDD00000004-if00: устройство в режиме загрузчика katapult, прошейте вручную: flashtool.py -d <CASE>/byid/usb-katapult_stm32f446xx_DDDD00000004-if00 -f <bin>
+@@@@ CASE update/list_full
+$ update_klipper_mcu.sh --list
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+ВНИМАНИЕ: (не в printer.cfg): serial NOCFG0000001 нет в devices.tsv, на чипе stm32f446xx бывают разные платы; беру stm32f446xx.config (Octopus Pro F446). Если плата другая, добавьте serial в devices.tsv
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+mcu                  stm32h723xx   v0.12.0-1-g<SHA>         stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00
+mcu T0CB             stm32g0b1xx   v0.12.0-0-g<SHA>         stm32g0b1xx-can.config   CAN can0 bcc1147e110d
+mcu T1CB             stm32g0b1xx   ?                          stm32g0b1xx-can.config   CAN can0 21ad41ca6772
+mcu alps             stm32f072xb   v0.11.0-5-g<SHA>-dirty   stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00
+(не в printer.cfg) stm32f072xb   ?                          stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_CCCC00000003-if00
+(не в printer.cfg) stm32f446xx   ?                          stm32f446xx.config       <CASE>/byid/usb-Klipper_stm32f446xx_NOCFG0000001-if00
+Плата mcu T0CB: Fysetc H36 v1.3 (can)
+Плата mcu T1CB: Fysetc H36 v1.3 (can)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: usb-katapult_stm32f446xx_DDDD00000004-if00: устройство в режиме загрузчика katapult, прошейте вручную: flashtool.py -d <CASE>/byid/usb-katapult_stm32f446xx_DDDD00000004-if00 -f <bin>
+$ update_klipper_mcu.sh --list -y
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+ВНИМАНИЕ: (не в printer.cfg): serial NOCFG0000001 нет в devices.tsv, на чипе stm32f446xx бывают разные платы; беру stm32f446xx.config (Octopus Pro F446). Если плата другая, добавьте serial в devices.tsv
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+mcu                  stm32h723xx   v0.12.0-1-g<SHA>         stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00
+mcu T0CB             stm32g0b1xx   v0.12.0-0-g<SHA>         stm32g0b1xx-can.config   CAN can0 bcc1147e110d
+mcu T1CB             stm32g0b1xx   ?                          stm32g0b1xx-can.config   CAN can0 21ad41ca6772
+mcu alps             stm32f072xb   v0.11.0-5-g<SHA>-dirty   stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00
+(не в printer.cfg) stm32f072xb   ?                          stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_CCCC00000003-if00
+(не в printer.cfg) stm32f446xx   ?                          stm32f446xx.config       <CASE>/byid/usb-Klipper_stm32f446xx_NOCFG0000001-if00
+Плата mcu T0CB: Fysetc H36 v1.3 (can)
+Плата mcu T1CB: Fysetc H36 v1.3 (can)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: usb-katapult_stm32f446xx_DDDD00000004-if00: устройство в режиме загрузчика katapult, прошейте вручную: flashtool.py -d <CASE>/byid/usb-katapult_stm32f446xx_DDDD00000004-if00 -f <bin>
+@@@@ CASE update/list_no_moonraker
+$ update_klipper_mcu.sh --list
+# rc=1
+
+== Проверки ==
+ОШИБКА: Moonraker недоступен (http://127.0.0.1:<PORT>). Проверьте MOONRAKER_URL или запустите с --ignore-moonraker
+$ update_klipper_mcu.sh --list --ignore-moonraker
+# rc=0
+
+== Проверки ==
+ВНИМАНИЕ: Moonraker недоступен (http://127.0.0.1:<PORT>): статус печати и секции [mcu*] не проверяются
+проверки пройдены
+
+== Найденные MCU ==
+ВНИМАНИЕ: (не в printer.cfg): serial NOCFG0000001 нет в devices.tsv, на чипе stm32f446xx бывают разные платы; беру stm32f446xx.config (Octopus Pro F446). Если плата другая, добавьте serial в devices.tsv
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+(не в printer.cfg) stm32f072xb   ?                          stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00
+(не в printer.cfg) stm32f072xb   ?                          stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_CCCC00000003-if00
+(не в printer.cfg) stm32f446xx   ?                          stm32f446xx.config       <CASE>/byid/usb-Klipper_stm32f446xx_NOCFG0000001-if00
+(не в printer.cfg) stm32h723xx   ?                          stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00
+Пропущено: usb-katapult_stm32f446xx_DDDD00000004-if00: устройство в режиме загрузчика katapult, прошейте вручную: flashtool.py -d <CASE>/byid/usb-katapult_stm32f446xx_DDDD00000004-if00 -f <bin>
+@@@@ CASE update/list_printing
+$ update_klipper_mcu.sh --list
+# rc=1
+
+== Проверки ==
+ОШИБКА: идёт печать (state=printing). Обновление остановит Klipper и сорвёт печать
+$ update_klipper_mcu.sh --list
+# rc=1
+
+== Проверки ==
+ОШИБКА: идёт печать (state=paused). Обновление остановит Klipper и сорвёт печать
+@@@@ CASE update/list_state_file_and_empty_byid
+$ update_klipper_mcu.sh --list
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+mcu                  stm32h723xx   v0.12.0-1-g<SHA>-dirty*  stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu alps: устройство <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+$ update_klipper_mcu.sh --list --ignore-moonraker
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+Версия хоста: v0.12.0-1-g<SHA>
+MCU по USB не найдены
+Пропущено: mcu: устройство <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu alps: устройство <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+@@@@ CASE update/preflight_errors
+$ --list (KLIPPER_DIR не репозиторий)
+# rc=1
+
+== Проверки ==
+ОШИБКА: <CASE>/no_klipper не git-репозиторий (KLIPPER_DIR)
+$ --list (нет katapult)
+# rc=1
+
+== Проверки ==
+ОШИБКА: нет <CASE>/no_katapult/scripts/flashtool.py (KATAPULT_DIR)
+$ --list (нет klippy-env, git-update)
+# rc=1
+
+== Проверки ==
+ОШИБКА: нет <CASE>/no_env/bin/pip (KLIPPY_ENV)
+$ --list --no-update (klippy-env не нужен)
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+Версия хоста: v0.12.0-1-g<SHA>
+MCU по USB не найдены
+Пропущено: mcu: устройство <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu alps: устройство <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+@@@@ CASE update/uptodate_no_update_no_flash
+$ update_klipper_mcu.sh --no-update --no-flash -y
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+ВНИМАНИЕ: (не в printer.cfg): serial NOCFG0000001 нет в devices.tsv, на чипе stm32f446xx бывают разные платы; беру stm32f446xx.config (Octopus Pro F446). Если плата другая, добавьте serial в devices.tsv
+Версия хоста: v0.12.0-1-g<SHA>
+MCU                  чип        версия               конфиг сборки устройство
+mcu                  stm32h723xx   v0.12.0-1-g<SHA>         stm32h723xx.config       <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00
+mcu alps             stm32f072xb   v0.11.0-5-g<SHA>-dirty   stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00
+(не в printer.cfg) stm32f072xb   ?                          stm32f072xb.config       <CASE>/byid/usb-Klipper_stm32f072xb_CCCC00000003-if00
+(не в printer.cfg) stm32f446xx   ?                          stm32f446xx.config       <CASE>/byid/usb-Klipper_stm32f446xx_NOCFG0000001-if00
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), интерфейс can0 не поднят (ip link show can0)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: usb-katapult_stm32f446xx_DDDD00000004-if00: устройство в режиме загрузчика katapult, прошейте вручную: flashtool.py -d <CASE>/byid/usb-katapult_stm32f446xx_DDDD00000004-if00 -f <bin>
+всё актуально: хост v0.12.0-1-g<SHA>, прошивки MCU совпадают

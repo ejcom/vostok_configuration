@@ -9,7 +9,7 @@
 | Узел | Варианты |
 |---|---|
 | Главная плата | BTT Octopus Pro v1.1 **H723** (по гайду) или Octopus Pro **F446**; также платы из реестра `boards/` (таблица ниже) |
-| Платы голов (CAN) | Fysetc **H36** v1.3 / v2 или BTT **EBB42**; можно без них |
+| Платы голов (CAN) | Fysetc **H36** v1.3 / v2 или BTT **EBB42/EBB36**; можно без них |
 | Датчики ALPS (USB) | 0, 1 или 2 |
 
 - **С платами голов** Octopus прошивается как **мост USB→CAN**, как в гайде, а платы голов работают по CAN (`can0`, 1 Мбит). Прошить их можно двумя способами:
@@ -29,7 +29,7 @@
 | `octopus-pro-f429` (`f429`) | STM32F429 | 8 МГц | 0x08008000 | есть (PD0/PD1) | джампер BOOT0 + RESET | `generic-bigtreetech-octopus-pro-v1.0.cfg` из Klipper | нет |
 | `manta-m8p-v1.0` (`m8p-v1.0`) | STM32G0B1 | 8 МГц | 0x08002000 | **нет** | BOOT + RESET | BTT, репозиторий Manta-M8P | нет |
 | `manta-m8p-v1.1` (`m8p-v1.1`) | STM32G0B1 | 8 МГц | 0x08002000 | есть (PD12/PD13) | BOOT + RESET | BTT, репозиторий Manta-M8P; `generic-bigtreetech-manta-m8p-v1.1.cfg` | нет |
-| `manta-m8p-v2.0` (`m8p-v2.0`) | STM32H723 | 25 МГц | 0x08020000 | есть (PD0/PD1) | BOOT + RESET | BTT, `generic-bigtreetech-manta-m8p-V2_0.cfg` | нет |
+| `manta-m8p-v2.0` (`m8p-v2.0`) | STM32H723 | 25 МГц | 0x08020000 | есть (PD0/PD1) | BOOT + RESET | BTT, `generic-bigtreetech-manta-m8p-V2_0.cfg` | **да** |
 | `spider-v3-h723` (`spider-h723`) | STM32H723 | 25 МГц | 0x08020000 | есть (PD0/PD1) | кнопки BT0 + RST | docs.fysetc.com | нет |
 | `spider-v3-f446` (`spider-f446`) | STM32F446 | 12 МГц | 0x08008000 | есть (PD0/PD1, документацией не подтверждены) | кнопки BT0 + RST | docs.fysetc.com | нет |
 | `spider-v2-f446` (`spider-v2`, `spider-v2.x`) | STM32F446 | 12 МГц | 0x08008000 | **нет** | перемычка BT0–3.3V + RESET | `generic-fysetc-spider.cfg` из Klipper, Voron docs | нет |
@@ -37,24 +37,7 @@
 
 Katapult у всех плат пишется по DFU с 0x08000000. USB у всех плат — PA11/PA12.
 
-> ⚠️ **Платы, кроме Octopus Pro H723, на железе не проверены (Octopus Pro F446 и платы голов H36/EBB42 тоже).** Их параметры взяты из документации производителей и исходников Klipper/katapult, конфиги прошивок собираются, но ни одна новая плата установщиком не прошивалась. Перед первой прошивкой сверьте плату, кварц и способ входа в DFU с документацией производителя.
->
-> **Проверено на железе:** Octopus Pro v1.1 H723 и ALPS (F072). Больше ничего.
->
-> **Не проверены на железе (платы):**
-> - главные: Octopus Pro F446, Octopus Pro v1.0 F429, Manta M8P v1.0 / v1.1 / v2.0, Spider v3.0 H723, Spider v3.0 F446, Spider v2.x, FLY-C8;
-> - платы голов: Fysetc H36 v1.3, Fysetc H36 v2, BTT EBB42.
->
-> **Что не проверено на железе:**
-> - **Прошивка целиком** (katapult и Klipper за один сеанс DFU, затем запуск) на Octopus Pro F446 и F429, Manta M8P v1.0/v1.1/v2.0, Spider v3.0 H723/F446, Spider v2.x и FLY-C8.
-> - **Вход в DFU:** кнопки BOOT/RESET у Manta M8P, BT0/RST у Spider v3, перемычка BT0–3.3V у Spider v2.x, `fly-flash -d c8 -u` и положение DIP-переключателей у FLY-C8.
-> - **Определение платы по DFU:** семейство чипа читается по адресу Option Bytes; на железе это проверено только для F0 и H7, для F4 (F407/F429/F446) и G0/G4 — только по документации ST. Платы на одном чипе (H723: Octopus, Manta v2.0, Spider v3.0) по DFU неразличимы, их различает только ваш выбор.
-> - **Пины CAN моста:** Manta M8P v1.1 (PD12/PD13) и FLY-C8 (PB8/PB9) по документации; для Spider v3.0 F446 (PD0/PD1) документация пины не подтверждает.
-> - **Katapult на новых платах:** смещения приложения (128/32/8 КиБ), двойной RESET, светодиод не задан. Запись katapult по DFU с `mass-erase` стирает весь флеш, включая штатный загрузчик производителя; вернуть его можно только его `.bin` через ROM-загрузчик STM32 (DFU остаётся доступным всегда).
-> - **canbus_uuid:** чтение UID чипа по DFU и вычисление `canbus_uuid` на железе не проверялись ни на одной плате (в том числе на новых).
-> - **Допущение про «Fly C6»:** в документации Mellow такой платы нет, под ней понимается FLY-C8.
->
-> Первую прошивку новой платы делайте под наблюдением, без подключённых нагревателей и моторов, а о проблемах сообщайте разработчику.
+> ⚠️ **Проверены на железе:** Octopus Pro v1.1 H723, Manta M8P v2.0 (CB1 и CB2), платы голов Fysetc H36 v1.3 / v2 и BTT EBB36/EBB42, ALPS; мост USB→CAN, прошивка голов «на столе» и по CAN, `--check-can`. **Остальные платы** (Octopus Pro F446 и F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8) настроены по документации производителей и на железе не проверялись: сверьте плату, кварц и вход в DFU, первую прошивку делайте без нагревателей и моторов, о проблемах сообщайте разработчику. Подробности: [tested.md](tested.md).
 - **M8P v1.0 и Spider v2.x без USB-CAN моста**: платы голов по CAN с ними не поддерживаются, установщик отказывает (нужен `--heads none`).
 - **Octopus Pro F429** — только версия v1.0; у v1.1 другая распиновка и чип (H723), для неё используйте `octopus-pro-h723`.
 - **FLY-C8**: DIP-переключатели 1 и 2 направляют внутренний USB к ARM-части платы, 3 и 4 — на разъём Type-C; прошивка идёт через DFU по USB. В документации Mellow платы «Fly C6» нет, под этим названием понимается FLY-C8 (алиасы `fly-c6`, `flyc6`).
@@ -72,11 +55,11 @@ Katapult у всех плат пишется по DFU с 0x08000000. USB у вс
 | `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `mcu-update.service.in` | обновление Klipper и прошивок, кнопка в Fluidd |
 | `install_fluidd_theme.sh`, `fluidd-theme/` | тема K3D VOSTOK для Fluidd: логотип, `custom.css`, пресет |
 | `install_klipperscreen_theme.sh`, `klipperscreen-theme/` | тема K3D VOSTOK для KlipperScreen: `style.css`, `style.conf`, знак K3D, шрифт Tektur |
-| `lib/vostok_config.sh` | общая библиотека настройки конфига (её подключают `install_vostok.sh` и `configure_vostok.sh`) |
+| `vostok/` | Python-пакет, в котором работает вся логика установщика (stdlib, Python 3.8+); `*.sh` в корне - тонкие обёртки над `python3 -m vostok <команда>` |
 | `templates/` | шаблон конфига электроники без плат и драйверов (`electronics_blank.cfg`), пресеты плат (`boards/`) и драйверов (`drivers/`) |
-| `tools/` | `gen_electronics.py` (генерация конфига электроники), `mcu_merge.py` (дописывание `[mcu]`, `--set` для `canbus_uuid`), `can_uuid.py` (canbus_uuid по UID чипа), `pin_conflicts.py` (поиск повторяющихся пинов), `gen_configs.sh` (конфиги сборки прошивок по реестру `boards/`) |
+| `tools/` | `gen_electronics.py` (генерация конфига электроники; обёртка над `vostok/electronics.py`), `gen_configs.py` (конфиги сборки прошивок по реестру `boards/`) |
 | `boards/` | реестр плат: по файлу `<id>.board` на плату (параметры сборки, подписи, подсказки DFU, проверена ли на железе) |
-| `lib/boards.sh` | чтение реестра (`board_load`, `board_resolve`, `board_cfg` и др.), подключается скриптами |
+| `tests/` | юнит-тесты (`python3 -m unittest discover tests`) и golden-эталоны вывода (`tests/run_golden.sh`) |
 | `configs/` | конфиги сборки Klipper и katapult |
 | `docs/` | эта документация по разделам |
 | `VERSION`, `CHANGELOG.md` | версия установщика (`-V`/`--version` у всех скриптов) и [история изменений](../CHANGELOG.md) |

@@ -24,14 +24,15 @@ README.md                    # Пользовательская документ
 README.en.md                 # её английский перевод.
 user_configs/                # Пользовательские конфигурации электроники.
   README.md                  # Описание папки (на русском) + README.en.md.
-installer/                   # Установщик на чистую систему + кнопка обновления Klipper и прошивок (bash). README.md (быстрый старт и содержание) + README.en.md, разделы в installer/docs/*.md (+ *.en.md).
+installer/                   # Установщик на чистую систему + кнопка обновления Klipper и прошивок (Python-пакет `vostok/`, `*.sh` - тонкие обёртки). README.md (быстрый старт и содержание) + README.en.md, разделы в installer/docs/*.md (+ *.en.md).
+  vostok/                    # Вся логика на Python 3.8+ (только stdlib): `python3 -m vostok <install|update|configure|button|theme|ks-theme>`.
   install_vostok.sh          # Первичная установка: ПО, прошивка плат, конфигурация. Берёт конфиги из клона (если запущен из него), иначе скачивает main.
   update_klipper_mcu.sh      # Обновление Klipper и перепрошивка MCU (USB и CAN) через katapult; его же запускает кнопка Fluidd.
   install_fluidd_button.sh   # Сервис mcu-update для меню питания Fluidd.
-  configs/                   # Конфиги сборки Klipper и katapult (configs/katapult/); менять через tools/gen_configs.sh.
+  configs/                   # Конфиги сборки Klipper и katapult (configs/katapult/); менять через tools/gen_configs.py.
 ```
 
-`installer/` не связан с конфигом Klipper (конфиг его не импортирует). Артефакты `installer/build/`, `installer/firmware/`, `installer/devices.tsv` создаются на машине пользователя и лежат в `.gitignore`. Новая плата в установщике = файл `installer/boards/<id>.board` + конфиги в `installer/configs/` (`tools/gen_configs.sh`); пресет пинов главной платы — `installer/templates/boards/main/<имя>.cfg` (поле `TEMPLATE` в `.board`). Генерация своего конфига электроники: `installer/templates/` (пустой шаблон, пресеты плат `boards/`, драйверы `drivers/`) и `installer/tools/gen_electronics.py`; дописывание `[mcu]` в существующий printer.cfg — `installer/tools/mcu_merge.py`. Подробное описание конфигуратора — `installer/CONFIGURATOR.md` (+ `.en.md`). Версия установщика — файл `installer/VERSION`. Настройка конфига вынесена в `installer/lib/vostok_config.sh` (общая библиотека для `install_vostok.sh` и автономного `configure_vostok.sh`); `tools/pin_conflicts.py` ищет повторяющиеся пины.
+`installer/` не связан с конфигом Klipper (конфиг его не импортирует). Артефакты `installer/build/`, `installer/firmware/`, `installer/devices.tsv` создаются на машине пользователя и лежат в `.gitignore`. Новая плата в установщике = файл `installer/boards/<id>.board` + конфиги в `installer/configs/` (`tools/gen_configs.py`); пресет пинов главной платы — `installer/templates/boards/main/<имя>.cfg` (поле `TEMPLATE` в `.board`). Генерация своего конфига электроники: `installer/templates/` (пустой шаблон, пресеты плат `boards/`, драйверы `drivers/`) и `installer/tools/gen_electronics.py` (обёртка над `vostok/electronics.py`); дописывание `[mcu]` в существующий printer.cfg — `cfgfile.merge_mcus` в `installer/vostok/cfgfile.py`. Подробное описание конфигуратора — `installer/CONFIGURATOR.md` (+ `.en.md`). Версия установщика — файл `installer/VERSION`. Настройка конфига — `installer/vostok/configurator.py` (для `install_vostok.sh` и автономного `configure_vostok.sh`); `cfgfile.pin_conflicts` ищет повторяющиеся пины. Тесты установщика: `python3 -m unittest discover installer/tests`, эталоны вывода: `installer/tests/run_golden.sh`.
 
 ## Архитектура конфигурации
 

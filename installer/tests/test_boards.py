@@ -1,0 +1,137 @@
+"""Тесты vostok.boards: реестр из installer/boards и тексты ошибок разбора (bash-реестр lib/boards.sh удалён, сверка с ним снята)."""
+import os
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+INSTALL = os.path.dirname(HERE)
+sys.path.insert(0, INSTALL)
+
+from vostok import boards  # noqa: E402
+
+GOOD = '''# комментарий
+LABEL="Тестовая плата"
+ROLE="main"
+CHIP="stm32x"
+FAMILY="f4"
+MACH="STM32F4"
+CLOCK="8M"
+APP_OFFSET="8000"
+USB="PA11_PA12"
+CAN="PD0_PD1"
+CAN_KIND="cmenu"
+CFG="stm32x"
+ALIASES="Alias One two"
+VERIFIED=yes
+'''
+
+
+class BoardsTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.dir = Path(self.tmp.name)
+
+    def write(self, name, text):
+        (self.dir / (name + ".board")).write_text(text, encoding="utf-8")
+
+    def err(self, text, name="x"):
+        self.write(name, text)
+        with self.assertRaises(boards.BoardError) as cm:
+            boards.Registry(self.dir).get(name)
+        return str(cm.exception)
+
+    # ------------------------------------------------------------ формат
+
+    def test_parse_good(self):
+        self.write("good", GOOD)
+        b = boards.Registry(self.dir).get("good")
+        self.assertEqual((b.id, b.label, b.role, b.chip, b.cfg, b.verified), ("good", "Тестовая плата", "main", "stm32x", "stm32x", "yes"))
+        self.assertEqual(b.alias_list, ["Alias", "One", "two"])
+        self.assertEqual(b.field("CAN_KIND"), "cmenu")
+        self.assertEqual(b.note, "")
+
+    def test_errors_text(self):
+        d = str(self.dir)
+        self.assertEqual(self.err(GOOD + "FOO=1\n"), "boards: %s/x.board: неизвестное поле FOO" % d)
+        self.assertEqual(self.err(GOOD + "NOTE=a b\n"), "boards: %s/x.board: значение NOTE надо взять в двойные кавычки" % d)
+        self.assertEqual(self.err(GOOD + 'NOTE="a\n'), "boards: %s/x.board: значение NOTE надо взять в двойные кавычки" % d)
+        self.assertEqual(self.err(GOOD + "мусор\n"), "boards: %s/x.board: не разобрана строка: мусор" % d)
+        self.assertEqual(self.err(GOOD.replace('LABEL="Тестовая плата"\n', "")),
+                         "boards: %s/x.board: не задано обязательное поле LABEL" % d)
+        self.assertEqual(self.err(GOOD.replace('CAN_KIND="cmenu"\n', "")),
+                         "boards: %s/x.board: для CAN нужно поле CAN_KIND" % d)
+        self.assertEqual(self.err(GOOD.replace('ROLE="main"', 'ROLE="zzz"')),
+                         "boards: %s/x.board: ROLE должен быть main|head|alps" % d)
+        self.assertEqual(self.err(GOOD.replace('"cmenu"', '"zzz"')),
+                         "boards: %s/x.board: CAN_KIND должен быть cmenu|mmenu|direct" % d)
+        self.assertEqual(self.err(GOOD.replace("VERIFIED=yes", "VERIFIED=maybe")),
+                         "boards: %s/x.board: VERIFIED должен быть yes|no" % d)
+
+    def test_missing_and_bad_id(self):
+        r = boards.Registry(self.dir)
+        for bad in ("nosuch", "Bad", "../x", ""):
+            with self.assertRaises(boards.BoardError) as cm:
+                r.get(bad)
+            self.assertTrue(str(cm.exception).startswith("boards: нет описания платы '%s'" % bad))
+
+    def test_crlf_and_comments(self):
+        self.write("crlf", GOOD.replace("\n", "\r\n") + "   # хвост\r\n\r\n")
+        self.assertEqual(boards.Registry(self.dir).get("crlf").label, "Тестовая плата")
+
+    # ------------------------------------------------------------ реестр
+
+    def test_real_registry(self):
+        r = boards.registry()
+        mains = r.list("main")
+        self.assertIn("octopus-pro-h723", mains)
+        self.assertEqual(len(r.ids()), len(list((Path(INSTALL) / "boards").glob("*.board"))))
+        for i in r.ids():  # все платы реестра разбираются
+            self.assertEqual(r.get(i).id, i)
+        self.assertEqual(r.resolve("H723"), "octopus-pro-h723")
+        self.assertIsNone(r.resolve("nosuch"))
+        self.assertIsNone(r.resolve(""))
+        self.assertTrue(r.has_bridge("octopus-pro-h723"))
+        self.assertFalse(r.has_bridge("alps"))
+        self.assertEqual(r.by_cfg("stm32h723xx-canbridge.config"), ("octopus-pro-h723", "bridge"))
+        self.assertEqual(r.by_cfg("/a/b/katapult/stm32h723xx.config"), ("octopus-pro-h723", "katapult"))
+        self.assertIsNone(r.by_cfg("nosuch.config"))
+        with self.assertRaises(boards.BoardError):
+            r.cfg_path("alps", "zzz")
+
+    def test_rank(self):
+        """0 - плата гайда (board_resolve h723), 1 - VERIFIED=yes, 2 - остальные."""
+        r = boards.registry()
+        self.assertEqual(r.rank("octopus-pro-h723"), 0)
+        self.assertEqual(r.rank("manta-m8p-v2.0"), 1)
+        self.assertEqual(r.rank("spider-v3-h723"), 2)
+        for i in r.list("main"):
+            want = 0 if i == r.resolve("h723") else (1 if r.get(i).verified == "yes" else 2)
+            self.assertEqual(r.rank(i), want, i)
+
+    def test_ebb_alias_and_verified(self):
+        r = boards.registry()
+        self.assertEqual(r.resolve("ebb36"), "ebb42")
+        self.assertEqual(r.resolve("EBB36"), "ebb42")
+        self.assertEqual(r.get("ebb42").label, "BTT EBB42/EBB36")
+        for i in ("ebb42", "h36-v1.3", "h36-v2", "manta-m8p-v2.0"):
+            self.assertEqual(r.get(i).verified, "yes", i)
+
+    def test_cfg_path_kinds(self):
+        r = boards.registry()
+        cfgs = Path(INSTALL) / "configs"
+        self.assertEqual(r.cfg_path("octopus-pro-h723", "usb"), cfgs / "stm32h723xx.config")
+        self.assertEqual(r.cfg_path("octopus-pro-h723", "bridge"), cfgs / "stm32h723xx-canbridge.config")
+        self.assertIsNone(r.cfg_path("octopus-pro-h723", "can"))
+        self.assertEqual(r.cfg_path("octopus-pro-h723", "katapult"), cfgs / "katapult" / "stm32h723xx.config")
+        heads = r.list("head")
+        self.assertTrue(heads)
+        self.assertIsNone(r.cfg_path(heads[0], "usb"))
+        self.assertTrue(str(r.cfg_path(heads[0], "can")).endswith("-can.config"))
+        self.assertTrue(str(r.cfg_path(heads[0], "katapult")).endswith("-can.config"))
+
+
+if __name__ == "__main__":
+    unittest.main()

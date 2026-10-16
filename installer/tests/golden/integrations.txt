@@ -1,0 +1,299 @@
+@@@@ CASE integrations/button_dry_run
+$ install_fluidd_button.sh --dry-run -y
+# rc=0
+
+== Проверки ==
+Найденные MCU и конфиги сборки:
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+Версия хоста: v0.12.0-1-g<SHA>
+MCU по USB не найдены
+Пропущено: mcu: устройство <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), нет конфига сборки (devices.tsv или configs/bcc1147e110d.config), прошивается вручную: flashtool.py -i can0 -u bcc1147e110d -f <bin>
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), нет конфига сборки (devices.tsv или configs/21ad41ca6772.config), прошивается вручную: flashtool.py -i can0 -u 21ad41ca6772 -f <bin>
+Пропущено: mcu alps: устройство <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+Напоминание: на каждом MCU должен стоять загрузчик katapult, иначе прошивка не сработает.
+проверки закончены
+
+== Права на остановку klipper без пароля ==
+достаточно polkit (права выданы Moonraker), sudoers не нужен
+
+== Сервис mcu-update ==
+[dry-run] /etc/systemd/system/mcu-update.service:
+[Unit]
+Description=Сборка и прошивка MCU Klipper через katapult
+After=moonraker.service
+
+[Service]
+Type=oneshot
+User=klipper
+Environment=HOME=<CASE>/home
+Environment=PRINTER_DATA=<CASE>/pd
+ExecStart=<INSTALL>/update_klipper_mcu.sh -y 
+TimeoutStartSec=30min
+
+== Moonraker: список разрешённых сервисов ==
+[dry-run] добавить mcu-update в <CASE>/pd/moonraker.asvc
+
+== Moonraker: загрузка юнита mcu-update в systemd ==
+
+== Готово ==
+В Fluidd: меню питания ⏻ вверху справа -> mcu-update -> Start.
+Лог: <CASE>/pd/logs/klipper_mcu_update.log (Fluidd: Файлы -> logs), journalctl -u mcu-update
+$ install_fluidd_button.sh --dry-run -y --with-macro --flash-args --no-update --force-flash
+# rc=0
+
+== Проверки ==
+Найденные MCU и конфиги сборки:
+
+== Проверки ==
+проверки пройдены
+
+== Найденные MCU ==
+Версия хоста: v0.12.0-1-g<SHA>
+MCU по USB не найдены
+Пропущено: mcu: устройство <CASE>/byid/usb-Klipper_stm32h723xx_120026000A51333231343036-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu T0CB: CAN (canbus_uuid bcc1147e110d), нет конфига сборки (devices.tsv или configs/bcc1147e110d.config), прошивается вручную: flashtool.py -i can0 -u bcc1147e110d -f <bin>
+Пропущено: mcu T1CB: CAN (canbus_uuid 21ad41ca6772), нет конфига сборки (devices.tsv или configs/21ad41ca6772.config), прошивается вручную: flashtool.py -i can0 -u 21ad41ca6772 -f <bin>
+Пропущено: mcu alps: устройство <CASE>/byid/usb-Klipper_stm32f072xb_AAAA00000001-if00 не найдено (не подключено или в режиме загрузчика?)
+Пропущено: mcu ghost: устройство <CASE>/byid/usb-Klipper_stm32f072xb_NOTPLUGGED-if00 не найдено (не подключено или в режиме загрузчика?)
+Напоминание: на каждом MCU должен стоять загрузчик katapult, иначе прошивка не сработает.
+проверки закончены
+
+== Права на остановку klipper без пароля ==
+достаточно polkit (права выданы Moonraker), sudoers не нужен
+
+== Сервис mcu-update ==
+[dry-run] /etc/systemd/system/mcu-update.service:
+[Unit]
+Description=Сборка и прошивка MCU Klipper через katapult
+After=moonraker.service
+
+[Service]
+Type=oneshot
+User=klipper
+Environment=HOME=<CASE>/home
+Environment=PRINTER_DATA=<CASE>/pd
+ExecStart=<INSTALL>/update_klipper_mcu.sh -y --no-update --force-flash
+TimeoutStartSec=30min
+
+== Moonraker: список разрешённых сервисов ==
+[dry-run] добавить mcu-update в <CASE>/pd/moonraker.asvc
+
+== Moonraker: загрузка юнита mcu-update в systemd ==
+
+== Макрос MCU_UPDATE ==
+ВНИМАНИЕ: нет gcode_shell_command.py: установите расширение через KIAUH (Extensions), иначе макрос не загрузится
+[dry-run] создать <CASE>/pd/config/mcu_update.cfg
+Добавьте в printer.cfg после остальных [include]: [include mcu_update.cfg]
+
+== Готово ==
+В Fluidd: меню питания ⏻ вверху справа -> mcu-update -> Start.
+Лог: <CASE>/pd/logs/klipper_mcu_update.log (Fluidd: Файлы -> logs), journalctl -u mcu-update
+$ install_fluidd_button.sh --dry-run -y --uninstall
+# rc=0
+
+== Удаление ==
+[dry-run] sudo systemctl stop mcu-update
+[dry-run] sudo rm -f /etc/systemd/system/mcu-update.service
+[dry-run] sudo systemctl daemon-reload
+удалён /etc/systemd/system/mcu-update.service
+[dry-run] sudo rm -f /etc/systemd/system/moonraker.service.d/mcu-update.conf
+[dry-run] sudo rmdir --ignore-fail-on-non-empty /etc/systemd/system/moonraker.service.d
+[dry-run] sudo systemctl daemon-reload
+удалён /etc/systemd/system/moonraker.service.d/mcu-update.conf
+## дерево pd
+moonraker.asvc	18	bf02c3eec9c1a51c
+config/moonraker.conf	23	3e7a345c6f8f3cf3
+logs/klipper_mcu_update.log	(лог)
+@@@@ CASE integrations/fluidd_theme
+$ install_fluidd_theme.sh --dry-run -y --no-activate
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Файлы темы в <CASE>/pd/config/.fluidd-theme ==
+[dry-run] скопировать logo_vostok.svg и custom.css в <CASE>/pd/config/.fluidd-theme
+
+== Пресет в <CASE>/home/fluidd/config.json ==
+[dry-run] добавить пресет "K3D VOSTOK" (logo.src=server/files/config/.fluidd-theme/logo_vostok.svg)
+
+== Готово ==
+Обновите вкладку Fluidd (Ctrl+F5). Пресет «K3D VOSTOK» также доступен в Настройки -> Тема.
+Удалить: <INSTALL>/install_fluidd_theme.sh --uninstall
+$ install_fluidd_theme.sh -y --no-activate
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Файлы темы в <CASE>/pd/config/.fluidd-theme ==
+логотип: <CASE>/pd/config/.fluidd-theme/logo_vostok.svg
+стили: <CASE>/pd/config/.fluidd-theme/custom.css
+
+== Пресет в <CASE>/home/fluidd/config.json ==
+обновлён
+
+== Готово ==
+Обновите вкладку Fluidd (Ctrl+F5). Пресет «K3D VOSTOK» также доступен в Настройки -> Тема.
+Удалить: <INSTALL>/install_fluidd_theme.sh --uninstall
+## дерево pd
+config/moonraker.conf	23	3e7a345c6f8f3cf3
+config/.fluidd-theme/custom.css	1827	ecf7643d1f7587be
+config/.fluidd-theme/logo_vostok.svg	794	98026ac6e8342b5c
+config/.theme/.keep	0	e3b0c44298fc1c14
+## файл config/moonraker.conf
+[server]
+host: 0.0.0.0
+$ install_fluidd_theme.sh -y --no-activate (повтор)
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Файлы темы в <CASE>/pd/config/.fluidd-theme ==
+логотип: <CASE>/pd/config/.fluidd-theme/logo_vostok.svg
+стили: <CASE>/pd/config/.fluidd-theme/custom.css
+
+== Пресет в <CASE>/home/fluidd/config.json ==
+без изменений
+
+== Готово ==
+Обновите вкладку Fluidd (Ctrl+F5). Пресет «K3D VOSTOK» также доступен в Настройки -> Тема.
+Удалить: <INSTALL>/install_fluidd_theme.sh --uninstall
+$ install_fluidd_theme.sh -y --logo-copy --no-activate
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Файлы темы в <CASE>/pd/config/.fluidd-theme ==
+логотип: <CASE>/pd/config/.fluidd-theme/logo_vostok.svg
+стили: <CASE>/pd/config/.fluidd-theme/custom.css
+логотип скопирован в <CASE>/home/fluidd (после обновления Fluidd запустите скрипт ещё раз)
+
+== Пресет в <CASE>/home/fluidd/config.json ==
+обновлён
+
+== Готово ==
+Обновите вкладку Fluidd (Ctrl+F5). Пресет «K3D VOSTOK» также доступен в Настройки -> Тема.
+Удалить: <INSTALL>/install_fluidd_theme.sh --uninstall
+## дерево pd
+config/moonraker.conf	23	3e7a345c6f8f3cf3
+config/.fluidd-theme/custom.css	1827	ecf7643d1f7587be
+config/.fluidd-theme/logo_vostok.svg	794	98026ac6e8342b5c
+config/.theme/.keep	0	e3b0c44298fc1c14
+## файл config/moonraker.conf
+[server]
+host: 0.0.0.0
+## дерево home/fluidd
+config.json	173	8267298249310b58
+index.html	14	b0693dc92f76e08b
+logo_vostok.svg	794	98026ac6e8342b5c
+config.json.bak-<ДАТА>	(резервная копия)
+$ install_fluidd_theme.sh -y --uninstall --no-activate
+# rc=0
+
+== Удаление темы K3D VOSTOK ==
+config.json: обновлён
+удалён custom.css
+удалён logo_vostok.svg
+Обновите вкладку браузера (Ctrl+F5).
+## дерево pd
+config/moonraker.conf	23	3e7a345c6f8f3cf3
+config/.theme/.keep	0	e3b0c44298fc1c14
+## файл config/moonraker.conf
+[server]
+host: 0.0.0.0
+## дерево home/fluidd
+config.json	25	cff39d46320bfe6e
+index.html	14	b0693dc92f76e08b
+config.json.bak-<ДАТА>	(резервная копия)
+@@@@ CASE integrations/klipperscreen_theme
+$ install_klipperscreen_theme.sh --dry-run -y
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Тема в <CASE>/home/KlipperScreen/styles/vostok ==
+[dry-run] собрать <CASE>/home/KlipperScreen/styles/vostok: иконки из material-dark + klipper.svg, style.css, style.conf
+
+== Шрифт Tektur в <CASE>/home/.fonts ==
+[dry-run] скопировать <INSTALL>/klipperscreen-theme/fonts/Tektur*.ttf и OFL.txt, fc-cache -f
+
+== Включение темы ==
+[dry-run] theme = vostok в <CASE>/pd/config/KlipperScreen.conf
+
+== Готово ==
+Перезапустите KlipperScreen: sudo systemctl restart KlipperScreen
+(или выберите тему "vostok" в Настройки -> Тема — применяется сразу).
+Удалить: <INSTALL>/install_klipperscreen_theme.sh --uninstall
+$ install_klipperscreen_theme.sh -y --no-activate
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Тема в <CASE>/home/KlipperScreen/styles/vostok ==
+тема: <CASE>/home/KlipperScreen/styles/vostok (2 иконок)
+
+== Шрифт Tektur в <CASE>/home/.fonts ==
+шрифт установлен
+
+== Готово ==
+Перезапустите KlipperScreen: sudo systemctl restart KlipperScreen
+(или выберите тему "vostok" в Настройки -> Тема — применяется сразу).
+Удалить: <INSTALL>/install_klipperscreen_theme.sh --uninstall
+## дерево pd
+config/KlipperScreen.conf	28	92d5a227bff4738d
+## файл config/KlipperScreen.conf
+[main]
+theme: material-dark
+$ install_klipperscreen_theme.sh -y
+# rc=0
+
+== Проверки ==
+проверки пройдены
+
+== Тема в <CASE>/home/KlipperScreen/styles/vostok ==
+тема: <CASE>/home/KlipperScreen/styles/vostok (2 иконок)
+
+== Шрифт Tektur в <CASE>/home/.fonts ==
+шрифт установлен
+
+== Включение темы ==
+KlipperScreen.conf: обновлён (была тема: material-dark)
+
+== Готово ==
+Перезапустите KlipperScreen: sudo systemctl restart KlipperScreen
+(или выберите тему "vostok" в Настройки -> Тема — применяется сразу).
+Удалить: <INSTALL>/install_klipperscreen_theme.sh --uninstall
+## дерево pd
+config/KlipperScreen.conf	22	cf09ec53cd860e64
+config/KlipperScreen.conf.bak-<ДАТА>	(резервная копия)
+## файл config/KlipperScreen.conf
+[main]
+theme = vostok
+$ install_klipperscreen_theme.sh -y --uninstall
+# rc=0
+
+== Удаление темы K3D VOSTOK ==
+удалён <CASE>/home/KlipperScreen/styles/vostok
+KlipperScreen.conf: обновлён
+удалён шрифт Tektur[wdth,wght].ttf
+Перезапустите KlipperScreen: sudo systemctl restart KlipperScreen
+## дерево pd
+config/KlipperScreen.conf	29	ec9b94677770a479
+config/KlipperScreen.conf.bak-<ДАТА>	(резервная копия)
+## файл config/KlipperScreen.conf
+[main]
+theme = material-dark
+## дерево home
+.fonts/Tektur-OFL.txt	4385	ff4bb37f716836fe
+KlipperScreen/styles/material-dark/images/icon.svg	7	cd1fafe3cc7f06f5

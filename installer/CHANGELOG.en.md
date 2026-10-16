@@ -4,6 +4,19 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.5 — 2026-10-16
+
+The installer was ported from bash to Python 3.8+ (standard library only). Commands, flags, environment variables, output texts, exit codes and file formats (`devices.tsv`, `*.board`, build configs) are unchanged: `install_vostok.sh`, `configure_vostok.sh`, `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `install_fluidd_theme.sh` and `install_klipperscreen_theme.sh` remain the entry points and now run `python3 -m vostok <command>`.
+
+- All logic lives in the `vostok/` package; `lib/vostok_config.sh` and `lib/boards.sh` are removed. `tools/gen_configs.sh` is replaced by `tools/gen_configs.py` (same `--force`, `--board`, `--check`, `--build` options, same 36 configs); `tools/gen_electronics.py` keeps its path and arguments but is now a wrapper over `vostok/`; the `tools/mcu_merge.py`, `tools/pin_conflicts.py` and `tools/can_uuid.py` wrappers are removed (their logic is available as `vostok.cfgfile` and `vostok.can_uuid`; the installer calls the modules directly).
+- Added unit tests (`python3 -m unittest discover tests`) and golden output references taken from the old scripts (`tests/run_golden.sh`).
+- Minor differences from 1.3a: Moonraker and the configuration download use `urllib`, `curl` is not called for them; without a terminal and without `-y` a question immediately gives `ОШИБКА: нужен терминал…` instead of bash internals (`/dev/tty: No such device`, `ans: unbound variable`), exit code 1 as before; files (`devices.tsv`, `moonraker.asvc`, `mcu_update.cfg`, themes) are written atomically; a failed external command or an unexpected error gives one `ОШИБКА: …` line instead of aborting the script or a traceback; `flash_can` looks for the bridge's katapult in `BYID_DIR` instead of a hard-coded `/dev/serial/by-id`; the configurator's temporary directory is always removed; the "bash 4.4+" check is gone.
+- `python3` 3.8 or newer is required (Debian 11 has it); other requirements are unchanged.
+- `configure_vostok.sh --printer-data <missing dir>` now stops with an error (`нет каталога … (укажите --printer-data)`); before (1.3) the directory was silently created and the config written there (the check existed in the code but never fired). Version 1.4 was never released: 1.5 is the first Python release.
+- 1.5 includes the 1.3b changes (ported from bash to `vostok/`): marked as verified on hardware (from user reports): Manta M8P v2.0 (with CB1 and CB2), Fysetc H36 v1.3 and v2, BTT EBB36 (the `ebb42` entry, label "BTT EBB42/EBB36", alias `ebb36`). Confirmed: the USB→CAN bridge on the M8P v2.0, flashing toolheads "on the bench" and over CAN, `--check-can`. `VERIFIED="yes"` in `boards/*.board`; the installer plan no longer warns for these boards.
+- Default mainboard choice: on the H723 the guide board (Octopus Pro) is offered first, then verified boards, then the rest (`Registry.rank` in `vostok/boards.py`, ordering in `rank_main_boards` in `vostok/configurator.py`), so the Manta M8P v2.0 does not displace the Octopus Pro once marked verified.
+- Documentation: the warning in `docs/hardware.en.md` is cut to one paragraph, the details live in `docs/tested.en.md` (verified / dry-run only / not verified).
+
 ## 1.3a — 2026-10-15
 
 - Configurator: main-board pin presets in `templates/boards/main/` (`octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0`); the `TEMPLATE` field of a `.board` file points at the preset and `tools/gen_configs.sh --check` verifies the file exists. For these boards `gen_electronics.py --template <name>` fills motors, sockets and driver SPI, bed, fans, endstops, probe, hotends (without head boards) and the "equipment → connector" table in the header; blocks carry the СВЕРЬТЕ note. The boards are not verified on hardware. Spider v2.x / v3.0 and FLY-C8 have no preset: no reliable pin source was found.

@@ -1,0 +1,1288 @@
+@@@@ CASE install/detect_auto_empty
+$ install_vostok.sh --only-detect --main h723
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@@@ CASE install/detect_auto_f446_katapult
+$ install_vostok.sh --only-detect --main f446 --heads none --alps 0
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro F446, режим: USB
+ВНИМАНИЕ: Octopus Pro F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://k3d.tech/vostok/manual/electronics/firmware/). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro F446: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@@@ CASE install/detect_auto_h723_2alps
+$ install_vostok.sh --only-detect
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+На найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 spider-v3-h723; выбрана octopus-pro-h723 (уточните: --main <id>)
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 2
+
+Шаги с железом:
+  1. ALPS левый (T0): katapult через DFU, затем Klipper
+  2. ALPS правый (T1): katapult через DFU, затем Klipper
+  3. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+@@@@ CASE install/dry_alps2_v2_can_flash
+$ install_vostok.sh --dry-run --main h723 --heads v2 --alps 2 --heads-flash can -y
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: мост USB-CAN (по гайду)
+  Платы голов: Fysetc H36 v2, 2 шт., CAN can0 1 Мбит
+  ALPS: 2
+
+Шаги с железом:
+  1. ALPS левый (T0): katapult через DFU, затем Klipper
+  2. ALPS правый (T1): katapult через DFU, затем Klipper
+  3. Fysetc H36 v2 (обе, по очереди): katapult через DFU по USB
+  4. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+  5. Fysetc H36 v2 (обе, по очереди): Klipper по CAN. ВНИМАНИЕ: нужны источник 24 В и подключение плат голов и Octopus по CAN
+  6. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Требования схемы с мостом USB-CAN ==
+  [ок]   ядро 5.15.0-golden поддерживает CAN и USB-CAN адаптеры (gs_usb)
+  [ок]   ip (iproute2)
+
+== Интерфейс CAN (can0) ==
+создаю /etc/network/interfaces.d/can0 (по гайду)
+[dry-run] sudo tee /etc/network/interfaces.d/can0 <<< 'allow-hotplug can0
+iface can0 can static
+    bitrate 1000000
+    up ip link set can0 txqueuelen 128
+'
+настройка CAN записана (интерфейс появится, когда будет прошит мост)
+
+== ALPS левый (T0) ==
+Датчик ALPS подключите USB-кабелем к хосту (другие ALPS можно не отключать).
+Режим DFU: зажмите BOOT, нажмите и отпустите RESET, отпустите BOOT.
+
+>>> ALPS левый (T0): переведите этот ALPS в режим DFU (BOOT + RESET, затем отпустить BOOT)
+[dry-run] ожидание Enter
+[dry-run] сборка katapult (stm32f072xb)
+[dry-run] dfu-util -> <CASE>/build/katapult-stm32f072xb/out/katapult.bin
+
+== Klipper -> ALPS левый (T0) ==
+[dry-run] сборка stm32f072xb.config, flashtool.py -d <CASE>/byid/usb-katapult_stm32f072xb_DRYRUN-if00 -f <bin>
+
+== ALPS правый (T1) ==
+Датчик ALPS подключите USB-кабелем к хосту (другие ALPS можно не отключать).
+Режим DFU: зажмите BOOT, нажмите и отпустите RESET, отпустите BOOT.
+
+>>> ALPS правый (T1): переведите этот ALPS в режим DFU (BOOT + RESET, затем отпустить BOOT)
+[dry-run] ожидание Enter
+[dry-run] сборка katapult (stm32f072xb)
+[dry-run] dfu-util -> <CASE>/build/katapult-stm32f072xb/out/katapult.bin
+
+== Klipper -> ALPS правый (T1) ==
+[dry-run] сборка stm32f072xb.config, flashtool.py -d <CASE>/byid/usb-katapult_stm32f072xb_DRYRUN-if00 -f <bin>
+ВНИМАНИЕ: Вариант «Klipper по CAN»: на следующих этапах понадобятся источник 24 В и подключение плат голов и Octopus по CAN. Для прошивки на столе по USB используйте --heads-flash dfu.
+
+== Fysetc H36 v2: katapult, плата левая (T0CB) ==
+Эти шаги выполняются по одной плате:
+  - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v2 левая (T0CB) (другую плату головы от USB отключите);
+  - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0.
+katapult на этих платах работает только по CAN, поэтому после прошивки отключите USB.
+
+>>> Fysetc H36 v2 левая (T0CB): подключите USB, переведите в DFU и нажмите Enter. DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0.
+[dry-run] ожидание Enter
+[dry-run] сборка katapult (stm32g431xx-can)
+[dry-run] dfu-util -> <CASE>/build/katapult-stm32g431xx-can/out/katapult.bin
+katapult записан на Fysetc H36 v2 левая (T0CB)
+
+== Fysetc H36 v2: katapult, плата правая (T1CB) ==
+Эти шаги выполняются по одной плате:
+  - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v2 правая (T1CB) (другую плату головы от USB отключите);
+  - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0.
+katapult на этих платах работает только по CAN, поэтому после прошивки отключите USB.
+
+>>> Fysetc H36 v2 правая (T1CB): подключите USB, переведите в DFU и нажмите Enter. DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0.
+[dry-run] ожидание Enter
+[dry-run] сборка katapult (stm32g431xx-can)
+[dry-run] dfu-util -> <CASE>/build/katapult-stm32g431xx-can/out/katapult.bin
+katapult записан на Fysetc H36 v2 правая (T1CB)
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult и Klipper за один сеанс DFU.
+
+== katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка katapult (stm32h723xx)
+
+>>> Octopus Pro v1.1 H723: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8020000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32h723xx/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8020000:leave -D stm32h723xx-canbridge-.bin
+
+== UUID моста (Octopus Pro v1.1 H723) ==
+Для этого этапа подайте питание 24 В на Octopus и платы голов и подключите CAN-кабели по схеме из гайда.
+[dry-run] canbus_query.py can0 -> UUID Octopus
+
+== Fysetc H36 v2 левая (T0CB): Klipper по CAN ==
+[dry-run] flashtool.py -i can0 -q -> UUID, затем -u UUID -f klipper.bin
+
+== Fysetc H36 v2 правая (T1CB): Klipper по CAN ==
+[dry-run] flashtool.py -i can0 -q -> UUID, затем -u UUID -f klipper.bin
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+000000000000	stm32h723xx-canbridge.config	bridge
+000000000000	stm32g431xx-can.config	can
+000000000001	stm32g431xx-can.config	can
+DRYRUN	stm32f072xb.config	usb
+DRYRUN	stm32f072xb.config	usb
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+
+Конфиг электроники можно взять из репозитория vostok_configuration:
+  - стандартный: корень main, поддерживается автором (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg);
+  - пользовательский: каталог user_configs, конфиги пользователей (4 шт.), могут не совпадать с документацией;
+  - сгенерировать свой: шаблон без плат и драйверов + пресеты найденных плат, пины драйверов и моторов вы впишете сами;
+ВНИМАНИЕ: user_configs: конфиги ведут пользователи. Перед использованием сверьте схему подключения в начале файла с вашей проводкой: неверная схема может вывести электронику из строя.
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_5x2240_2xH36v2.0.cfg (источник: user)
+[mcu]
+canbus_uuid: 000000000000
+
+[mcu T0CB]
+canbus_uuid: 000000000000
+
+[mcu T1CB]
+canbus_uuid: 000000000001
+
+[mcu alps]
+serial: /dev/serial/by-id/usb-Klipper_stm32f072xb_DRYRUN-if00
+
+[mcu alps_t1]
+serial: /dev/serial/by-id/usb-Klipper_stm32f072xb_DRYRUN-if00
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+установка завершена
+@@@@ CASE install/dry_cfg_local_off
+$ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult и Klipper за один сеанс DFU.
+
+== katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка katapult (stm32h723xx)
+
+>>> Octopus Pro v1.1 H723: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8020000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32h723xx/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8020000:leave -D stm32h723xx-.bin
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+DRYRUN	stm32h723xx.config	usb
+
+== Конфигурация принтера ==
+[dry-run] взял бы конфигурацию из https://codeload.github.com/dmitry-sorkin/vostok_configuration/tar.gz/refs/heads/main, скопировал printer.cfg, printer_base.cfg, chamber_heater.cfg, electronics_*.cfg, postprocessing/ в <CASE>/pd/config
+[mcu]
+serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+установка завершена
+@@@@ CASE install/dry_check_can
+$ install_vostok.sh --check-can --dry-run --main h723 --heads v1.3 -y
+# rc=0
+
+== Проверка canbus_uuid на шине CAN ==
+
+== canbus_uuid на шине can0 ==
+Нужны питание 24 В и подключённые по CAN Octopus и платы голов.
+[dry-run] canbus_query.py can0, сверка с devices.tsv, запись в printer.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+проверка завершена
+@@@@ CASE install/dry_generate_drivers
+$ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-software --config-source generate --drivers all=5160 --modules none
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult и Klipper за один сеанс DFU.
+
+== katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка katapult (stm32h723xx)
+
+>>> Octopus Pro v1.1 H723: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8020000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32h723xx/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8020000:leave -D stm32h723xx-.bin
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+DRYRUN	stm32h723xx.config	usb
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+Чистая установка: пины и параметры моторов берутся из стокового конфига main (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg)
+конфиг электроники сгенерирован: electronics_octopus_pro_v1.1_h723_7x5160.cfg (драйверы: all=5160)
+  подставлено пинов из эталона: 42
+  подставлено пинов экструдеров на разъёмы MOTOR4 (E0) и MOTOR5 (E1): 14
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_7x5160.cfg (источник: generate)
+[mcu]
+serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
+ВНИМАНИЕ: Сгенерирован electronics_octopus_pro_v1.1_h723_7x5160.cfg: Klipper не запустится, пока вы не впишете пины.
+  0. Пины моторов и драйверов взяты из стокового конфига main (X: MOTOR2, W: MOTOR0, YL: MOTOR3, YR: MOTOR1, Z: MOTOR7, экструдеры: MOTOR4 и MOTOR5): проверьте, что драйверы стоят в этих разъёмах.
+  1. Впишите пины по схеме СВОЕЙ платы (пустых пинов: 1). Они помечены ЗАПОЛНИТЕ:
+       [extruder]: heater_pin
+  2. Проверьте параметры моторов (run_current, stealthchop_threshold, interpolate): они взяты из эталонного конфига (по умолчанию ваш; для чистой установки стоковый main под TMC2240),
+     у вашего драйвера и мотора они могут быть другими. sense_resistor выставлен по документации BTT (5160 и 5160T Pro 0.075, 5160T Plus 0.022, 2130/2208/2209 0.110); если у вас другой модуль, исправьте.
+  3. Проверьте направления моторов (знак ! у dir_pin) и full_steps_per_rotation после первого запуска.
+  4. Если используете chamber_heater.cfg, проверьте, что его пины не пересекаются с вашей проводкой.
+ВНИМАНИЕ: Пины из таблицы разъёмов Octopus Pro (конфиги репозитория, не main), сверьте со своей схемой подключения: [extruder], [extruder1], [carriage xc], [dual_carriage wc], [probe], [output_pin probe_enable], [heater_fan e0_fan], [heater_fan e1_fan]
+ВНИМАНИЕ: [extruder] heater_pin: пин PA2 из таблицы разъёмов Octopus Pro уже занят ([stepper motor_yl] enable_pin), оставлен пустым - впишите свободный пин
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Вписать пины в сгенерированный electronics_octopus_pro_v1.1_h723_7x5160.cfg (поиск: ЗАПОЛНИТЕ), сверить блоки с пометкой СВЕРЬТЕ, проверить параметры моторов и драйверов, затем перезапустить Klipper.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+установка завершена
+@@@@ CASE install/dry_main_flash_katapult
+$ install_vostok.sh --dry-run --main h723 --heads none --alps 0 --main-flash katapult -y
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult по DFU, затем Klipper через katapult. Если katapult уже на плате (прошлая попытка), на запросе DFU ответьте s.
+
+>>> Octopus Pro v1.1 H723: поставьте джампер BOOT0 и нажмите RESET (после прошивки katapult джампер нужно будет снять)
+[dry-run] ожидание Enter
+[dry-run] сборка katapult (stm32h723xx)
+[dry-run] dfu-util -> <CASE>/build/katapult-stm32h723xx/out/katapult.bin
+
+>>> Снимите джампер BOOT0 с Octopus Pro v1.1 H723 и ДВАЖДЫ быстро нажмите RESET (одиночный RESET после прошивки по DFU может не запустить katapult).
+[dry-run] ожидание Enter
+
+== Klipper -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка stm32h723xx.config, flashtool.py -d <CASE>/byid/usb-katapult_stm32h723xx_DRYRUN-if00 -f <bin>
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+DRYRUN	stm32h723xx.config	usb
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+
+Конфиг электроники можно взять из репозитория vostok_configuration:
+  - стандартный: корень main, поддерживается автором (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg);
+  - пользовательский: каталог user_configs, конфиги пользователей (4 шт.), могут не совпадать с документацией;
+  - сгенерировать свой: шаблон без плат и драйверов + пресеты найденных плат, пины драйверов и моторов вы впишете сами;
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg (источник: standard)
+[mcu]
+serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+установка завершена
+@@@@ CASE install/dry_no_can_kernel
+$ install_vostok.sh --dry-run --main h723 --heads v1.3 --alps 0 -y
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: мост USB-CAN (по гайду)
+  Платы голов: Fysetc H36 v1.3, 2 шт., CAN can0 1 Мбит
+  ALPS: 0
+
+Шаги с железом:
+  1. Fysetc H36 v1.3 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+  2. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+  3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+  4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Требования схемы с мостом USB-CAN ==
+  [НЕТ]  ядро 5.15.0-golden собрано без CAN (нужны CONFIG_CAN, CONFIG_CAN_RAW, CONFIG_CAN_GS_USB): Octopus в режиме моста USB-CAN работать не сможет. Нужно ядро с поддержкой CAN (gs_usb) либо сборка без плат голов по CAN: --heads none
+  [ок]   ip (iproute2)
+ВНИМАНИЕ: Требования схемы: найдено проблем: 1 (при реальной установке скрипт остановится)
+
+== Интерфейс CAN (can0) ==
+создаю /etc/network/interfaces.d/can0 (по гайду)
+[dry-run] sudo tee /etc/network/interfaces.d/can0 <<< 'allow-hotplug can0
+iface can0 can static
+    bitrate 1000000
+    up ip link set can0 txqueuelen 128
+'
+настройка CAN записана (интерфейс появится, когда будет прошит мост)
+
+== Fysetc H36 v1.3: katapult и Klipper по DFU, плата левая (T0CB) ==
+Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+  - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v1.3 левая (T0CB) (остальные платы голов от USB отключите);
+  - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0;
+  - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+
+== katapult и Klipper по DFU за один сеанс -> Fysetc H36 v1.3 левая (T0CB) ==
+[dry-run] сборка katapult (stm32g0b1xx-can)
+
+>>> Fysetc H36 v1.3 левая (T0CB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-can/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-can-.bin
+[dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+
+== Fysetc H36 v1.3: katapult и Klipper по DFU, плата правая (T1CB) ==
+Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
+  - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v1.3 правая (T1CB) (остальные платы голов от USB отключите);
+  - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0;
+  - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+
+== katapult и Klipper по DFU за один сеанс -> Fysetc H36 v1.3 правая (T1CB) ==
+[dry-run] сборка katapult (stm32g0b1xx-can)
+
+>>> Fysetc H36 v1.3 правая (T1CB): переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8002000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32g0b1xx-can/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-can-.bin
+[dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult и Klipper за один сеанс DFU.
+
+== katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка katapult (stm32h723xx)
+
+>>> Octopus Pro v1.1 H723: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8020000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32h723xx/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8020000:leave -D stm32h723xx-canbridge-.bin
+
+== canbus_uuid плат: проверка на шине ==
+  мост (Octopus Pro v1.1 H723): 000000000000
+  Fysetc H36 v1.3 левая (T0CB): 000000000000 (вычислен по UID чипа)
+  Fysetc H36 v1.3 правая (T1CB): 000000000000 (вычислен по UID чипа)
+ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+(она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+000000000000	stm32h723xx-canbridge.config	bridge
+000000000000	stm32g0b1xx-can.config	can
+000000000000	stm32g0b1xx-can.config	can
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+
+Конфиг электроники можно взять из репозитория vostok_configuration:
+  - стандартный: корень main, поддерживается автором (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg);
+  - пользовательский: каталог user_configs, конфиги пользователей (4 шт.), могут не совпадать с документацией;
+  - сгенерировать свой: шаблон без плат и драйверов + пресеты найденных плат, пины драйверов и моторов вы впишете сами;
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg (источник: standard)
+[mcu]
+canbus_uuid: 000000000000
+
+[mcu T0CB]
+canbus_uuid: 000000000000
+
+[mcu T1CB]
+canbus_uuid: 000000000000
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
+  После установки электроники в принтер подайте 24 В и выполните: <INSTALL>/install_vostok.sh --check-can
+  Команда прочитает UUID с шины CAN, исправит devices.tsv и printer.cfg и перезапустит Klipper.
+  Вручную: остановите Klipper и выполните <CASE>/home/klippy-env/bin/python <CASE>/home/klipper/scripts/canbus_query.py can0, затем впишите canbus_uuid в [mcu], [mcu T0CB], [mcu T1CB].
+установка завершена
+@@@@ CASE install/dry_no_klipper_upgrade
+$ install_vostok.sh --dry-run --upgrade --main h723 --heads none --alps 0 -y
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+[dry-run] sudo apt-get update
+[dry-run] sudo apt-get -y upgrade
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult и Klipper за один сеанс DFU.
+
+== katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка katapult (stm32h723xx)
+
+>>> Octopus Pro v1.1 H723: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8020000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32h723xx/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8020000:leave -D stm32h723xx-.bin
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+DRYRUN	stm32h723xx.config	usb
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+
+Конфиг электроники можно взять из репозитория vostok_configuration:
+  - стандартный: корень main, поддерживается автором (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg);
+  - пользовательский: каталог user_configs, конфиги пользователей (4 шт.), могут не совпадать с документацией;
+  - сгенерировать свой: шаблон без плат и драйверов + пресеты найденных плат, пины драйверов и моторов вы впишете сами;
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg (источник: standard)
+[mcu]
+serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+установка завершена
+@@@@ CASE install/dry_no_tty_no_y
+$ install_vostok.sh --dry-run --main h723 --heads none --alps 0
+# rc=1
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Octopus Pro v1.1 H723 ==
+ОШИБКА: нужен терминал: установка просит переключать платы и нажимать Enter
+@@@@ CASE install/dry_skip_all
+$ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-software --skip-flash --skip-config --skip-button --skip-theme
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+Прошивка пропущена (--skip-flash): serial/UUID для printer.cfg неизвестны, впишите [mcu ...] вручную
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+установка завершена
+@@@@ CASE install/dry_skip_board_reflash
+$ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-board main
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: USB
+  Платы голов: нет
+  ALPS: 0
+
+Шаги с железом:
+  1. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB
+  2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Octopus Pro v1.1 H723 ==
+Octopus Pro v1.1 H723: пропускаю
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+0123456789AB	stm32h723xx.config	usb
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+
+Конфиг электроники можно взять из репозитория vostok_configuration:
+  - стандартный: корень main, поддерживается автором (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg);
+  - пользовательский: каталог user_configs, конфиги пользователей (4 шт.), могут не совпадать с документацией;
+  - сгенерировать свой: шаблон без плат и драйверов + пресеты найденных плат, пины драйверов и моторов вы впишете сами;
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg (источник: standard)
+[mcu]
+serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_0123456789AB-if00
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+Пропущено как уже прошитое:
+  - Octopus Pro v1.1 H723: уже прошит
+установка завершена
+$ install_vostok.sh --dry-run --main h723 --heads v1.3 --alps 0 -y --skip-board heads --reflash
+# rc=0
+
+== Проверки ==
+ОС: <ОС хоста>
+проверки пройдены
+
+== Окружение ==
+  [ок]   базовые утилиты, apt, dpkg, systemctl, sudo
+  [ок]   systemd запущен
+  [ок]   место на диске: 99000 МБ
+  [ок]   память (ОЗУ + swap): <N> МБ
+  [ок]   python3 <версия>
+
+== Пакеты ==
+все нужные пакеты уже установлены
+пакеты готовы
+
+== KIAUH, Klipper (форк), Moonraker, Fluidd, katapult ==
+[dry-run] git clone https://github.com/dw-0/kiauh <CASE>/home/kiauh
+[dry-run] kiauh.cfg: единственный репозиторий Klipper = https://github.com/dmbutyugin/klipper, generic-cartesian
+KIAUH: install klipper --count 1
+[dry-run] <CASE>/home/kiauh/kiauh.sh install klipper --count 1
+KIAUH: install moonraker --create-example-cfg
+[dry-run] <CASE>/home/kiauh/kiauh.sh install moonraker --create-example-cfg
+KIAUH: install fluidd --install-config
+[dry-run] <CASE>/home/kiauh/kiauh.sh install fluidd --install-config
+[dry-run] cp <CASE>/home/kiauh/kiauh/extensions/gcode_shell_cmd/assets/gcode_shell_command.py <CASE>/home/klipper/klippy/extras/
+установлено расширение gcode_shell_command
+[dry-run] git clone https://github.com/Arksine/katapult <CASE>/home/katapult
+программное обеспечение готово
+
+== Инструменты ==
+  [ок]   python3
+  [ок]   git
+  [ок]   curl
+  [ок]   tar
+  [ок]   make
+  [ок]   arm-none-eabi-gcc
+  [ок]   dfu-util
+  [ок]   lsusb
+  [ок]   ip
+  [ок]   python3: pyserial
+  [ок]   python3: venv
+
+== Определение подключённых MCU ==
+Устройства в /dev/serial/by-id:
+  <список by-id хоста скрыт нормализацией>
+Устройств в режиме DFU (0483:df11): 0
+
+План установки:
+  Главная плата: Octopus Pro v1.1 H723, режим: мост USB-CAN (по гайду)
+  Платы голов: Fysetc H36 v1.3, 2 шт., CAN can0 1 Мбит
+  ALPS: 0
+
+Шаги с железом:
+  1. Fysetc H36 v1.3 (обе, по очереди): katapult и Klipper сразу по DFU через USB (на столе, 24 В и CAN не нужны)
+  2. Octopus Pro v1.1 H723: katapult и Klipper по DFU (джампер BOOT0; можно выбрать katapult по DFU + Klipper через katapult), режим: USB-CAN мост
+  3. canbus_uuid плат голов и моста вычисляются по UID чипов; проверка на шине после установки в принтер (--check-can, нужны 24 В)
+  4. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
+
+== Требования схемы с мостом USB-CAN ==
+  [ок]   ядро 5.15.0-golden поддерживает CAN и USB-CAN адаптеры (gs_usb)
+  [ок]   ip (iproute2)
+
+== Интерфейс CAN (can0) ==
+создаю /etc/network/interfaces.d/can0 (по гайду)
+[dry-run] sudo tee /etc/network/interfaces.d/can0 <<< 'allow-hotplug can0
+iface can0 can static
+    bitrate 1000000
+    up ip link set can0 txqueuelen 128
+'
+настройка CAN записана (интерфейс появится, когда будет прошит мост)
+ВНИМАНИЕ: --skip-board heads: UUID плат голов неизвестны (нет devices.tsv), впишите canbus_uuid в printer.cfg вручную
+платы голов: пропускаю (?, ?)
+
+== Octopus Pro v1.1 H723 ==
+Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
+Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
+Другие платы в режиме DFU быть не должны.
+Способ: katapult и Klipper за один сеанс DFU.
+
+== katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
+[dry-run] сборка katapult (stm32h723xx)
+
+>>> Octopus Pro v1.1 H723: переведите плату в DFU (джампер BOOT0 или кнопка BOOT, затем RESET) и нажмите Enter. В один сеанс запишутся katapult (0x08000000) и Klipper (по адресу 0x8020000).
+[dry-run] ожидание Enter
+[dry-run] dfu-util -a 0 -s 0x08000000:mass-erase:force -D stm32h723xx/katapult.bin
+fatal: cannot change to '<CASE>/home/klipper': No such file or directory
+[dry-run] dfu-util -a 0 -s 0x8020000:leave -D stm32h723xx-canbridge-.bin
+
+== canbus_uuid плат: проверка на шине ==
+  мост (Octopus Pro v1.1 H723): 000000000000
+  Fysetc H36 v1.3 левая (T0CB): не определён
+  Fysetc H36 v1.3 правая (T1CB): не определён
+ВНИМАНИЕ: canbus_uuid получены по UID чипов и на шине CAN не проверены.
+После установки электроники в принтер подайте 24 В и проверьте их командой: <INSTALL>/install_vostok.sh --check-can
+(она найдёт платы на шине, сверит UUID и при необходимости исправит devices.tsv и printer.cfg).
+ВНИМАНИЕ: Где UUID не определён, в printer.cfg стоит ЗАПОЛНИТЕ: впишите canbus_uuid вручную или выполните --check-can.
+
+== Карта устройств (<CASE>/devices.tsv) ==
+[dry-run] записал бы:
+000000000000	stm32h723xx-canbridge.config	bridge
+
+== Конфигурация принтера ==
+Конфигурация берётся из локального клона: <REPO>
+
+Конфиг электроники можно взять из репозитория vostok_configuration:
+  - стандартный: корень main, поддерживается автором (electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg);
+  - пользовательский: каталог user_configs, конфиги пользователей (4 шт.), могут не совпадать с документацией;
+  - сгенерировать свой: шаблон без плат и драйверов + пресеты найденных плат, пины драйверов и моторов вы впишете сами;
+[dry-run] чистая установка: записал бы в <CASE>/pd/config из main printer.cfg, printer_base.cfg, chamber_heater.cfg, postprocessing/ и electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg (источник: standard)
+[mcu]
+canbus_uuid: 000000000000
+
+[mcu T0CB]
+canbus_uuid: ЗАПОЛНИТЕ
+
+[mcu T1CB]
+canbus_uuid: ЗАПОЛНИТЕ
+[dry-run] после записи конфига спросил бы про дополнительные модули: chamber_heater.cfg
+
+== Запуск Klipper ==
+[dry-run] systemctl start klipper; проверка ready и версий MCU
+
+== Кнопка обновления в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_button.sh -y
+
+== Тема K3D VOSTOK в Fluidd ==
+[dry-run] <INSTALL>/install_fluidd_theme.sh -y
+
+Что осталось сделать вручную:
+  1. Адаптировать electronics_*.cfg под вашу электронику (драйверы, термисторы, пины) и проверить printer.cfg: все параметры описаны комментариями.
+  2. Проверить термисторы голов: возьмите термистор пальцами, температура должна расти у нужной головы (иначе поменяйте T0CB и T1CB местами).
+  3. ALPS: добавьте [static_pwm_clock]/[load_cell_probe] (см. документацию ALPS) и выполните LOAD_CELL_CALIBRATE.
+  4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
+  5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
+  6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
+  После установки электроники в принтер подайте 24 В и выполните: <INSTALL>/install_vostok.sh --check-can
+  Команда прочитает UUID с шины CAN, исправит devices.tsv и printer.cfg и перезапустит Klipper.
+  Вручную: остановите Klipper и выполните <CASE>/home/klippy-env/bin/python <CASE>/home/klipper/scripts/canbus_query.py can0, затем впишите canbus_uuid в [mcu], [mcu T0CB], [mcu T1CB].
+Пропущено как уже прошитое:
+  - Fysetc H36 v1.3: уже прошиты
+установка завершена

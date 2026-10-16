@@ -4,11 +4,14 @@ from __future__ import annotations
 import sys
 from typing import Callable, Dict, List, Optional
 
-from . import VostokError, ui
+from . import VostokError, integrations, ui
 
 # Реестр команд: имя -> main(argv) -> код выхода. Каждый агент добавляет только свою строку:
 # update, install, configure, button, theme, ks-theme.
 COMMANDS: Dict[str, Callable[[List[str]], int]] = {}
+COMMANDS["button"] = integrations.main_button
+COMMANDS["theme"] = integrations.main_theme
+COMMANDS["ks-theme"] = integrations.main_ks_theme
 
 
 def main(argv: Optional[List[str]] = None) -> int:

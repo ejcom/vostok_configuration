@@ -28,20 +28,9 @@ The web address comes from `VOSTOK_PINOUT_URL` (default `https://github.com/dmit
 | `fly-c8` | `Mellow/FLY-C8/pinout.jpg` | Mellow FLY-C8 (named `.png` upstream, but it is a JPEG) |
 | `alps` | — | There is no official ALPS pinout: the installer shows `DOC` |
 
-## VOSTOK guide wiring diagrams
+## VOSTOK wiring diagrams
 
-These are wiring diagrams (what connects where in the printer), not board pinouts, so they are not part of `PINOUT`. Taken from the VOSTOK guide ([page](https://k3d.tech/vostok/manual/electronics/wiring/), repository `dmitry-sorkin/k3d-site`, repository licence GPL-3.0; the CC-BY 4.0 licence for the site is not confirmed). Dark variants are not included. All are in `K3D/Octopus_Pro/v1_1/`:
-
-- `wiring_vostok_motors.png` — motors;
-- `wiring_vostok_jumpers.png` — jumpers;
-- `wiring_vostok_24v.png` — 24 V power;
-- `wiring_vostok_220v.png` — 220 V power;
-- `wiring_vostok_heatbed.png` — heated bed;
-- `wiring_vostok_chamber.png` — chamber;
-- `wiring_vostok_printhead.png` — print head;
-- `wiring_vostok_printhead_boards.png` — head boards;
-- `wiring_vostok_other.png` — other;
-- `wiring_vostok_ws7040.png` — WS7040 unit.
+Wiring diagrams (what connects where in the printer) are not stored here: they are in the guide on the site — <https://k3d.tech/vostok/manual/electronics/wiring/>.
 
 ## How to add a board
 

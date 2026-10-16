@@ -28,20 +28,9 @@
 | `fly-c8` | `Mellow/FLY-C8/pinout.jpg` | Mellow FLY-C8 (в репозитории файл назван `.png`, но это JPEG) |
 | `alps` | — | Официальной распиновки ALPS нет: установщик показывает `DOC` |
 
-## Схемы подключения гайда VOSTOK
+## Схемы подключения VOSTOK
 
-Это схемы проводки (куда что подключается в принтере), а не распиновка платы, поэтому в `PINOUT` они не входят. Взяты из гайда VOSTOK ([страница](https://k3d.tech/vostok/manual/electronics/wiring/), репозиторий `dmitry-sorkin/k3d-site`, лицензия репозитория GPL-3.0; лицензия CC-BY 4.0 для сайта не подтверждена). Тёмные варианты не включены. Все лежат в `K3D/Octopus_Pro/v1_1/`:
-
-- `wiring_vostok_motors.png` — моторы;
-- `wiring_vostok_jumpers.png` — джамперы;
-- `wiring_vostok_24v.png` — питание 24 В;
-- `wiring_vostok_220v.png` — питание 220 В;
-- `wiring_vostok_heatbed.png` — стол;
-- `wiring_vostok_chamber.png` — камера;
-- `wiring_vostok_printhead.png` — печатающая голова;
-- `wiring_vostok_printhead_boards.png` — платы голов;
-- `wiring_vostok_other.png` — прочее;
-- `wiring_vostok_ws7040.png` — блок WS7040.
+Схемы проводки (куда что подключается в принтере) здесь не хранятся: они есть в гайде на сайте — <https://k3d.tech/vostok/manual/electronics/wiring/>.
 
 ## Как добавить плату
 

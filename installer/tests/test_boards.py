@@ -101,6 +101,24 @@ class BoardsTest(unittest.TestCase):
         with self.assertRaises(boards.BoardError):
             r.cfg_path("alps", "zzz")
 
+    def test_rank(self):
+        """0 - плата гайда (board_resolve h723), 1 - VERIFIED=yes, 2 - остальные."""
+        r = boards.registry()
+        self.assertEqual(r.rank("octopus-pro-h723"), 0)
+        self.assertEqual(r.rank("manta-m8p-v2.0"), 1)
+        self.assertEqual(r.rank("spider-v3-h723"), 2)
+        for i in r.list("main"):
+            want = 0 if i == r.resolve("h723") else (1 if r.get(i).verified == "yes" else 2)
+            self.assertEqual(r.rank(i), want, i)
+
+    def test_ebb_alias_and_verified(self):
+        r = boards.registry()
+        self.assertEqual(r.resolve("ebb36"), "ebb42")
+        self.assertEqual(r.resolve("EBB36"), "ebb42")
+        self.assertEqual(r.get("ebb42").label, "BTT EBB42/EBB36")
+        for i in ("ebb42", "h36-v1.3", "h36-v2", "manta-m8p-v2.0"):
+            self.assertEqual(r.get(i).verified, "yes", i)
+
     def test_cfg_path_kinds(self):
         r = boards.registry()
         cfgs = Path(INSTALL) / "configs"

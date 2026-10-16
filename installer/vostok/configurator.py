@@ -151,15 +151,14 @@ class McuValues:
 def rank_main_boards(reg: Registry, ids: Sequence[str]) -> List[str]:
     """ТОЧКА РАСШИРЕНИЯ: порядок предпочтения главных плат при выборе «по умолчанию» (первая - лучшая).
     Здесь одно правило, общее для кандидатов по железу (main_candidates) и для догадки по printer.cfg
-    (guess_main_board): сначала проверенные на железе (VERIFIED=yes), при равенстве - по чипу в обратном
-    порядке (H7 раньше F4), затем по id. Ранжирование по board_rank (1.3b) добавляется только сюда."""
-    def info(i: str) -> Tuple[str, str]:
-        b = reg.get(i)
-        return b.verified, b.chip
+    (guess_main_board): сначала плата гайда и проверенные на железе (Registry.rank: 0 - плата гайда, 1 -
+    VERIFIED=yes, 2 - остальные), при равенстве - по чипу в обратном порядке (H7 раньше F4), затем по id."""
+    def info(i: str) -> Tuple[int, str]:
+        return reg.rank(i), reg.get(i).chip
 
     res = sorted(ids)                                   # третий ключ: id по возрастанию
     res.sort(key=lambda i: info(i)[1], reverse=True)    # второй ключ: чип по убыванию (sort устойчив)
-    res.sort(key=lambda i: 0 if info(i)[0] == "yes" else 1)
+    res.sort(key=lambda i: info(i)[0])
     return res
 
 

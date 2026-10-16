@@ -14,5 +14,5 @@
 set -euo pipefail
 
 INSTALL_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-command -v python3 >/dev/null || { echo "ОШИБКА: нужен python3" >&2; exit 1; }
-PYTHONPATH="$INSTALL_DIR" exec python3 -m vostok configure "$@"
+command -v python3 >/dev/null 2>&1 || { echo "ОШИБКА: нужен python3 (установите: sudo apt install python3)" >&2; exit 1; }
+PYTHONPATH="$INSTALL_DIR${PYTHONPATH:+:$PYTHONPATH}" PYTHONDONTWRITEBYTECODE=1 exec python3 -m vostok configure "$@"

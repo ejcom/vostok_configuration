@@ -692,15 +692,17 @@ def print_summary(ctx: InstallContext) -> None:
 
 # ------------------------------------------------------------------ проверка canbus_uuid на шине (--check-can)
 
-def write_uuid_to_cfg(ctx: InstallContext, name: str, uuid: str) -> None:
-    """Записать UUID в [mcu ...] printer.cfg."""
+def write_uuid_to_cfg(ctx: InstallContext, name: str, uuid: str) -> bool:
+    """Записать UUID в [mcu ...] printer.cfg (атомарно, с копией .bak-<дата>).
+    False - запись не удалась (предупреждение уже выведено); отсутствие файла/секции или отказ пользователя - не ошибка."""
     cfg = ctx.env.printer_cfg_dir / "printer.cfg"
     if not cfg.is_file():
-        return
+        return True
     try:
-        r = cfgfile.set_canbus_uuid(cfg, name, uuid)
-    except (VostokError, OSError):
-        return
+        r = cfgfile.set_canbus_uuid(cfg, name, uuid, backup=True)
+    except (VostokError, OSError) as e:
+        ui.warn("не удалось записать printer.cfg ([%s] canbus_uuid): %s" % (name, e))
+        return False
     if r.kind == "SET":
         ui.ok("printer.cfg: [%s] canbus_uuid: %s" % (name, uuid))
     elif r.kind == "SAME":
@@ -711,12 +713,14 @@ def write_uuid_to_cfg(ctx: InstallContext, name: str, uuid: str) -> None:
         cur = r.args[0] if r.args else ""
         if ui.ask_yn("В printer.cfg у [%s] другое значение (%s). Заменить на найденное на шине (%s)?" % (name, cur, uuid), "y"):
             try:
-                cfgfile.set_canbus_uuid(cfg, name, uuid, force=True)
-            except (VostokError, OSError):
-                pass
+                cfgfile.set_canbus_uuid(cfg, name, uuid, force=True, backup=True)
+            except (VostokError, OSError) as e:
+                ui.warn("не удалось записать printer.cfg ([%s] canbus_uuid): %s" % (name, e))
+                return False
             ui.ok("printer.cfg: [%s] canbus_uuid: %s" % (name, uuid))
         else:
             ui.warn("[%s] оставлен без изменений, проверьте вручную" % name)
+    return True
 
 
 def check_can_uuids(ctx: InstallContext) -> bool:
@@ -798,11 +802,16 @@ def check_can_uuids(ctx: InstallContext) -> bool:
         if u:
             fl.state_set(u)
     fl.save_devices(quiet=True)
+    written = True
     for slot in range(3):
-        if exp[slot]:
-            write_uuid_to_cfg(ctx, want[slot], exp[slot])
+        if exp[slot] and not write_uuid_to_cfg(ctx, want[slot], exp[slot]):
+            written = False
     if not cfg.is_file():
         ui.info("printer.cfg не найден: canbus_uuid записаны только в %s" % env.devices_file)
+    if not written:
+        ui.warn("canbus_uuid не удалось записать в printer.cfg: проверьте права и место на диске, затем повторите --check-can "
+                "или впишите значения вручную")
+        return False
     ui.ok("canbus_uuid подтверждены на шине")
     return True
 

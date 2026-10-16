@@ -13,6 +13,7 @@
 | A4 configurator | py/configurator | merged | слияние py/configurator | см. reports/configurator.md | 2026-10-16 |
 | A5 install-flow | py/install-flow | review | см. git log py/install-flow (402 теста, golden 232 из 234) | 2 эталона не пересняты (install/dry_no_tty_no_y, boards/bad_args), см. reports/install-flow.md | 2026-10-16 |
 | A6 cleanup-docs | py/cleanup-docs | review | см. git log py/cleanup-docs (399 тестов, golden 234/0, gen_configs --check 41/0) | tools/mcu_merge, pin_conflicts, can_uuid оставлены обёртками ради golden; см. reports/cleanup-docs.md | 2026-10-16 |
+| R-fixes review-fixes | py/review-fixes | review | N1, N2, L2, L3, L4/N4, удаление tools-обёрток; 408 тестов, golden 231/0 | эталоны install*/dry пересняты (-50 строк `fatal: cannot change to`), см. reports/review-fixes.md | 2026-10-16 |
 
 Статусы: todo | in-progress | review | merged. Ревью (R) после волн 0–1, 2, 3, 4: отчёты в `reports/review-*.md`.
 

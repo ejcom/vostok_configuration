@@ -87,7 +87,7 @@ Without a terminal and without `--config-source`, an existing `printer.cfg` lead
 
 ## “Skip” mode
 
-Use it when you are happy with the config and only need to add a flashed board. `tools/mcu_merge.py` works; for every board in the list of found boards it prints one of these results:
+Use it when you are happy with the config and only need to add a flashed board. `cfgfile.merge_mcus` (`vostok/cfgfile.py`) does the work; for every board in the list of found boards it prints one of these results:
 
 | Result | Meaning |
 |---|---|
@@ -240,7 +240,7 @@ For each module that is not yet enabled:
 
 The question defaults to “no”. `--modules chamber_heater|all|none` answers without asking (comma-separated names). With `-y` and without a terminal modules are left unchanged.
 
-**The pin-conflict check** (`tools/pin_conflicts.py`) reads `printer.cfg` and all its `[include]`s, compares pins per board and looks for a pin used in several sections (it accounts for prefixes like `T0CB:` and the signs `!`, `^`, `~`). Not counted as a conflict: shared SPI lines (`spi_software_*`), repeats within one section, virtual endstops (`probe:z_virtual_endstop`). The check runs:
+**The pin-conflict check** (`cfgfile.pin_conflicts`) reads `printer.cfg` and all its `[include]`s, compares pins per board and looks for a pin used in several sections (it accounts for prefixes like `T0CB:` and the signs `!`, `^`, `~`). Not counted as a conflict: shared SPI lines (`spi_software_*`), repeats within one section, virtual endstops (`probe:z_virtual_endstop`). The check runs:
 
 - before enabling a module: the config with and without the module is compared and only **new** conflicts matter. On a conflict the module is not enabled silently: the dialog asks “enable anyway?” (default no); without a terminal or with `-y` the module is not enabled;
 - after the config is written: all conflicts are printed as a warning.
@@ -329,7 +329,7 @@ The reference (the user's own config) always wins over the preset: the preset on
 | `configure_vostok.sh` | thin wrapper: `python3 -m vostok configure` |
 | `vostok/configurator.py` | config setup for `install_vostok.sh` and `configure_vostok.sh`: `HardwareDetector` (hardware detection), `Configurator` (`pick_electronics` - the source menu, `drivers_wizard`, `find_reference`, `gen_custom_electronics`, `print_gen_warnings`, `merge_mcus_into_cfg`, `stage_config`, `stage_modules`), `main` |
 | `vostok/electronics.py` | builds the file: template + presets + drivers + reference; prints `NAME`, `FILL`, `EMPTY`, `WARN`; `tools/gen_electronics.py` is a wrapper with the old path and flags |
-| `vostok/cfgfile.py` | parses `printer.cfg` with its `[include]`s, adds `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`, `--list` mode, `--set`), finds duplicated pins; `tools/mcu_merge.py` and `tools/pin_conflicts.py` are wrappers |
+| `vostok/cfgfile.py` | parses `printer.cfg` with its `[include]`s, adds `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`, `list_mcus`, `set_canbus_uuid`), finds duplicated pins |
 | `templates/electronics_blank.cfg` | template with empty pins and the markers `;;DRIVERS;;`, `;;EXTRAS;;` |
 | `templates/boards/*.cfg` | board presets: `octopus_pro`, `octopus_extruders`, `octopus_heads`, `h36_v1.3`, `h36_v2`, `ebb42`, `alps` |
 | `templates/boards/main/*.cfg` | pin presets of other main boards: `octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0` (format and how to add one: below) |

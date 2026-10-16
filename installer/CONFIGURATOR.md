@@ -87,7 +87,7 @@ cd ~/vostok_configuration/installer
 
 ## Режим «Пропустить»
 
-Служит, когда конфиг вас устраивает, а нужно лишь добавить прошитую плату. Работает `tools/mcu_merge.py`; для каждой платы из списка найденных он печатает один из результатов:
+Служит, когда конфиг вас устраивает, а нужно лишь добавить прошитую плату. Работает `cfgfile.merge_mcus` (`vostok/cfgfile.py`); для каждой платы из списка найденных он печатает один из результатов:
 
 | Результат | Что значит |
 |---|---|
@@ -240,7 +240,7 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 
 Вопрос задаётся по умолчанию с ответом «нет». `--modules chamber_heater|all|none` отвечает без вопроса (имена через запятую). С `-y` и без терминала модули не меняются.
 
-**Проверка пересечений пинов** (`tools/pin_conflicts.py`) читает `printer.cfg` и все его `[include]`, сравнивает пины по плате и ищет пин, который использован в нескольких секциях (учитывает префиксы вида `T0CB:` и знаки `!`, `^`, `~`). Не считается конфликтом: общие линии SPI (`spi_software_*`), повторы внутри одной секции, виртуальные концевики (`probe:z_virtual_endstop`). Проверка выполняется:
+**Проверка пересечений пинов** (`cfgfile.pin_conflicts`) читает `printer.cfg` и все его `[include]`, сравнивает пины по плате и ищет пин, который использован в нескольких секциях (учитывает префиксы вида `T0CB:` и знаки `!`, `^`, `~`). Не считается конфликтом: общие линии SPI (`spi_software_*`), повторы внутри одной секции, виртуальные концевики (`probe:z_virtual_endstop`). Проверка выполняется:
 
 - перед подключением модуля: сравнивается конфиг с модулем и без него, значимы только **новые** пересечения. При пересечении модуль не подключается молча: в диалоге спрашивается «всё равно подключить?» (по умолчанию нет), без терминала или с `-y` модуль не подключается;
 - после записи конфига: все пересечения выводятся предупреждением.
@@ -329,7 +329,7 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 | `configure_vostok.sh` | тонкая обёртка: `python3 -m vostok configure` |
 | `vostok/configurator.py` | настройка конфига для `install_vostok.sh` и `configure_vostok.sh`: `HardwareDetector` (определение железа), `Configurator` (`pick_electronics` - меню источника, `drivers_wizard`, `find_reference`, `gen_custom_electronics`, `print_gen_warnings`, `merge_mcus_into_cfg`, `stage_config`, `stage_modules`), `main` |
 | `vostok/electronics.py` | сборка файла: шаблон + пресеты + драйверы + эталон; вывод `NAME`, `FILL`, `EMPTY`, `WARN`; `tools/gen_electronics.py` - обёртка с прежним путём и флагами |
-| `vostok/cfgfile.py` | разбор `printer.cfg` с `[include]`, дописывание `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`, режим `--list`, `--set`), поиск повторяющихся пинов; `tools/mcu_merge.py` и `tools/pin_conflicts.py` - обёртки |
+| `vostok/cfgfile.py` | разбор `printer.cfg` с `[include]`, дописывание `[mcu …]` (`OK`/`ADD`/`DIFF`/`TODO`, `list_mcus`, `set_canbus_uuid`), поиск повторяющихся пинов |
 | `templates/electronics_blank.cfg` | шаблон с пустыми пинами и маркерами `;;DRIVERS;;`, `;;EXTRAS;;` |
 | `templates/boards/*.cfg` | пресеты плат: `octopus_pro`, `octopus_extruders`, `octopus_heads`, `h36_v1.3`, `h36_v2`, `ebb42`, `alps` |
 | `templates/boards/main/*.cfg` | пресеты пинов других главных плат: `octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0` (формат и добавление: ниже) |

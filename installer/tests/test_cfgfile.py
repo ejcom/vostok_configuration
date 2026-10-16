@@ -1,5 +1,5 @@
-"""Тесты vostok.cfgfile. Парные проверки: старые tools/mcu_merge.py, tools/pin_conflicts.py, heredoc правки
-printer.cfg и sed-функции модулей из lib/vostok_config.sh запускаются на тех же фикстурах, вывод и файлы сравниваются."""
+"""Тесты vostok.cfgfile. Ожидаемые результаты mcu_merge/pin_conflicts зафиксированы литералами (сняты со старых утилит);
+парные проверки heredoc правки printer.cfg и sed-функций модулей из lib/vostok_config.sh запускаются на тех же фикстурах."""
 import os
 import re
 import shutil
@@ -19,8 +19,6 @@ from vostok import VostokError, cfgfile  # noqa: E402
 FIX = os.path.join(HERE, "fixtures")
 ROOT = os.path.join(FIX, "repo_root")
 ELEC = "electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg"
-MCU_MERGE = os.path.join(INSTALL, "tools", "mcu_merge.py")
-PIN_CONFLICTS = os.path.join(INSTALL, "tools", "pin_conflicts.py")
 LEGACY_REWRITE = os.path.join(FIX, "legacy_rewrite_printer_cfg.py")   # heredoc из lib/vostok_config.sh 1.3a
 LEGACY_MODULES = os.path.join(FIX, "legacy_modules.sh")
 
@@ -33,12 +31,6 @@ BLOCKS = (
 SAVE_CONFIG = ("\n#*# <---------------------- SAVE_CONFIG ---------------------->\n"
                "#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.\n"
                "#*#\n#*# [extruder]\n#*# control = pid\n")
-
-
-def old_tool(script, *args):
-    pr = subprocess.run([sys.executable, "-I", script] + [str(a) for a in args], stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE, universal_newlines=True)
-    return pr.returncode, pr.stdout
 
 
 def lines(results):
@@ -92,49 +84,50 @@ class ParsingTest(Base):
         self.assertEqual(names, ["include a.cfg", "include sub/*.cfg", "x", "include printer.cfg", "a", "b", "c"])
         self.assertEqual(cfgfile.read_with_includes(d / "nosuch.cfg"), "")
 
-    def test_list_same_as_old(self):
-        old, new = self.pair()
-        rc, out = old_tool(MCU_MERGE, old / "printer.cfg", "--list")
-        got = "".join("%s\t%s\t%s\n" % m for m in cfgfile.list_mcus(new / "printer.cfg"))
-        self.assertEqual(got, out)
-        self.assertIn("mcu T0CB\tcanbus_uuid\t", got)
+    def test_list_mcus(self):
+        new = self.tree("new")
+        self.assertEqual(cfgfile.list_mcus(new / "printer.cfg"),
+                         [("mcu", "canbus_uuid", "821a4dc3b8eb"), ("mcu T0CB", "canbus_uuid", "bcc1147e110d"),
+                          ("mcu T1CB", "canbus_uuid", "21ad41ca6772")])
 
 
 class MergeTest(Base):
-    def test_merge_same_as_old(self):
-        old, new = self.pair()
-        blocks = self.root / "blocks.txt"
-        blocks.write_text(BLOCKS, encoding="utf-8")
-        for dry in (True, False, False):  # --dry, запись, повтор
-            args = [old / "printer.cfg", blocks] + (["--dry"] if dry else [])
-            rc, out = old_tool(MCU_MERGE, *args)
-            self.assertEqual(rc, 0)
+    def test_merge_results(self):
+        new = self.tree("new")
+        head = "OK\tmcu\tmcu\nDIFF\tmcu T0CB\tcanbus_uuid\tbcc1147e110d\tffffffffffff\n"
+        want = [(True, head + "ADD\tmcu alps\nTODO\tmcu alps_t1\n"), (False, head + "ADD\tmcu alps\nTODO\tmcu alps_t1\n"),
+                (False, head + "OK\tmcu alps\tmcu alps\nTODO\tmcu alps_t1\n")]   # --dry, запись, повтор
+        before = (new / "printer.cfg").read_bytes()
+        for dry, out in want:
             res = cfgfile.merge_mcus(new / "printer.cfg", BLOCKS, dry=dry, backup=False)
             self.assertEqual(lines(res), out)
-            self.assertSameFiles(old, new)
+            if dry:
+                self.assertEqual((new / "printer.cfg").read_bytes(), before)       # dry-run файл не меняет
         text = (new / "printer.cfg").read_text(encoding="utf-8")
         self.assertIn("[mcu alps]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_AAAA-if00", text)
         self.assertNotIn("alps_t1", text)
 
-    def test_merge_variants_same_as_old(self):
+    def test_merge_variants(self):
+        add4 = "ADD\tmcu alps\nADD\tmcu alps_t1\nADD\tmcu x\nADD\tmcu q\n"
         variants = {
-            "без mcu": "[include printer_base.cfg]\n\n[printer]\nkinematics: x\n" + SAVE_CONFIG,
-            "mcu перед SAVE_CONFIG": "[mcu]\nserial: /dev/a\n\n\n" + SAVE_CONFIG,
-            "пусто": "",
-            "serial уже есть": "[mcu]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_AAAA-if00\n\n[mcu x]\nserial: /dev/y\n",
+            "без mcu": ("[include printer_base.cfg]\n\n[printer]\nkinematics: x\n" + SAVE_CONFIG, add4),
+            "mcu перед SAVE_CONFIG": ("[mcu]\nserial: /dev/a\n\n\n" + SAVE_CONFIG, add4),
+            "пусто": ("", add4),
+            "serial уже есть": ("[mcu]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_AAAA-if00\n\n[mcu x]\nserial: /dev/y\n",
+                                "OK\tmcu alps\tmcu\nADD\tmcu alps_t1\nDIFF\tmcu x\tserial\t/dev/y\t/dev/zzz\nADD\tmcu q\n"),
         }
         blocks = ("[mcu alps]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_AAAA-if00\n\n"
                   "[mcu alps_t1]\nserial: /dev/serial/by-id/usb-Klipper_stm32f072xb_BBBB-if00\n\n"
                   "[mcu x]\nserial: /dev/zzz\n\n[mcu q]\nfoo: 1\n")
-        bpath = self.root / "blocks.txt"
-        bpath.write_text(blocks, encoding="utf-8")
-        for name, text in variants.items():
+        for name, (text, out) in variants.items():
             with self.subTest(name):
-                old, new = self.pair(text)
-                rc, out = old_tool(MCU_MERGE, old / "printer.cfg", bpath)
+                new = self.tree("v_" + str(abs(hash(name))), text)
                 res = cfgfile.merge_mcus(new / "printer.cfg", blocks, backup=False)
                 self.assertEqual(lines(res), out)
-                self.assertSameFiles(old, new)
+                got = (new / "printer.cfg").read_text(encoding="utf-8")
+                if "SAVE_CONFIG" in text:                       # секции вставляются выше блока SAVE_CONFIG
+                    self.assertTrue(got.endswith(SAVE_CONFIG), name)
+                    self.assertLess(got.index("[mcu alps]"), got.index("SAVE_CONFIG"))
 
     def test_merge_backup(self):
         _, new = self.pair()
@@ -151,30 +144,32 @@ class MergeTest(Base):
         cfgfile.merge_mcus(new / "printer.cfg", BLOCKS)
         self.assertEqual(list(new.glob("printer.cfg.bak-*")), [])
 
-    def test_set_same_as_old(self):
-        old, new = self.pair()
-        steps = [("mcu T1CB", "aaaaaaaaaaaa", False), ("mcu T1CB", "aaaaaaaaaaaa", True),
-                 ("mcu T1CB", "aaaaaaaaaaaa", False), ("mcu nosuch", "bbbbbbbbbbbb", False),
-                 ("mcu T1CB", "AAAAAAAAAAAA", False)]
-        for name, uuid, force in steps:
-            args = [old / "printer.cfg", "--set", name, uuid] + (["--force"] if force else [])
-            rc, out = old_tool(MCU_MERGE, *args)
+    def test_set_results(self):
+        new = self.tree("new")
+        steps = [("mcu T1CB", "aaaaaaaaaaaa", False, "DIFF\tmcu T1CB\t21ad41ca6772\taaaaaaaaaaaa"),
+                 ("mcu T1CB", "aaaaaaaaaaaa", True, "SET\tmcu T1CB"),
+                 ("mcu T1CB", "aaaaaaaaaaaa", False, "SAME\tmcu T1CB"),
+                 ("mcu nosuch", "bbbbbbbbbbbb", False, "NOSECTION\tmcu nosuch"),
+                 ("mcu T1CB", "AAAAAAAAAAAA", False, "SAME\tmcu T1CB")]
+        for name, uuid, force, want in steps:
             res = cfgfile.set_canbus_uuid(new / "printer.cfg", name, uuid, force=force)
-            self.assertEqual(res.line() + "\n", out, (name, uuid, force))
-            self.assertSameFiles(old, new)
+            self.assertEqual(res.line(), want, (name, uuid, force))
+        self.assertIn("canbus_uuid: aaaaaaaaaaaa", (new / "printer.cfg").read_text(encoding="utf-8"))
         self.assertEqual(list(new.glob("printer.cfg.bak-*")), [])
 
     def test_set_todo_and_serial(self):
         text = ("[mcu]\ncanbus_uuid: ЗАПОЛНИТЕ\n\n[mcu a]\nserial: /dev/x\n\n[mcu b]\nfoo: 1\n\n[mcu c]\ncanbus_uuid:  # пусто\n"
                 + SAVE_CONFIG)
-        old, new = self.pair(text)
-        for name in ("mcu", "mcu a", "mcu b", "mcu c"):
-            for force in (False, True):
-                args = [old / "printer.cfg", "--set", name, "0123456789ab"] + (["--force"] if force else [])
-                rc, out = old_tool(MCU_MERGE, *args)
-                res = cfgfile.set_canbus_uuid(new / "printer.cfg", name, "0123456789ab", force=force)
-                self.assertEqual(res.line() + "\n", out, (name, force))
-                self.assertSameFiles(old, new)
+        want = {("mcu", False): "SET\tmcu", ("mcu", True): "SET\tmcu",
+                ("mcu a", False): "DIFF\tmcu a\tserial\t0123456789ab", ("mcu a", True): "SET\tmcu a",
+                ("mcu b", False): "SET\tmcu b", ("mcu b", True): "SET\tmcu b",
+                ("mcu c", False): "SET\tmcu c", ("mcu c", True): "SET\tmcu c"}
+        for (name, force), line in want.items():
+            new = self.tree("s_%s_%s" % (name.replace(" ", "_"), force), text)
+            res = cfgfile.set_canbus_uuid(new / "printer.cfg", name, "0123456789ab", force=force)
+            self.assertEqual(res.line(), line, (name, force))
+            changed = (new / "printer.cfg").read_text(encoding="utf-8") != text
+            self.assertEqual(changed, line.startswith("SET"), (name, force))
 
     def test_set_missing_file(self):
         with self.assertRaises(VostokError):
@@ -193,9 +188,7 @@ class PinConflictsTest(Base):
     EXTRA = "[extruder]\nheater_pin: T0CB:pb9\nstep_pin: PA2\n[led l]\nred_pin: probe:PA1\n"
 
     def check(self, d):
-        rc, out = old_tool(PIN_CONFLICTS, d / "printer.cfg")
-        self.assertEqual(lines(cfgfile.pin_conflicts(d / "printer.cfg")), out)
-        return out
+        return lines(cfgfile.pin_conflicts(d / "printer.cfg"))
 
     def test_stock(self):
         out = self.check(self.tree("t"))
@@ -213,10 +206,9 @@ class PinConflictsTest(Base):
 
     def test_missing_file(self):
         self.assertEqual(cfgfile.pin_conflicts(self.root / "nothing.cfg"), [])
-        self.assertEqual(old_tool(PIN_CONFLICTS, self.root / "nothing.cfg")[1], "")
 
     def test_user_configs(self):
-        # все пользовательские electronics из фикстуры: те же результаты, что у старой утилиты
+        # все пользовательские electronics из фикстуры разбираются без ошибок
         for f in sorted(Path(ROOT, "user_configs").glob("*.cfg")) + [Path(ROOT, "chamber_heater.cfg")]:
             d = self.root / ("u_" + f.stem)
             d.mkdir()

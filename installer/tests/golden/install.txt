@@ -739,7 +739,6 @@ iface can0 can static
 fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-can-.bin
 [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
-fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 
 == Fysetc H36 v1.3: katapult и Klipper по DFU, плата правая (T1CB) ==
 Прошивка "на столе": питание 24 В и CAN не нужны, достаточно USB.
@@ -756,7 +755,6 @@ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 [dry-run] dfu-util -a 0 -s 0x8002000:leave -D stm32g0b1xx-can-.bin
 [dry-run] dfu-util -U UID (0x1FFF7590) -> canbus_uuid
-fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 
 == Octopus Pro v1.1 H723 ==
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).

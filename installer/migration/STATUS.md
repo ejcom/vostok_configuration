@@ -8,9 +8,9 @@
 |---|---|---|---|---|---|
 | A0 harness | py/harness | merged | b89f806 (слияние в py-migration; golden 234/0 расхождений) | 5 вопросов в reports/harness.md (нумерация A–H, 10 главных плат, требования к хосту) | 2026-10-15 |
 | A1 core | py/core | merged | см. git log py-migration (слияние py/core; 75 тестов, golden 234/0) | 4 вопроса в reports/core.md | 2026-10-15 |
-| A2 update | py/update | todo | | | |
-| A3 integrations | py/integrations | todo | | | |
-| A4 configurator | py/configurator | todo | | | |
+| A2 update | py/update | merged | слияние py/update (121 тест; golden 234/0) | см. reports/update.md | 2026-10-16 |
+| A3 integrations | py/integrations | merged | слияние py/integrations | см. reports/integrations.md | 2026-10-16 |
+| A4 configurator | py/configurator | merged | слияние py/configurator | см. reports/configurator.md | 2026-10-16 |
 | A5 install-flow | py/install-flow | todo | | | |
 | A6 cleanup-docs | py/cleanup-docs | todo | | | |
 
@@ -40,3 +40,4 @@
 - 2026-10-15 (конец дня): влиты A0 и A1 в `py-migration`. Следующий шаг на завтра: (1) по желанию R по волнам 0–1 (`prompts/R-reviewer.md`, отчёт `reports/review-wave1.md`), (2) волна 2: A2 ‖ A3 ‖ A4 параллельно по `prompts/A2-…A4-….md` (в промпт добавить: worktree может стоять на main, сразу `git checkout -b py/<имя> py-migration`; обёртки вызывают `PYTHONPATH="$INSTALL_DIR" exec python3 -m vostok <cmd>`; golden после замены своей обёртки переснимать нельзя без согласования). Старые worktree агентов в `.claude/worktrees/` можно удалить (`git worktree remove`), ветки `py/harness`, `py/core` влиты. Не запушено.
 
 - 2026-10-16 (решение пользователя): ветки `add-installer` и `docs-verified-boards` не трогаем, работаем только в `py-migration` (база 1.3a). Изменения 1.3b (`168b26f`: `board_rank`, `VERIFIED=yes` у h36-v1.3/v2, ebb42 «EBB42/EBB36» + алиас `ebb36`, manta-m8p-v2.0, docs/CHANGELOG) переносятся в Python-архитектуру отдельным шагом S6 после S5. Golden-эталоны остаются на 1.3a. В A4 выбор платы по умолчанию оформить одной функцией — точкой расширения под `board_rank`.
+- 2026-10-16 (оркестратор): влиты A3, A2, A4 (157+ тестов, golden 234/0). Намеренно переснят один эталон `boards/bad_args`: без tty bash печатал мусор (`/dev/tty: No such device`, `ans: unbound variable`), теперь `ОШИБКА: нужен терминал…`, код выхода тот же. `PYTHONDONTWRITEBYTECODE=1` оставлен (обёртки + golden_lib). Fluidd-тема с `-y` и чужой темой по-прежнему заменяется (1:1 с 1.3a). Временный `lib/update_legacy.sh` удалить в A5/A6. A5: добавить в `Runner.run` параметры `quiet`/`stdout_file`; USB/DFU/CAN-функции из `configurator.py` (byid_find, dfu_*, show_usb_state…) решить, переносить ли в `hardware.py`; `LEGACY_BOARD_NAMES` в `electronics.py` удалить, когда в `.board` появятся поля (S6/1.3b). Дальше: R по волне 2 (по желанию), затем A5.

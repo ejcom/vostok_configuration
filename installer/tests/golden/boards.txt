@@ -50,15 +50,7 @@ $ configure_vostok.sh --printer-data <CASE>/no-such-dir
   8) Fysetc Spider v2.x (spider-v2-f446)
   9) Fysetc Spider v3.0 F446 (spider-v3-f446)
   10) Fysetc Spider v3.0 H723 (spider-v3-h723)
-<INSTALL>/lib/vostok_config.sh: line 53: /dev/tty: No such device or address
-<INSTALL>/lib/vostok_config.sh: line 54: ans: unbound variable
-Платы голов по CAN (при их наличии Octopus станет мостом USB-CAN):
-  1) нет (пассивная плата, например fly miniAB)
-  2) Fysetc H36 v1.3
-  3) Fysetc H36 v2
-  4) BTT EBB42
-<INSTALL>/lib/vostok_config.sh: line 53: /dev/tty: No such device or address
-<INSTALL>/lib/vostok_config.sh: line 54: ans: unbound variable
+Номер [по умолчанию: Octopus Pro v1.1 H723 (octopus-pro-h723)]: ОШИБКА: нужен терминал: установка просит переключать платы и нажимать Enter
 @@@@ CASE boards/list_boards
 $ install_vostok.sh --list-boards
 # rc=0

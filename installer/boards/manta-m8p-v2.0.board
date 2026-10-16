@@ -1,7 +1,7 @@
-# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
 LABEL="BTT Manta M8P v2.0"
 ROLE="main"
 CHIP="stm32h723xx"
@@ -24,6 +24,6 @@ DFU_HOW="button"
 ELEC_PATTERN=""
 TEMPLATE="manta_m8p_v2.0"
 HEAD_NAMES=""
-VERIFIED="no"
+VERIFIED="yes"
 DOC="Manta-M8P V2.0/Firmware/generic-bigtreetech-manta-m8p-V2_0.cfg"
-NOTE="Тот же чип H723, что у Octopus Pro v1.1, но другая плата и другие пины."
+NOTE="Тот же чип H723, что у Octopus Pro v1.1, но другая плата и другие пины. Прошивка и мост USB-CAN проверены пользователями (CB1, CB2); пресет пинов конфигуратора не проверен."

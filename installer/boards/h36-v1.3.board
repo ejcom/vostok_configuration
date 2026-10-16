@@ -1,7 +1,7 @@
-# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
 LABEL="Fysetc H36 v1.3"
 ROLE="head"
 CHIP="stm32g0b1xx"
@@ -24,6 +24,6 @@ DFU_HOW="button"
 ELEC_PATTERN="H36v1.3"
 TEMPLATE=""
 HEAD_NAMES="T0CB,T1CB"
-VERIFIED="no"
+VERIFIED="yes"
 DOC="https://k3d.tech/vostok/manual/electronics/firmware/"
-NOTE=""
+NOTE="Проверено пользователями."

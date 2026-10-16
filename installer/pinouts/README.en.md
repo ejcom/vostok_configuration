@@ -14,7 +14,7 @@ The web address comes from `VOSTOK_PINOUT_URL` (default `https://github.com/dmit
 
 | Board (id in `boards/`) | Files | Manufacturer, notes |
 |---|---|---|
-| `octopus-pro-h723` | `BTT/Octopus_Pro/v1_1/pinout.jpg` | BIGTREETECH Octopus Pro V1.1 |
+| `octopus-pro-h723` | `BTT/Octopus_Pro/v1_1/pinout.jpg` | BIGTREETECH Octopus Pro V1.1. **Some pins differ from v1.0** (HE0=PA0, HE2=PB0, Motor3-EN=PA2, RGB=PB10; Motor3-EN is not on the image); the installer prints this warning next to the link (the `PINOUT_NOTE` field); [BTT change list](https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10) |
 | `octopus-pro-f446`, `octopus-pro-f429` | `BTT/Octopus_Pro/v1_0/pinout.pdf` | BIGTREETECH Octopus Pro, the light (0.8 MB) `Octopus Pro - PIN` sheet. The revision is not confirmed by the file name. The colour V1.0 sheet (16 MB) is not included |
 | `manta-m8p-v1.0` | `BTT/Manta_M8P/v1_0/pinout.png` | BIGTREETECH Manta M8P V1.0 |
 | `manta-m8p-v1.1` | `BTT/Manta_M8P/v1_1/pinout.png` | BIGTREETECH Manta M8P V1.1 |

@@ -14,7 +14,7 @@
 
 | Плата (id в `boards/`) | Файлы | Производитель, примечание |
 |---|---|---|
-| `octopus-pro-h723` | `BTT/Octopus_Pro/v1_1/pinout.jpg` | BIGTREETECH Octopus Pro V1.1 |
+| `octopus-pro-h723` | `BTT/Octopus_Pro/v1_1/pinout.jpg` | BIGTREETECH Octopus Pro V1.1. **Часть пинов изменена относительно v1.0** (HE0=PA0, HE2=PB0, Motor3-EN=PA2, RGB=PB10; на картинке Motor3-EN нет), установщик печатает это предупреждение рядом со ссылкой (поле `PINOUT_NOTE`); [список изменений BTT](https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10) |
 | `octopus-pro-f446`, `octopus-pro-f429` | `BTT/Octopus_Pro/v1_0/pinout.pdf` | BIGTREETECH Octopus Pro, лёгкий (0,8 МБ) лист `Octopus Pro - PIN`. Ревизия по имени файла не подтверждена. Цветной лист V1.0 (16 МБ) не включён |
 | `manta-m8p-v1.0` | `BTT/Manta_M8P/v1_0/pinout.png` | BIGTREETECH Manta M8P V1.0 |
 | `manta-m8p-v1.1` | `BTT/Manta_M8P/v1_1/pinout.png` | BIGTREETECH Manta M8P V1.1 |

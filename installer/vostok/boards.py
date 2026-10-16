@@ -13,7 +13,7 @@ from . import INSTALL_DIR, VostokError
 BOARD_KEYS = ("LABEL", "ROLE", "CHIP", "FAMILY", "MACH", "CLOCK", "APP_OFFSET", "USB", "CAN", "CAN_KIND",
               "INITIAL_PINS", "BRIDGE_INITIAL_PINS", "KATAPULT_INITIAL_PINS", "KATAPULT_LED",
               "KATAPULT_DOUBLE_RESET", "CFG", "ALIASES", "DFU_HINT", "DFU_HOW", "ELEC_PATTERN",
-              "TEMPLATE", "HEAD_NAMES", "VERIFIED", "DOC", "PINOUT", "NOTE")
+              "TEMPLATE", "HEAD_NAMES", "VERIFIED", "DOC", "PINOUT", "PINOUT_NOTE", "NOTE")
 BOARD_REQUIRED = ("LABEL", "ROLE", "CHIP", "FAMILY", "MACH", "CLOCK", "APP_OFFSET", "CFG", "VERIFIED")
 
 
@@ -50,6 +50,7 @@ class Board:
     verified: str = ""
     doc: str = ""
     pinout: str = ""
+    pinout_note: str = ""
     note: str = ""
 
     def field(self, key: str) -> str:

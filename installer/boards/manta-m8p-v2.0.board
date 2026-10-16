@@ -1,9 +1,10 @@
 # Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT PINOUT_NOTE NOTE. Конфиги сборки создаёт tools/gen_configs.py.
 # PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
 #          пусто - установщик показывает DOC.
+# PINOUT_NOTE - необязательное поле: предупреждение, которое печатается рядом с картинкой (например, пины не совпадают с листом).
 LABEL="BTT Manta M8P v2.0"
 ROLE="main"
 CHIP="stm32h723xx"

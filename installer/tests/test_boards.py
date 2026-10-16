@@ -164,6 +164,15 @@ class BoardsTest(unittest.TestCase):
         for i in ("alps", "spider-v3-h723"):
             self.assertEqual(r.get(i).pinout_list, [])
 
+    def test_pinout_note_octopus_v11(self):
+        from vostok import ui
+        r = boards.registry()
+        t = "\n".join(ui.pinout_lines(r, "octopus-pro-h723"))
+        self.assertIn("онлайн: ", t)
+        self.assertIn("Внимание, ", t)
+        self.assertIn("HE0=PA0", t)
+        self.assertNotIn("Внимание", "\n".join(ui.pinout_lines(r, "ebb42")))
+
     def test_pinout_lines_texts(self):
         from vostok import ui
         r = boards.registry()

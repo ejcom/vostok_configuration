@@ -203,6 +203,8 @@ def pinout_lines(reg: Registry, board_id: str, indent: str = "  ") -> List[str]:
             title += " " + (rev.replace("_", ".") if re.match(r"^v\d+(_\d+)*$", rev) else rev)
         lines.append("%s%s %s: %s" % (indent, name, title, root / rel))
         lines.append("%s  онлайн: %s" % (indent, pinout_url(rel)))
+    if found and board.pinout_note:
+        lines.append("%sВнимание, %s: %s" % (indent, board.label, board.pinout_note))
     if not lines and board.doc:
         if board.role == "alps":
             lines.append("%s%s: официального листа распиновки нет; подключение - в гайде: %s" % (indent, board.label, board.doc))

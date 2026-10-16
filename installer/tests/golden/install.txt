@@ -259,6 +259,7 @@ katapult записан на Fysetc H36 v2 правая (T1CB)
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -333,6 +334,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32f072xb_DRYRUN-if00
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
   Распиновка Fysetc H36 v2: <INSTALL>/pinouts/Fysetc/H36/v2_0/pinout.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v2_0/pinout.pdf
   ALPS: официального листа распиновки нет; подключение - в гайде: https://k3d.tech/vostok/manual/electronics/firmware/
@@ -403,6 +405,7 @@ KIAUH: install fluidd --install-config
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -443,6 +446,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 установка завершена
 @@@@ CASE install/dry_check_can
 $ install_vostok.sh --check-can --dry-run --main h723 --heads v1.3 -y
@@ -504,6 +508,7 @@ $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-softwa
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -533,6 +538,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
   1. Впишите пины по схеме СВОЕЙ платы (пустых пинов: 1). Они помечены ЗАПОЛНИТЕ:
      Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
        онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+     Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
        [extruder]: heater_pin
   2. Проверьте параметры моторов (run_current, stealthchop_threshold, interpolate): они взяты из эталонного конфига (по умолчанию ваш; для чистой установки стоковый main под TMC2240),
      у вашего драйвера и мотора они могут быть другими. sense_resistor выставлен по документации BTT (5160 и 5160T Pro 0.075, 5160T Plus 0.022, 2130/2208/2209 0.110); если у вас другой модуль, исправьте.
@@ -562,6 +568,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 установка завершена
 @@@@ CASE install/dry_main_flash_katapult
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 --main-flash katapult -y
@@ -629,6 +636,7 @@ KIAUH: install fluidd --install-config
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult по DFU, затем Klipper через katapult. Если katapult уже на плате (прошлая попытка), на запросе DFU ответьте s.
 
 >>> Octopus Pro v1.1 H723: поставьте джампер BOOT0 и нажмите RESET (после прошивки katapult джампер нужно будет снять)
@@ -678,6 +686,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 установка завершена
 @@@@ CASE install/dry_no_can_kernel
 $ install_vostok.sh --dry-run --main h723 --heads v1.3 --alps 0 -y
@@ -795,6 +804,7 @@ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -858,6 +868,7 @@ canbus_uuid: 000000000000
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
   Схема Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
@@ -933,6 +944,7 @@ KIAUH: install fluidd --install-config
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -980,6 +992,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 установка завершена
 @@@@ CASE install/dry_no_tty_no_y
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0
@@ -1093,6 +1106,7 @@ $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-softwa
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 установка завершена
 @@@@ CASE install/dry_skip_board_reflash
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-board main
@@ -1193,6 +1207,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_0123456789AB-if00
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Пропущено как уже прошитое:
   - Octopus Pro v1.1 H723: уже прошит
 установка завершена
@@ -1278,6 +1293,7 @@ iface can0 can static
 Другие платы в режиме DFU быть не должны.
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -1340,6 +1356,7 @@ canbus_uuid: ЗАПОЛНИТЕ
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Внимание, Octopus Pro v1.1 H723: в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10
   Схема Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.

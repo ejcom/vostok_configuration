@@ -1,9 +1,10 @@
 # Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT PINOUT_NOTE NOTE. Конфиги сборки создаёт tools/gen_configs.py.
 # PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
 #          пусто - установщик показывает DOC.
+# PINOUT_NOTE - необязательное поле: предупреждение, которое печатается рядом с картинкой (например, пины не совпадают с листом).
 LABEL="Octopus Pro v1.1 H723"
 ROLE="main"
 CHIP="stm32h723xx"
@@ -31,4 +32,5 @@ HEAD_NAMES=""
 VERIFIED="yes"
 DOC="https://k3d.tech/vostok/manual/electronics/firmware/"
 PINOUT="BTT/Octopus_Pro/v1_1/pinout.jpg"
+PINOUT_NOTE="в v1.1 часть пинов изменена относительно v1.0 и не совпадает с листами/конфигами v1.0: HE0=PA0 (было PA2), HE2=PB0 (было PB10), Motor3-EN=PA2 (было PA0), RGB=PB10 (было PB0); Motor3-EN на картинке не указан. Список изменений: https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-Pro#changes-in-v11-compared-to-v10"
 NOTE="Основная плата гайда VOSTOK."

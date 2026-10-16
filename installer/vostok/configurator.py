@@ -1322,13 +1322,9 @@ def main(argv: Optional[Sequence[str]] = None, environ=None, reg: Optional[Regis
         return 0
     opts = parsed.opts
     version = installer_version(env.install_dir)
-    try:       # каталог журнала создаётся до проверки printer_data (как mkdir -p в bash), поэтому проверка ниже почти не срабатывает
-        env.effective_log_file.parent.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
-    ui.log("=== configure_vostok.sh %s: %s ===" % (version, " ".join(argv)))
-    if not env.printer_data.is_dir():
+    if not env.printer_data.is_dir():      # проверка до создания каталога журнала: опечатка в пути не создаёт каталог
         raise VostokError("нет каталога %s (укажите --printer-data)" % env.printer_data)
+    ui.log("=== configure_vostok.sh %s: %s ===" % (version, " ".join(argv)))
     ui.step("Настройка конфига VOSTOK (версия %s)" % version)
     ui.info("Каталог конфига: %s" % env.printer_cfg_dir)
 

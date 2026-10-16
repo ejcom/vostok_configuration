@@ -975,6 +975,14 @@ class TestCommandLine(Base):
         self.assertEqual(res.env.effective_log_file, self.tmp / "x" / "logs" / "vostok_configure.log")
         self.assertTrue(ui.opts.yes and ui.opts.dry_run)
 
+    def test_main_missing_printer_data_does_not_create(self):
+        # M3: опечатка в --printer-data не создаёт каталог журнала
+        bad = self.tmp / "printer_dta"
+        with self.assertRaises(VostokError) as cm:
+            cf.main(["--printer-data", str(bad), "--dry-run", "-y"], environ={"HOME": str(self.tmp)})
+        self.assertIn("нет каталога", str(cm.exception))
+        self.assertFalse(bad.exists())
+
     def test_env_from_environ(self):
         e = cf.Env.from_environ({"PRINTER_DATA": "/p", "BYID_DIR": "/b", "CAN_IFACE": "can1", "DEVICES_FILE": "/d.tsv",
                                  "VOSTOK_CFG_LOCAL": "0", "VOSTOK_CFG_TARBALL": "u", "TEMPLATES_DIR": "/t", "LOG_FILE": "/l.log"})
@@ -999,16 +1007,6 @@ class TestCommandLine(Base):
         self.assertEqual(os.listdir(self.pd / "config"), [])
         log = (self.pd / "logs" / "vostok_configure.log").read_text(encoding="utf-8")
         self.assertIn("configure_vostok.sh", log)
-
-    def test_main_missing_printer_data_dir_is_created_for_log(self):
-        """Как в bash: mkdir -p каталога журнала создаёт и сам printer_data, поэтому проверка каталога проходит."""
-        missing = self.tmp / "no-such" / "pd"
-        env = {"PRINTER_DATA": str(missing), "BYID_DIR": str(self.byid), "DEVICES_FILE": str(self.tmp / "d.tsv"),
-               "VOSTOK_CFG_LOCAL": str(ROOT), "HOME": str(self.tmp)}
-        rc, out, err = capture(cf.main, ["--main", "h723", "--heads", "none", "--alps", "0", "--config-source", "skip", "-y"],
-                               env, REG, FakeRunner())
-        self.assertIsInstance(rc, VostokError)       # дальше: skip без printer.cfg
-        self.assertTrue(missing.is_dir())
 
 
 class TestWrapper(unittest.TestCase):

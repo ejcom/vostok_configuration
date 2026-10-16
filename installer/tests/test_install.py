@@ -146,9 +146,7 @@ class TestPlan(Base):
         self.assertIn("  3. Mellow FLY-C8: katapult и Klipper по DFU (кнопки BOOT и RESET;", t)
         self.assertIn("  4. BTT EBB42/EBB36 (обе, по очереди): Klipper по CAN. ВНИМАНИЕ: нужны источник 24 В", t)
         self.assertIn("  5. Прошивки собираются из", t)
-        # плата не проверена: рядом с предупреждением - распиновка (у FLY-C8 есть картинка: путь и ссылка)
-        self.assertIn("Распиновка Mellow FLY-C8: %s/pinouts/Mellow/FLY-C8/pinout.jpg" % INSTALLER, t)
-        self.assertIn("онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Mellow/FLY-C8/pinout.jpg", t)
+        self.assertNotIn("Распиновка", t)      # в плане распиновки нет: она выводится при DFU и в итоге
         c = self.ctx(heads="v2", way="dfu")
         self.out.truncate(0)
         install.print_plan(c)
@@ -541,7 +539,7 @@ class TestSummary(Base):
         self.assertIn("Распиновка ваших плат (сверьте проводку по схеме):", t)
         self.assertIn("Распиновка Octopus Pro v1.1 H723: %s/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg" % INSTALLER, t)
         self.assertIn("Распиновка Fysetc H36 v2:", t)          # плата головы v2
-        self.assertIn("Распиновка ALPS: https://k3d.tech/vostok/manual/electronics/firmware/", t)   # у ALPS pinout нет - DOC
+        self.assertIn("ALPS: официального листа распиновки нет; подключение - в гайде: https://k3d.tech/vostok/manual/electronics/firmware/", t)
         self.out.truncate(0)
         self.err.truncate(0)
         c = self.ctx()

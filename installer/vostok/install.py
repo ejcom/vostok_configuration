@@ -236,7 +236,6 @@ def print_plan(ctx: InstallContext) -> None:
     if hw.board.field("VERIFIED") != "yes":
         ui.warn("%s не проверена на железе: конфиги прошивки составлены по документации производителя (%s). Сверьте "
                 "плату и способ входа в DFU, о проблемах сообщите разработчику." % (hw.main_label(), hw.board.field("DOC")))
-        ui.pinout_hint(ctx.reg, hw.main_board)
     if hw.heads == "none":
         ui.info("  Платы голов: нет")
     else:

@@ -75,8 +75,6 @@ $ install_vostok.sh --only-detect --main f446 --heads none --alps 0
 План установки:
   Главная плата: Octopus Pro F446, режим: USB
 ВНИМАНИЕ: Octopus Pro F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://k3d.tech/vostok/manual/electronics/firmware/). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
-  Распиновка Octopus Pro F446: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_0/pinout.pdf
-    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_0/pinout.pdf
   Платы голов: нет
   ALPS: 0
 
@@ -337,7 +335,7 @@ serial: /dev/serial/by-id/usb-Klipper_stm32f072xb_DRYRUN-if00
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
   Распиновка Fysetc H36 v2: <INSTALL>/pinouts/Fysetc/H36/v2_0/pinout.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v2_0/pinout.pdf
-  Распиновка ALPS: https://k3d.tech/vostok/manual/electronics/firmware/
+  ALPS: официального листа распиновки нет; подключение - в гайде: https://k3d.tech/vostok/manual/electronics/firmware/
 установка завершена
 @@@@ CASE install/dry_cfg_local_off
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y
@@ -762,7 +760,7 @@ iface can0 can static
   - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v1.3 левая (T0CB) (остальные платы голов от USB отключите);
   - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0;
   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
-  Распиновка Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
+  Схема Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 
 == katapult и Klipper по DFU за один сеанс -> Fysetc H36 v1.3 левая (T0CB) ==
@@ -860,7 +858,7 @@ canbus_uuid: 000000000000
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
-  Распиновка Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
+  Схема Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
   После установки электроники в принтер подайте 24 В и выполните: <INSTALL>/install_vostok.sh --check-can
@@ -1342,7 +1340,7 @@ canbus_uuid: ЗАПОЛНИТЕ
 Распиновка ваших плат (сверьте проводку по схеме):
   Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
-  Распиновка Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
+  Схема Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
     онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
   После установки электроники в принтер подайте 24 В и выполните: <INSTALL>/install_vostok.sh --check-can

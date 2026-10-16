@@ -164,6 +164,23 @@ class BoardsTest(unittest.TestCase):
         for i in ("alps", "spider-v3-h723"):
             self.assertEqual(r.get(i).pinout_list, [])
 
+    def test_pinout_lines_texts(self):
+        from vostok import ui
+        r = boards.registry()
+        t = "\n".join(ui.pinout_lines(r, "h36-v1.3"))
+        self.assertIn("Схема Fysetc H36 v1.3: ", t)
+        self.assertNotIn("Распиновка", t)
+        t = "\n".join(ui.pinout_lines(r, "spider-v2-f446"))
+        self.assertIn("Fysetc Spider v2.x v2.3: ", t)
+        self.assertIn("Fysetc Spider v2.x v2.2: ", t)
+        t = "\n".join(ui.pinout_lines(r, "ebb42"))
+        self.assertIn("ebb42_v1_1_v1_2: ", t)
+        self.assertIn("ebb36_v1_1_v1_2: ", t)
+        t = "\n".join(ui.pinout_lines(r, "spider-v3-h723"))
+        self.assertIn("Fysetc Spider v3.0 H723: картинки распиновки в каталоге нет, документация: ", t)
+        self.assertEqual(ui.pinout_lines(r, "alps")[0][:2], "  ")
+        self.assertIn("ALPS: официального листа распиновки нет", ui.pinout_lines(r, "alps")[0])
+
 
 if __name__ == "__main__":
     unittest.main()

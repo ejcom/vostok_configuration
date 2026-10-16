@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -189,16 +190,24 @@ def pause_hw(msg: str, allow_skip: bool = False) -> str:
 
 def pinout_lines(reg: Registry, board_id: str, indent: str = "  ") -> List[str]:
     """Строки про распиновку платы: локальный путь и веб-ссылка на каждую картинку (поле PINOUT).
-    Нет картинок (PINOUT пуст или файлов нет) - вместо них DOC платы; нет и DOC - пустой список."""
+    Нет картинок (PINOUT пуст или файлов нет) - вместо них пояснение и DOC платы; нет и DOC - пустой список."""
     board = reg.get(board_id)
     root = pinouts_dir()
+    found = [rel for rel in board.pinout_list if (root / rel).is_file()]
     lines: List[str] = []
-    for rel in board.pinout_list:
-        if (root / rel).is_file():
-            lines.append("%sРаспиновка %s: %s" % (indent, board.label, root / rel))
-            lines.append("%s  онлайн: %s" % (indent, pinout_url(rel)))
+    for rel in found:
+        name = "Схема" if os.path.basename(rel).startswith("schematic") else "Распиновка"
+        title = board.label
+        if len(found) > 1:      # несколько листов: ревизия из имени каталога (v2_3 -> v2.3)
+            rev = os.path.basename(os.path.dirname(rel))
+            title += " " + (rev.replace("_", ".") if re.match(r"^v\d+(_\d+)*$", rev) else rev)
+        lines.append("%s%s %s: %s" % (indent, name, title, root / rel))
+        lines.append("%s  онлайн: %s" % (indent, pinout_url(rel)))
     if not lines and board.doc:
-        lines.append("%sРаспиновка %s: %s" % (indent, board.label, board.doc))
+        if board.role == "alps":
+            lines.append("%s%s: официального листа распиновки нет; подключение - в гайде: %s" % (indent, board.label, board.doc))
+        else:
+            lines.append("%s%s: картинки распиновки в каталоге нет, документация: %s" % (indent, board.label, board.doc))
     return lines
 
 

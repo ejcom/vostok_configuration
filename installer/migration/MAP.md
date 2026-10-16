@@ -276,27 +276,27 @@
 | `edit_ks_conf` | 103 | integrations.edit_ks_conf | done |
 | `current_theme` | 145 | integrations.current_ks_theme | done |
 
-## tools/gen_configs.sh
+## tools/gen_configs.sh (A6: заменён tools/gen_configs.py, .sh удалён)
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `gen` | 54 |  | todo |
-| `clock_hz` | 73 |  | todo |
-| `hex_addr` | 74 |  | todo |
-| `can_lines` | 77 |  | todo |
-| `gen_klipper_cfg` | 91 |  | todo |
-| `gen_katapult_cfg` | 107 |  | todo |
-| `gen_all` | 126 |  | todo |
-| `sig` | 136 |  | todo |
+| `gen` | 54 | tools/gen_configs.Generator.gen (+ GenError) | done |
+| `clock_hz` | 73 | tools/gen_configs.clock_hz | done |
+| `hex_addr` | 74 | tools/gen_configs.hex_addr | done |
+| `can_lines` | 77 | tools/gen_configs.Generator.can_lines | done |
+| `gen_klipper_cfg` | 91 | tools/gen_configs.Generator.gen_klipper_cfg | done |
+| `gen_katapult_cfg` | 107 | tools/gen_configs.Generator.gen_katapult_cfg | done |
+| `gen_all` | 126 | tools/gen_configs.Generator.gen_all | done |
+| `sig` | 136 | tools/gen_configs.sig (+ do_check - ветка --check, do_build - ветка --build) | done |
 
 ## Python-утилиты (уже на Python, переносятся в пакет)
 
 | файл | куда | статус |
 |---|---|---|
 | `tools/gen_electronics.py` | `vostok/electronics.py` (A4): Generator/GenOptions/GenResult, main() с прежними флагами и протоколом NAME/WARN/FILL/EMPTY | done (A5: файл стал тонкой обёрткой, путь сохранён ради golden gen_matrix) |
-| `tools/mcu_merge.py` | `vostok/cfgfile.py` (A1): list_mcus, merge_mcus, set_canbus_uuid | done (старый файл пока не тронут) |
-| `tools/pin_conflicts.py` | `vostok/cfgfile.py` (A1): pin_conflicts | done (старый файл пока не тронут) |
-| `tools/can_uuid.py` | `vostok/can_uuid.py` (A1, отдельный модуль, не electronics/hardware) | done (старый файл пока не тронут) |
+| `tools/mcu_merge.py` | `vostok/cfgfile.py` (A1): list_mcus, merge_mcus, set_canbus_uuid | done (A6: файл - тонкая обёртка над `cfgfile.mcu_merge_main`, путь сохранён ради golden tools/mcu_merge) |
+| `tools/pin_conflicts.py` | `vostok/cfgfile.py` (A1): pin_conflicts | done (A6: тонкая обёртка над `cfgfile.pin_conflicts_main`, ради golden tools/pin_conflicts) |
+| `tools/can_uuid.py` | `vostok/can_uuid.py` (A1, отдельный модуль, не electronics/hardware) | done (A6: тонкая обёртка над `can_uuid.main`, ради golden tools/can_uuid) |
 
 ## Встроенный Python в bash (heredoc / py -c)
 

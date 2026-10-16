@@ -132,6 +132,38 @@ class BoardsTest(unittest.TestCase):
         self.assertTrue(str(r.cfg_path(heads[0], "can")).endswith("-can.config"))
         self.assertTrue(str(r.cfg_path(heads[0], "katapult")).endswith("-can.config"))
 
+    # ------------------------------------------------------------ распиновка
+
+    def test_pinout_field_optional(self):
+        self.write("good", GOOD)
+        b = boards.Registry(self.dir).get("good")
+        self.assertEqual((b.pinout, b.pinout_list), ("", []))
+        self.write("pin", GOOD + 'PINOUT="A/p.png  B/q.pdf"\n')
+        self.assertEqual(boards.Registry(self.dir).get("pin").pinout_list, ["A/p.png", "B/q.pdf"])
+
+    def test_pinout_paths_and_url(self):
+        pins = self.dir / "pins"
+        (pins / "A").mkdir(parents=True)
+        (pins / "A" / "p.png").write_bytes(b"x")
+        self.write("pin", GOOD + 'PINOUT="A/p.png A/missing.png"\n')
+        saved = {k: os.environ.get(k) for k in ("PINOUTS_DIR", "VOSTOK_PINOUT_URL")}
+        self.addCleanup(lambda: [os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+                                 for k, v in saved.items()])
+        os.environ["PINOUTS_DIR"] = str(pins)
+        os.environ.pop("VOSTOK_PINOUT_URL", None)
+        r = boards.Registry(self.dir)
+        self.assertEqual(r.pinout_paths("pin"), [pins / "A" / "p.png"])      # несуществующий файл отброшен
+        self.assertEqual(boards.pinout_url("A/p.png"), boards.PINOUT_URL_DEFAULT + "A/p.png")
+        os.environ["VOSTOK_PINOUT_URL"] = "https://example.org/fork/"
+        self.assertEqual(boards.pinout_url("A/p.png"), "https://example.org/fork/A/p.png")
+
+    def test_real_registry_pinouts(self):
+        r = boards.registry()
+        self.assertTrue(r.pinout_paths("octopus-pro-h723")[0].is_file())
+        self.assertEqual(len(r.pinout_paths("ebb42")), 2)
+        for i in ("alps", "spider-v3-h723"):
+            self.assertEqual(r.get(i).pinout_list, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,9 @@
-# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
 LABEL="BTT EBB42/EBB36"
 ROLE="head"
 CHIP="stm32g0b1xx"
@@ -25,5 +27,6 @@ ELEC_PATTERN="ebb42"
 TEMPLATE=""
 HEAD_NAMES="T0_EBB,T1_EBB"
 VERIFIED="yes"
-DOC="документация BTT"
+DOC="https://github.com/bigtreetech/EBB (EBB CAN V1.1 and V1.2 (STM32G0B1), каталоги EBB42 и EBB36)"
+PINOUT="BTT/EBB/ebb42_v1_1_v1_2/pinout.png BTT/EBB/ebb36_v1_1_v1_2/pinout.png"
 NOTE="Загрузчик 8KiB по документации BTT. EBB36 и EBB42 на одном чипе G0B1, прошивка общая; проверено пользователями на EBB36."

@@ -1,7 +1,9 @@
 # Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
 LABEL="Octopus Pro F446"
 ROLE="main"
 CHIP="stm32f446xx"
@@ -26,4 +28,5 @@ TEMPLATE="octopus_pro_v1.0"
 HEAD_NAMES=""
 VERIFIED="no"
 DOC="https://k3d.tech/vostok/manual/electronics/firmware/"
+PINOUT="BTT/Octopus_Pro/v1_0/pinout.pdf"
 NOTE="Пресет пинов octopus_pro_v1.0 (HE2=PB10, стол HB=PA1); у Octopus Pro v1.1 на F446 пины другие - сверьте плату. Гайд эту плату не описывает: 12 МГц, загрузчик 32KiB, USB PA11/PA12 - по схеме платы."

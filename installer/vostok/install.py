@@ -236,6 +236,7 @@ def print_plan(ctx: InstallContext) -> None:
     if hw.board.field("VERIFIED") != "yes":
         ui.warn("%s не проверена на железе: конфиги прошивки составлены по документации производителя (%s). Сверьте "
                 "плату и способ входа в DFU, о проблемах сообщите разработчику." % (hw.main_label(), hw.board.field("DOC")))
+        ui.pinout_hint(ctx.reg, hw.main_board)
     if hw.heads == "none":
         ui.info("  Платы голов: нет")
     else:
@@ -437,6 +438,8 @@ def stage_flash_heads_katapult(ctx: InstallContext) -> None:
               "  - режим DFU: %s.\n"
               "katapult на этих платах работает только по CAN, поэтому после прошивки отключите USB."
               % (hw.head_label(), hw.head_side(i), hw.head_dfu_hint()))
+        if i == 0:
+            ui.pinout_hint(ctx.reg, hw.head_board_id())
         if flash_with_retry(fl, make_head_katapult_job(fl, i)):
             ui.ok("katapult записан на %s %s" % (hw.head_label(), hw.head_side(i)))
 
@@ -453,6 +456,8 @@ def stage_flash_heads_dfu(ctx: InstallContext) -> None:
               "  - режим DFU: %s;\n"
               "  - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN."
               % (hw.head_label(), hw.head_side(i), hw.head_dfu_hint()))
+        if i == 0:
+            ui.pinout_hint(ctx.reg, hw.head_board_id())
         flash_with_retry(fl, make_head_dfu_job(fl, i))
 
 
@@ -548,6 +553,7 @@ def stage_flash_main(ctx: InstallContext) -> None:
     _echo("Подключите %s USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).\n"
           "Режим DFU: %s.\n"
           "Другие платы в режиме DFU быть не должны." % (hw.main_label(), main_dfu_mode_text(hw)))
+    ui.pinout_hint(ctx.reg, hw.main_board)
     if way == m_dfu:
         start = "dfuall"
         ui.info("Способ: katapult и Klipper за один сеанс DFU.")
@@ -589,6 +595,7 @@ def stage_config(ctx: InstallContext) -> None:
     cfgr = Configurator(ctx.opts.conf, ctx.env.conf_env, ctx.reg, ctx.hw, ctx.runner)
     cfgr.mcu = ctx.res.mcu
     ctx.cfgr = cfgr
+    cfgr.show_pinouts = False   # распиновка плат выводится в итоге установки (print_summary)
     cfgr.stage_config()
 
 
@@ -668,6 +675,7 @@ def print_summary(ctx: InstallContext) -> None:
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): %s/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...""" % (first, hw.head_mcu[0], hw.head_mcu[1], d))
+    cf.print_pinouts(ctx.reg, hw)
     if hw.heads != "none" and res.heads_way == "dfu":
         ui.warn("Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.")
         ui.info("  После установки электроники в принтер подайте 24 В и выполните: %s/install_vostok.sh --check-can" % d)

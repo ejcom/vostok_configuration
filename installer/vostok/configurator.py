@@ -431,6 +431,22 @@ def _eecho(text: str) -> None:
     sys.stderr.flush()
 
 
+def print_pinouts(reg: Registry, hw: Hardware) -> None:
+    """Блок «Распиновка ваших плат» для итога: главная плата, плата головы и ALPS (если есть)."""
+    ids = [hw.main_board]
+    hid = hw.head_board_id()
+    if hid and hid not in ids:
+        ids.append(hid)
+    if hw.alps_count > 0:
+        ids.extend(reg.list("alps")[:1])
+    lines = [ln for bid in ids for ln in ui.pinout_lines(reg, bid)]
+    if lines:
+        ui.info("")
+        ui.info("Распиновка ваших плат (сверьте проводку по схеме):")
+        for ln in lines:
+            ui.info(ln)
+
+
 def _first_include(printer_cfg: Path) -> str:
     """Первый ``[include electronics_*.cfg]`` самого printer.cfg (без разбора вложенных include)."""
     try:
@@ -499,6 +515,7 @@ class Configurator:
         self.drivers_spec = ""
         self.el_src = ""                     # standard|user|generate|skip
         self.el_name = ""
+        self.show_pinouts = True             # выводить блок «Распиновка ваших плат» в конце (install_vostok.sh - в своём итоге)
 
     @property
     def printer_cfg(self) -> Path:
@@ -800,12 +817,14 @@ class Configurator:
             if tmpl and tmpl != "octopus_pro":
                 _eecho("  0. Пины взяты по разъёмам %s (таблица в шапке файла, плата не проверена на железе): сверьте с "
                        "проводкой, знаки dir_pin проверьте после запуска." % self.hw.main_label())
+                ui.pinout_hint(self.reg, self.hw.main_board, "     ", _eecho)
         elif self.ref_kind == "stock":
             _eecho("  0. Пины моторов и драйверов взяты из стокового конфига main (X: MOTOR2, W: MOTOR0, YL: MOTOR3, "
                    "YR: MOTOR1, Z: MOTOR7%s): проверьте, что драйверы стоят в этих разъёмах."
                    % (", экструдеры: MOTOR4 и MOTOR5" if self.hw.heads == "none" else ""))
         if n > 0:
             _eecho("  1. Впишите пины по схеме СВОЕЙ платы (пустых пинов: %d). Они помечены ЗАПОЛНИТЕ:" % n)
+            ui.pinout_hint(self.reg, self.hw.main_board, "     ", _eecho)
             lines: List[str] = []
             sec = None
             for s, opt in empty:
@@ -1086,6 +1105,8 @@ class Configurator:
             ui.warn("в %s могут быть включены платы голов по CAN. Без них адаптируйте этот файл под вашу проводку "
                     "(гайд, раздел «Конфигурация», п. 3)" % el)
         self.report_pin_conflicts(self.printer_cfg)
+        if self.show_pinouts:
+            print_pinouts(self.reg, self.hw)
 
     # --- пины и модули
 
@@ -1111,6 +1132,7 @@ class Configurator:
             return
         ui.warn("в конфиге есть пины, которые используются сразу в нескольких секциях (Klipper не запустится):")
         self._print_conflicts(lines)
+        ui.pinout_hint(self.reg, self.hw.main_board, "  ", _eecho)
 
     def module_wanted(self, name: str, label: str, file: str) -> bool:
         """Ответ на вопрос про модуль. --modules: all|none|имена через запятую (без .cfg)."""

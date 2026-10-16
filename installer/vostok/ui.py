@@ -9,9 +9,10 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Callable, List, Optional, Sequence
 
 from . import UserAbort, VostokError  # noqa: F401  (UserAbort - часть публичного контракта ui)
+from .boards import Registry, pinout_url, pinouts_dir
 
 
 class Options:
@@ -184,3 +185,25 @@ def pause_hw(msg: str, allow_skip: bool = False) -> str:
         prompt = ("Enter - плата переведена в DFU; s + Enter - пропустить DFU "
                   "(на плате уже katapult/Klipper): ")
     return _read_tty(prompt)
+
+
+def pinout_lines(reg: Registry, board_id: str, indent: str = "  ") -> List[str]:
+    """Строки про распиновку платы: локальный путь и веб-ссылка на каждую картинку (поле PINOUT).
+    Нет картинок (PINOUT пуст или файлов нет) - вместо них DOC платы; нет и DOC - пустой список."""
+    board = reg.get(board_id)
+    root = pinouts_dir()
+    lines: List[str] = []
+    for rel in board.pinout_list:
+        if (root / rel).is_file():
+            lines.append("%sРаспиновка %s: %s" % (indent, board.label, root / rel))
+            lines.append("%s  онлайн: %s" % (indent, pinout_url(rel)))
+    if not lines and board.doc:
+        lines.append("%sРаспиновка %s: %s" % (indent, board.label, board.doc))
+    return lines
+
+
+def pinout_hint(reg: Registry, board_id: str, indent: str = "  ",
+                out: Optional[Callable[[str], None]] = None) -> None:
+    """Вывести распиновку платы (pinout_lines) через out (по умолчанию info)."""
+    for ln in pinout_lines(reg, board_id, indent):
+        (out or info)(ln)

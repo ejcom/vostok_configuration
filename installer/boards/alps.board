@@ -1,7 +1,9 @@
 # Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
 LABEL="ALPS"
 ROLE="alps"
 CHIP="stm32f072xb"
@@ -26,4 +28,5 @@ TEMPLATE=""
 HEAD_NAMES=""
 VERIFIED="yes"
 DOC="https://k3d.tech/vostok/manual/electronics/firmware/"
-NOTE="Тензодатчик ALPS, USB, katapult с двойным reset."
+PINOUT=""
+NOTE="Тензодатчик ALPS, USB, katapult с двойным reset. Официальной распиновки нет: PINOUT пуст, установщик показывает DOC."

@@ -926,6 +926,8 @@ class TestModules(Base):
         _, out, err = capture(c.report_pin_conflicts, p)
         self.assertIn("в конфиге есть пины, которые используются сразу в нескольких секциях (Klipper не запустится):", err)
         self.assertIn("  - mcu:PA2: ", err)
+        self.assertIn("Распиновка Octopus Pro v1.1 H723:", err)
+        self.assertIn("онлайн: ", err)
         capture(c.report_pin_conflicts, self.tmp / "none.cfg")        # нет файла - тихо
 
 

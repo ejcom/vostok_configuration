@@ -75,6 +75,8 @@ $ install_vostok.sh --only-detect --main f446 --heads none --alps 0
 План установки:
   Главная плата: Octopus Pro F446, режим: USB
 ВНИМАНИЕ: Octopus Pro F446 не проверена на железе: конфиги прошивки составлены по документации производителя (https://k3d.tech/vostok/manual/electronics/firmware/). Сверьте плату и способ входа в DFU, о проблемах сообщите разработчику.
+  Распиновка Octopus Pro F446: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_0/pinout.pdf
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_0/pinout.pdf
   Платы голов: нет
   ALPS: 0
 
@@ -232,6 +234,8 @@ iface can0 can static
   - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v2 левая (T0CB) (другую плату головы от USB отключите);
   - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0.
 katapult на этих платах работает только по CAN, поэтому после прошивки отключите USB.
+  Распиновка Fysetc H36 v2: <INSTALL>/pinouts/Fysetc/H36/v2_0/pinout.pdf
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v2_0/pinout.pdf
 
 >>> Fysetc H36 v2 левая (T0CB): подключите USB, переведите в DFU и нажмите Enter. DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0.
 [dry-run] ожидание Enter
@@ -255,6 +259,8 @@ katapult записан на Fysetc H36 v2 правая (T1CB)
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -325,6 +331,13 @@ serial: /dev/serial/by-id/usb-Klipper_stm32f072xb_DRYRUN-if00
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Распиновка Fysetc H36 v2: <INSTALL>/pinouts/Fysetc/H36/v2_0/pinout.pdf
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v2_0/pinout.pdf
+  Распиновка ALPS: https://k3d.tech/vostok/manual/electronics/firmware/
 установка завершена
 @@@@ CASE install/dry_cfg_local_off
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y
@@ -390,6 +403,8 @@ KIAUH: install fluidd --install-config
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -426,6 +441,10 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 установка завершена
 @@@@ CASE install/dry_check_can
 $ install_vostok.sh --check-can --dry-run --main h723 --heads v1.3 -y
@@ -485,6 +504,8 @@ $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-softwa
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -512,6 +533,8 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
 ВНИМАНИЕ: Сгенерирован electronics_octopus_pro_v1.1_h723_7x5160.cfg: Klipper не запустится, пока вы не впишете пины.
   0. Пины моторов и драйверов взяты из стокового конфига main (X: MOTOR2, W: MOTOR0, YL: MOTOR3, YR: MOTOR1, Z: MOTOR7, экструдеры: MOTOR4 и MOTOR5): проверьте, что драйверы стоят в этих разъёмах.
   1. Впишите пины по схеме СВОЕЙ платы (пустых пинов: 1). Они помечены ЗАПОЛНИТЕ:
+     Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+       онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
        [extruder]: heater_pin
   2. Проверьте параметры моторов (run_current, stealthchop_threshold, interpolate): они взяты из эталонного конфига (по умолчанию ваш; для чистой установки стоковый main под TMC2240),
      у вашего драйвера и мотора они могут быть другими. sense_resistor выставлен по документации BTT (5160 и 5160T Pro 0.075, 5160T Plus 0.022, 2130/2208/2209 0.110); если у вас другой модуль, исправьте.
@@ -537,6 +560,10 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 установка завершена
 @@@@ CASE install/dry_main_flash_katapult
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 --main-flash katapult -y
@@ -602,6 +629,8 @@ KIAUH: install fluidd --install-config
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult по DFU, затем Klipper через katapult. Если katapult уже на плате (прошлая попытка), на запросе DFU ответьте s.
 
 >>> Octopus Pro v1.1 H723: поставьте джампер BOOT0 и нажмите RESET (после прошивки katapult джампер нужно будет снять)
@@ -647,6 +676,10 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 установка завершена
 @@@@ CASE install/dry_no_can_kernel
 $ install_vostok.sh --dry-run --main h723 --heads v1.3 --alps 0 -y
@@ -729,6 +762,8 @@ iface can0 can static
   - подключите к хосту USB-кабелем ТОЛЬКО Fysetc H36 v1.3 левая (T0CB) (остальные платы голов от USB отключите);
   - режим DFU: зажмите BOOT0, нажмите RST, отпустите BOOT0;
   - в один сеанс запишутся katapult и Klipper, после этого USB отключите: в принтере плата работает по CAN.
+  Распиновка Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 
 == katapult и Klipper по DFU за один сеанс -> Fysetc H36 v1.3 левая (T0CB) ==
 [dry-run] сборка katapult (stm32g0b1xx-can)
@@ -760,6 +795,8 @@ fatal: cannot change to '<CASE>/home/klipper': No such file or directory
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -819,6 +856,12 @@ canbus_uuid: 000000000000
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Распиновка Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
   После установки электроники в принтер подайте 24 В и выполните: <INSTALL>/install_vostok.sh --check-can
   Команда прочитает UUID с шины CAN, исправит devices.tsv и printer.cfg и перезапустит Klipper.
@@ -890,6 +933,8 @@ KIAUH: install fluidd --install-config
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -933,6 +978,10 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_DRYRUN-if00
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 установка завершена
 @@@@ CASE install/dry_no_tty_no_y
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0
@@ -1042,6 +1091,10 @@ $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-softwa
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 установка завершена
 @@@@ CASE install/dry_skip_board_reflash
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-board main
@@ -1138,6 +1191,10 @@ serial: /dev/serial/by-id/usb-Klipper_stm32h723xx_0123456789AB-if00
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Пропущено как уже прошитое:
   - Octopus Pro v1.1 H723: уже прошит
 установка завершена
@@ -1221,6 +1278,8 @@ iface can0 can static
 Подключите Octopus Pro v1.1 H723 USB-кабелем к хосту (питание 24 В не нужно, достаточно USB).
 Режим DFU: установите джампер на BOOT0, нажмите RESET (кнопка на плате).
 Другие платы в режиме DFU быть не должны.
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
 Способ: katapult и Klipper за один сеанс DFU.
 
 == katapult и Klipper по DFU за один сеанс -> Octopus Pro v1.1 H723 ==
@@ -1279,6 +1338,12 @@ canbus_uuid: ЗАПОЛНИТЕ
   4. Fluidd: ⏻ (вверху справа) -> mcu-update -> Start обновляет Klipper и прошивки всех MCU.
   5. Конфиг можно перенастроить отдельно, без переустановки (драйверы, другая проводка, модули вроде chamber_heater.cfg): <INSTALL>/configure_vostok.sh
   6. Если у вашей платы другой кварц или смещение загрузчика, настройте configs/*.config через make menuconfig KCONFIG_CONFIG=...
+
+Распиновка ваших плат (сверьте проводку по схеме):
+  Распиновка Octopus Pro v1.1 H723: <INSTALL>/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg
+  Распиновка Fysetc H36 v1.3: <INSTALL>/pinouts/Fysetc/H36/v1_3/schematic.pdf
+    онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Fysetc/H36/v1_3/schematic.pdf
 ВНИМАНИЕ: Платы голов прошиты на столе, canbus_uuid получены по UID чипов и на шине НЕ проверены.
   После установки электроники в принтер подайте 24 В и выполните: <INSTALL>/install_vostok.sh --check-can
   Команда прочитает UUID с шины CAN, исправит devices.tsv и printer.cfg и перезапустит Klipper.

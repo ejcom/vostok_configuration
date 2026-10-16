@@ -146,6 +146,9 @@ class TestPlan(Base):
         self.assertIn("  3. Mellow FLY-C8: katapult и Klipper по DFU (кнопки BOOT и RESET;", t)
         self.assertIn("  4. BTT EBB42/EBB36 (обе, по очереди): Klipper по CAN. ВНИМАНИЕ: нужны источник 24 В", t)
         self.assertIn("  5. Прошивки собираются из", t)
+        # плата не проверена: рядом с предупреждением - распиновка (у FLY-C8 есть картинка: путь и ссылка)
+        self.assertIn("Распиновка Mellow FLY-C8: %s/pinouts/Mellow/FLY-C8/pinout.jpg" % INSTALLER, t)
+        self.assertIn("онлайн: https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/Mellow/FLY-C8/pinout.jpg", t)
         c = self.ctx(heads="v2", way="dfu")
         self.out.truncate(0)
         install.print_plan(c)
@@ -522,7 +525,7 @@ class TestStartButtonTheme(Base):
 
 class TestSummary(Base):
     def test_summary_variants(self):
-        c = self.ctx(heads="v2", way="dfu")
+        c = self.ctx(heads="v2", alps=1, way="dfu")
         c.res.failed = ["Плата X: не прошита"]
         c.res.skipped = ["ALPS левый (T0): уже прошит (S1)"]
         c.finish_rc = 1
@@ -535,6 +538,10 @@ class TestSummary(Base):
         self.assertIn("Не прошиты платы:\n  - Плата X: не прошита\n", t)
         self.assertIn("Пропущено как уже прошитое:\n  - ALPS левый (T0): уже прошит (S1)", t)
         self.assertIn("установка завершена с замечаниями (лог: %s)" % self.env.log_file, t)
+        self.assertIn("Распиновка ваших плат (сверьте проводку по схеме):", t)
+        self.assertIn("Распиновка Octopus Pro v1.1 H723: %s/pinouts/BTT/Octopus_Pro/v1_1/pinout.jpg" % INSTALLER, t)
+        self.assertIn("Распиновка Fysetc H36 v2:", t)          # плата головы v2
+        self.assertIn("Распиновка ALPS: https://k3d.tech/vostok/manual/electronics/firmware/", t)   # у ALPS pinout нет - DOC
         self.out.truncate(0)
         self.err.truncate(0)
         c = self.ctx()

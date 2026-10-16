@@ -1,7 +1,9 @@
 # Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
 LABEL="BTT Octopus Pro v1.0 F429"
 ROLE="main"
 CHIP="stm32f429xx"
@@ -26,4 +28,5 @@ TEMPLATE="octopus_pro_v1.0"
 HEAD_NAMES=""
 VERIFIED="no"
 DOC="klipper/config/generic-bigtreetech-octopus-pro-v1.0.cfg"
+PINOUT="BTT/Octopus_Pro/v1_0/pinout.pdf"
 NOTE="Только Octopus Pro v1.0 (F429); пины отличаются от v1.1; пресет пинов VOSTOK octopus_pro_v1.0."

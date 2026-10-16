@@ -1,7 +1,9 @@
 # Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
 LABEL="BTT Manta M8P v1.0"
 ROLE="main"
 CHIP="stm32g0b1xx"
@@ -27,4 +29,5 @@ TEMPLATE="manta_m8p_v1.0"
 HEAD_NAMES=""
 VERIFIED="no"
 DOC="https://github.com/bigtreetech/Manta-M8P (V1.0_V1.1, README)"
+PINOUT="BTT/Manta_M8P/v1_0/pinout.png"
 NOTE="Моста USB-CAN нет: платы голов по CAN не поддерживаются."

@@ -13,7 +13,7 @@ from . import INSTALL_DIR, VostokError
 BOARD_KEYS = ("LABEL", "ROLE", "CHIP", "FAMILY", "MACH", "CLOCK", "APP_OFFSET", "USB", "CAN", "CAN_KIND",
               "INITIAL_PINS", "BRIDGE_INITIAL_PINS", "KATAPULT_INITIAL_PINS", "KATAPULT_LED",
               "KATAPULT_DOUBLE_RESET", "CFG", "ALIASES", "DFU_HINT", "DFU_HOW", "ELEC_PATTERN",
-              "TEMPLATE", "HEAD_NAMES", "VERIFIED", "DOC", "NOTE")
+              "TEMPLATE", "HEAD_NAMES", "VERIFIED", "DOC", "PINOUT", "NOTE")
 BOARD_REQUIRED = ("LABEL", "ROLE", "CHIP", "FAMILY", "MACH", "CLOCK", "APP_OFFSET", "CFG", "VERIFIED")
 
 
@@ -49,6 +49,7 @@ class Board:
     head_names: str = ""
     verified: str = ""
     doc: str = ""
+    pinout: str = ""
     note: str = ""
 
     def field(self, key: str) -> str:
@@ -59,6 +60,27 @@ class Board:
     def alias_list(self) -> List[str]:
         """Алиасы платы (поле ALIASES через пробел)."""
         return self.aliases.split()
+
+    @property
+    def pinout_list(self) -> List[str]:
+        """Пути картинок распиновки относительно pinouts/ (поле PINOUT через пробел)."""
+        return self.pinout.split()
+
+
+# Каталог картинок распиновки и его адрес в сети (VOSTOK_PINOUT_URL заменяет адрес, например для форка)
+PINOUT_DIR_NAME = "pinouts"
+PINOUT_URL_DEFAULT = "https://github.com/dmitry-sorkin/vostok_configuration/blob/main/installer/pinouts/"
+
+
+def pinouts_dir() -> Path:
+    """Каталог картинок распиновки (PINOUTS_DIR из окружения, иначе <install>/pinouts)."""
+    return Path(os.environ.get("PINOUTS_DIR") or INSTALL_DIR / PINOUT_DIR_NAME)
+
+
+def pinout_url(rel: str) -> str:
+    """Веб-адрес картинки распиновки по пути относительно pinouts/ (база - VOSTOK_PINOUT_URL)."""
+    base = os.environ.get("VOSTOK_PINOUT_URL") or PINOUT_URL_DEFAULT
+    return base.rstrip("/") + "/" + rel
 
 
 _ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
@@ -173,6 +195,11 @@ class Registry:
     def for_family(self, family: str, role: Optional[str] = None) -> List[str]:
         """id плат этого семейства (h7, f4, f0 …), опционально по роли."""
         return self._by("FAMILY", family, role)
+
+    def pinout_paths(self, id: str) -> List[Path]:
+        """Абсолютные пути существующих картинок распиновки платы (из PINOUT; отсутствующие файлы отбрасываются)."""
+        root = pinouts_dir()
+        return [root / rel for rel in self.get(id).pinout_list if (root / rel).is_file()]
 
     def rank(self, id: str) -> int:
         """Порядок предложения платы (board_rank): 0 - плата гайда (board_resolve h723), 1 - VERIFIED=yes, 2 - остальные."""

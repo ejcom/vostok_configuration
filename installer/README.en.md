@@ -27,6 +27,7 @@ Mainboards: Octopus Pro (H723 — verified; F446, F429), Manta M8P (v2.0 — ver
 | Section | What it covers |
 |---|---|
 | [Boards and directory contents](docs/hardware.en.md) | supported boards, what is in `installer/` |
+| [Board pinouts](pinouts/README.en.md) | pinout images per board, sources, how to add one |
 | [Requirements and checks](docs/requirements.en.md) | what the script checks before installing |
 | [Installation](docs/install.en.md) | launch, installer stages, `install_vostok.sh` options |
 | [Config setup](docs/configure.en.md) | `configure_vostok.sh` separately from the installation; full description: [CONFIGURATOR.en.md](CONFIGURATOR.en.md) |

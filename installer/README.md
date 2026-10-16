@@ -27,6 +27,7 @@ cd vostok_configuration/installer
 | Раздел | О чём |
 |---|---|
 | [Платы и состав каталога](docs/hardware.md) | какие платы поддерживаются (реестр плат), что лежит в `installer/` |
+| [Распиновка плат](pinouts/README.md) | картинки pinout по платам, источники, как добавить |
 | [Требования и проверки](docs/requirements.md) | что проверяет скрипт перед установкой |
 | [Установка](docs/install.md) | запуск, этапы установщика, опции `install_vostok.sh` |
 | [Настройка конфига](docs/configure.md) | `configure_vostok.sh` отдельно от установки; полное описание: [CONFIGURATOR.md](CONFIGURATOR.md) |

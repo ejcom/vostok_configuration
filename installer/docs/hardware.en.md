@@ -46,6 +46,10 @@ Katapult is always written over DFU at 0x08000000 on every board. USB is PA11/PA
 
 How to add your own board: [build-configs.en.md](build-configs.en.md#how-to-add-a-board).
 
+## Pinouts
+
+Board pinout images live in [`pinouts/`](../pinouts/README.en.md) (a board-to-files table; sources and licences are in `pinouts/SOURCES.tsv`). The installer prints the path and web link of your board's image in the install plan (for an unverified board), at DFU entry, in the configurator warnings (empty ЗАПОЛНИТЕ pins, pin conflicts) and in the final summary. The images are set by the `PINOUT` field in `boards/<id>.board`; if it is empty (ALPS, Spider v3.0 H723), `DOC` is shown. The address can be overridden with `VOSTOK_PINOUT_URL`. The VOSTOK guide wiring diagrams are stored there too.
+
 ## Contents of `installer/`
 
 | Path | What it is |
@@ -58,6 +62,7 @@ How to add your own board: [build-configs.en.md](build-configs.en.md#how-to-add-
 | `vostok/` | the Python package with all installer logic (stdlib only, Python 3.8+); the `*.sh` files in the root are thin wrappers over `python3 -m vostok <command>` |
 | `templates/` | blank electronics config without boards and drivers (`electronics_blank.cfg`), board presets (`boards/`) and driver presets (`drivers/`) |
 | `tools/` | `gen_electronics.py` (electronics config generator; a wrapper over `vostok/electronics.py`), `gen_configs.py` (firmware build configs from the `boards/` registry) |
+| `pinouts/` | board pinout images with sources (`SOURCES.tsv`) and the guide wiring diagrams |
 | `boards/` | board registry: one `<id>.board` file per board (build parameters, labels, DFU hints, whether verified on hardware) |
 | `tests/` | unit tests (`python3 -m unittest discover tests`) and golden output references (`tests/run_golden.sh`) |
 | `configs/` | Klipper and katapult build configs |

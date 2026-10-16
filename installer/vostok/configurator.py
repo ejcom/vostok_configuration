@@ -3,9 +3,9 @@
 Определение железа, меню источника конфига, генерация своего electronics_*.cfg, запись printer.cfg,
 дополнительные модули. Один код для автономной команды ``configure`` и для этапа конфигурации установщика.
 
-Для A5 (install-flow) без изменений пригодны: ``Hardware``/``HardwareDetector`` (главная плата, платы голов,
-ALPS, режим usb|bridge), ``mcu_blocks``, ``McuValues``, ``rank_main_boards``, помощники USB/DFU/CAN
-(``byid_find``, ``dfu_count``, ``dfu_family``, ``show_usb_state``) и ``Configurator.stage_config``.
+Для установщика (install.py) пригодны: ``Hardware``/``HardwareDetector`` (главная плата, платы голов,
+ALPS, режим usb|bridge), ``mcu_blocks``, ``McuValues``, ``rank_main_boards`` и ``Configurator.stage_config``.
+Помощники USB/DFU/CAN (byid_find, dfu_count, dfu_family, show_usb_state ...) живут в hardware.py.
 Вызовы внешних программ идут через system.Runner; чтение состояния (lsusb, ip, dfu-util) выполняется и в
 dry-run, как в bash.
 """
@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import List, Optional, Sequence, Tuple
 
 from . import INSTALL_DIR, VostokError, cfgfile, ui
+from .hardware import (byid_find, can_iface_exists, dfu_count, dfu_family, serial_from_path,  # noqa: F401  (общие с install)
+                       show_usb_state, usb_bridge_present)
 from .boards import Board, Registry, registry as default_registry
 from .electronics import ElectronicsError, GenOptions, GenResult, Generator, board_naming
 from .state import DevicesFile
@@ -141,71 +143,6 @@ class McuValues:
     main_serial: str = ""
     head_uuid: List[str] = field(default_factory=lambda: ["", ""])
     alps_serial: List[str] = field(default_factory=lambda: ["", ""])
-
-
-# ------------------------------------------------------------------ USB / DFU / CAN (общее с install)
-
-def byid_find(byid_dir, pattern: str) -> List[str]:
-    """Пути из каталога by-id по шаблону (glob), по возрастанию; битые ссылки не считаются."""
-    found = sorted(glob.glob(os.path.join(glob.escape(str(byid_dir)), pattern)))
-    return [f for f in found if os.path.exists(f)]
-
-
-def serial_from_path(path: str) -> str:
-    """Серийный номер из имени ``…usb-Klipper_<чип>_<serial>-if00`` (пусто, если имя другое)."""
-    m = re.match(r"^.*usb-Klipper_[^_]*_(.*)-if00$", path)
-    return m.group(1) if m else ""
-
-
-def probe(runner: Runner, argv: Sequence[str]) -> Tuple[int, str]:
-    """Выполнить команду «для чтения состояния»: (код, stdout), stderr скрыт (``2>/dev/null``), dry-run не мешает.
-    Нет команды - код 127."""
-    cp = runner.run(["sh", "-c", 'exec "$@" 2>/dev/null', "sh"] + list(argv), check=False, capture=True)
-    return cp.returncode, cp.stdout or ""
-
-
-def dfu_count(runner: Runner) -> int:
-    """Число устройств в режиме DFU (``lsusb -d 0483:df11 | wc -l``)."""
-    return probe(runner, ["lsusb", "-d", "0483:df11"])[1].count("\n")
-
-
-def dfu_family(runner: Runner) -> str:
-    """Семейство чипа в DFU по адресу Option Bytes: f0|f4|h7|g|unknown."""
-    rc, out = probe(runner, ["sudo", "-n", "dfu-util", "-l"])
-    if rc != 0:
-        rc, out = probe(runner, ["dfu-util", "-l"])
-        if rc != 0:
-            out = ""
-    low = out.lower()
-    for marker, fam in (("0x1ffff800", "f0"), ("0x1fffc000", "f4"), ("0x5200", "h7"), ("0x1fff7800", "g")):
-        if marker in low:
-            return fam
-    return "unknown"
-
-
-def usb_bridge_present(runner: Runner) -> bool:
-    """Есть ли мост USB-CAN Klipper (1d50:606f)."""
-    return probe(runner, ["lsusb", "-d", "1d50:606f"])[0] == 0
-
-
-def can_iface_exists(runner: Runner, iface: str) -> bool:
-    return probe(runner, ["ip", "link", "show", iface])[0] == 0
-
-
-def show_usb_state(runner: Runner, can_iface: str = "can0") -> None:
-    """Печатает устройства by-id, число плат в DFU и мост USB-CAN. Список by-id берётся из /dev/serial/by-id
-    (как в bash, в обход BYID_DIR)."""
-    ui.info("Устройства в /dev/serial/by-id:")
-    names = sorted(f for f in glob.glob("/dev/serial/by-id/*") if os.path.exists(f))
-    for f in names:
-        ui.info("  " + os.path.basename(f))
-    if not names:
-        ui.info("  (пусто)")
-    ui.info("Устройств в режиме DFU (0483:df11): %d" % dfu_count(runner))
-    if usb_bridge_present(runner):
-        out = probe(runner, ["ip", "-br", "link", "show", can_iface])[1]
-        state = "\n".join((ln.split() + ["", ""])[1] for ln in out.split("\n") if ln.strip())
-        ui.info("Найден мост USB-CAN Klipper (1d50:606f); интерфейс %s: %s" % (can_iface, state))
 
 
 # ------------------------------------------------------------------ железо
@@ -427,7 +364,7 @@ class HardwareDetector:
 
     def detect_heads(self, hw: Hardware) -> str:
         guess = "none"
-        if usb_bridge_present(self.runner) or can_iface_exists(self.runner, self.env.can_iface):
+        if usb_bridge_present(self.runner) or can_iface_exists(self.env.can_iface, self.runner):
             guess = "v2"
         if self.opts.heads:
             return self.opts.heads
@@ -1322,13 +1259,9 @@ def main(argv: Optional[Sequence[str]] = None, environ=None, reg: Optional[Regis
         return 0
     opts = parsed.opts
     version = installer_version(env.install_dir)
-    try:       # каталог журнала создаётся до проверки printer_data (как mkdir -p в bash), поэтому проверка ниже почти не срабатывает
-        env.effective_log_file.parent.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        pass
-    ui.log("=== configure_vostok.sh %s: %s ===" % (version, " ".join(argv)))
-    if not env.printer_data.is_dir():
+    if not env.printer_data.is_dir():      # проверка до создания каталога журнала: опечатка в пути не создаёт каталог
         raise VostokError("нет каталога %s (укажите --printer-data)" % env.printer_data)
+    ui.log("=== configure_vostok.sh %s: %s ===" % (version, " ".join(argv)))
     ui.step("Настройка конфига VOSTOK (версия %s)" % version)
     ui.info("Каталог конфига: %s" % env.printer_cfg_dir)
 

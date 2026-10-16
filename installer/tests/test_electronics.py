@@ -80,7 +80,8 @@ def snapshot(d):
     return {f: Path(d, f).read_bytes() for f in os.listdir(d)}
 
 
-@unittest.skipUnless(OLD_TOOL.is_file(), "старый tools/gen_electronics.py удалён (A6): сверка не нужна")
+@unittest.skipUnless(OLD_TOOL.is_file() and "vostok" not in OLD_TOOL.read_text(encoding="utf-8"),
+                     "tools/gen_electronics.py стал обёрткой над vostok.electronics: сверку со старым кодом заменяет golden gen_matrix")
 class TestMatchesOldGenerator(unittest.TestCase):
     """Вывод (stdout, stderr, код) и файл побайтно совпадают со старым скриптом."""
 

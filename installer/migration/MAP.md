@@ -6,83 +6,83 @@
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `usage` | 104 |  | todo |
-| `parse_args` | 153 |  | todo |
+| `usage` | 104 | install.USAGE | done |
+| `parse_args` | 153 | install.parse_args (+ install.print_boards для --list-boards) | done |
 | `pause_hw` | 198 | ui.pause_hw (ответ возвращается строкой, TMP_ANS не нужен) | done |
 | `run` | 211 | system.Runner.run | done |
 | `start_sudo` | 215 | system.Runner.sudo_keepalive | done |
-| `cleanup` | 224 |  | todo |
-| `stage_preflight` | 236 |  | todo |
-| `env_item` | 264 |  | todo |
-| `env_conclude` | 273 |  | todo |
-| `hw_steps_planned` | 282 |  | todo |
-| `check_dialout` | 284 |  | todo |
-| `check_bootstrap` | 297 |  | todo |
-| `check_tools` | 335 |  | todo |
-| `kernel_can_support` | 369 |  | todo |
-| `check_hw_requirements` | 388 |  | todo |
-| `stage_packages` | 409 |  | todo |
-| `kiauh_set_fork_repo` | 432 |  | todo |
-| `klipper_is_fork` | 459 |  | todo |
-| `switch_klipper_to_fork` | 465 |  | todo |
-| `kiauh_install` | 478 |  | todo |
-| `stage_software` | 483 |  | todo |
-| `choose_heads_flash` | 535 |  | todo |
-| `print_plan` | 555 |  | todo |
-| `stage_can` | 594 |  | todo |
-| `bring_up_can` | 625 |  | todo |
-| `check_can_health` | 640 |  | todo |
-| `build_katapult` | 655 |  | todo |
-| `wait_dfu` | 673 |  | todo |
-| `dfu_run` | 706 |  | todo |
-| `dfu_flash_katapult` | 718 |  | todo |
-| `wait_new_katapult` | 741 |  | todo |
-| `snapshot_katapult` | 754 |  | todo |
-| `katapult_devices` | 758 |  | todo |
-| `pick_katapult` | 761 |  | todo |
-| `enter_katapult` | 772 |  | todo |
-| `build_fw_safe` | 821 |  | todo |
-| `flash_klipper_via_katapult` | 834 |  | todo |
-| `dfu_flash_klipper` | 878 |  | todo |
-| `board_opt_skipped` | 962 |  | todo |
-| `version_ok` | 970 |  | todo |
-| `flash_menu` | 976 |  | todo |
-| `flash_board` | 996 |  | todo |
-| `alps_candidates` | 1018 |  | todo |
-| `alps_try_skip` | 1030 |  | todo |
-| `try_alps` | 1051 |  | todo |
-| `stage_flash_alps` | 1076 |  | todo |
-| `can_uuids` | 1092 |  | todo |
-| `heads_try_skip` | 1104 |  | todo |
-| `head_dfu_all` | 1136 |  | todo |
-| `try_head_katapult` | 1143 |  | todo |
-| `stage_flash_heads_katapult` | 1164 |  | todo |
-| `try_head_dfu` | 1185 |  | todo |
-| `stage_flash_heads_dfu` | 1204 |  | todo |
-| `set_bridge_uuid` | 1222 |  | todo |
-| `stage_heads_uuid_check` | 1238 |  | todo |
-| `try_head_klipper` | 1258 |  | todo |
-| `stage_flash_heads_klipper` | 1307 |  | todo |
-| `main_dfu_std` | 1364 |  | todo |
-| `main_dfu_short` | 1366 |  | todo |
-| `main_dfu_enter_text` | 1372 |  | todo |
-| `main_dfu_after_text` | 1377 |  | todo |
-| `main_dfu_mode_text` | 1384 |  | todo |
-| `main_dfu_klipper_how` | 1389 |  | todo |
-| `main_try_skip` | 1395 |  | todo |
-| `try_main` | 1431 |  | todo |
-| `stage_flash_main` | 1459 |  | todo |
-| `stage_flash` | 1482 |  | todo |
-| `save_devices` | 1507 |  | todo |
-| `wait_moonraker` | 1534 |  | todo |
-| `stage_start_klipper` | 1546 |  | todo |
-| `stage_button` | 1561 |  | todo |
-| `stage_theme` | 1568 |  | todo |
-| `print_summary` | 1584 |  | todo |
-| `write_uuid_to_cfg` | 1617 |  | todo |
-| `check_can_uuids` | 1638 |  | todo |
-| `check_can_main` | 1713 |  | todo |
-| `install_main` | 1763 |  | todo |
+| `cleanup` | 224 | install.main / install._klipper_hint (подсказка про остановленный Klipper) | done |
+| `stage_preflight` | 236 | host.stage_preflight | done |
+| `env_item` | 264 | host.EnvChecks.item | done |
+| `env_conclude` | 273 | host.EnvChecks.conclude | done |
+| `hw_steps_planned` | 282 | host.EnvChecks.hw_steps_planned | done |
+| `check_dialout` | 284 | host.EnvChecks.check_dialout | done |
+| `check_bootstrap` | 297 | host.EnvChecks.check_bootstrap | done |
+| `check_tools` | 335 | host.EnvChecks.check_tools | done |
+| `kernel_can_support` | 369 | hardware.kernel_can_support | done |
+| `check_hw_requirements` | 388 | host.EnvChecks.check_hw_requirements | done |
+| `stage_packages` | 409 | host.stage_packages | done |
+| `kiauh_set_fork_repo` | 432 | host.Software.kiauh_set_fork_repo (+ host.kiauh_cfg_with_repo) | done |
+| `klipper_is_fork` | 459 | host.Software.klipper_is_fork | done |
+| `switch_klipper_to_fork` | 465 | host.Software.switch_klipper_to_fork | done |
+| `kiauh_install` | 478 | host.Software.kiauh_install | done |
+| `stage_software` | 483 | host.Software.stage_software | done |
+| `choose_heads_flash` | 535 | install.choose_heads_flash | done |
+| `print_plan` | 555 | install.print_plan | done |
+| `stage_can` | 594 | host.stage_can | done |
+| `bring_up_can` | 625 | hardware.bring_up_can | done |
+| `check_can_health` | 640 | hardware.check_can_health | done |
+| `build_katapult` | 655 | firmware.build_katapult (+ flashing.Flasher.build_katapult_safe) | done |
+| `wait_dfu` | 673 | flashing.Flasher.wait_dfu | done |
+| `dfu_run` | 706 | firmware.dfu_run | done |
+| `dfu_flash_katapult` | 718 | flashing.Flasher.dfu_flash_katapult | done |
+| `wait_new_katapult` | 741 | flashing.Flasher.wait_new_katapult | done |
+| `snapshot_katapult` | 754 | hardware.byid_find (снимок «до» - список путей) | done |
+| `katapult_devices` | 758 | flashing.Flasher.katapult_devices | done |
+| `pick_katapult` | 761 | flashing.Flasher.pick_katapult | done |
+| `enter_katapult` | 772 | flashing.Flasher.enter_katapult | done |
+| `build_fw_safe` | 821 | flashing.Flasher.build_fw_safe | done |
+| `flash_klipper_via_katapult` | 834 | flashing.Flasher.flash_klipper_via_katapult | done |
+| `dfu_flash_klipper` | 878 | flashing.Flasher.dfu_flash_klipper | done |
+| `board_opt_skipped` | 962 | host.Options.board_skipped | done |
+| `version_ok` | 970 | flashing.Flasher.version_ok | done |
+| `flash_menu` | 976 | flashing.flash_menu | done |
+| `flash_board` | 996 | flashing.flash_with_retry (FlashJob; BOARD_PHASE - FlashJob.retry_phase, BOARD_DEV - FlashJob.dev) | done |
+| `alps_candidates` | 1018 | install.alps_candidates | done |
+| `alps_try_skip` | 1030 | install.alps_try_skip | done |
+| `try_alps` | 1051 | flashing.make_alps_job (стратегии DfuAll / DfuKlipperOnly / KatapultThenKlipper) | done |
+| `stage_flash_alps` | 1076 | install.stage_flash_alps | done |
+| `can_uuids` | 1092 | hardware.can_uuids (Flasher.can_uuids) | done |
+| `heads_try_skip` | 1104 | install.heads_try_skip | done |
+| `head_dfu_all` | 1136 | flashing.Flasher.head_dfu_all | done |
+| `try_head_katapult` | 1143 | flashing.make_head_katapult_job (стратегия HeadKatapult) | done |
+| `stage_flash_heads_katapult` | 1164 | install.stage_flash_heads_katapult | done |
+| `try_head_dfu` | 1185 | flashing.make_head_dfu_job | done |
+| `stage_flash_heads_dfu` | 1204 | install.stage_flash_heads_dfu | done |
+| `set_bridge_uuid` | 1222 | flashing.Flasher.set_bridge_uuid | done |
+| `stage_heads_uuid_check` | 1238 | install.stage_heads_uuid_check | done |
+| `try_head_klipper` | 1258 | flashing.make_head_klipper_job (стратегия CanKlipper) | done |
+| `stage_flash_heads_klipper` | 1307 | install.stage_flash_heads_klipper | done |
+| `main_dfu_std` | 1364 | flashing.main_dfu_std | done |
+| `main_dfu_short` | 1366 | flashing.main_dfu_short | done |
+| `main_dfu_enter_text` | 1372 | flashing.main_dfu_enter_text | done |
+| `main_dfu_after_text` | 1377 | flashing.main_dfu_after_text | done |
+| `main_dfu_mode_text` | 1384 | flashing.main_dfu_mode_text | done |
+| `main_dfu_klipper_how` | 1389 | flashing.main_dfu_klipper_how | done |
+| `main_try_skip` | 1395 | install.main_try_skip | done |
+| `try_main` | 1431 | flashing.make_main_job | done |
+| `stage_flash_main` | 1459 | install.stage_flash_main | done |
+| `stage_flash` | 1482 | install.stage_flash | done |
+| `save_devices` | 1507 | flashing.Flasher.save_devices | done |
+| `wait_moonraker` | 1534 | host.wait_moonraker | done |
+| `stage_start_klipper` | 1546 | install.stage_start_klipper | done |
+| `stage_button` | 1561 | install.stage_button | done |
+| `stage_theme` | 1568 | install.stage_theme | done |
+| `print_summary` | 1584 | install.print_summary | done |
+| `write_uuid_to_cfg` | 1617 | install.write_uuid_to_cfg | done |
+| `check_can_uuids` | 1638 | install.check_can_uuids | done |
+| `check_can_main` | 1713 | install.check_can_main | done |
+| `install_main` | 1763 | install.run / install.main | done |
 
 ## update_klipper_mcu.sh
 
@@ -140,20 +140,20 @@
 | `ask_yn` | 32 | ui.ask_yn | done |
 | `ask_choice` | 43 | ui.ask_choice | done |
 | `prev_keys` | 64 | Configurator.prev_keys | done |
-| `byid_find` | 71 | configurator.byid_find | done |
-| `dfu_count` | 77 | configurator.dfu_count | done |
-| `dfu_family` | 80 | configurator.dfu_family | done |
-| `family_name` | 92 |  | todo (только install: A5; hardware.py) |
-| `uid_addr` | 104 |  | todo (только install: A5; hardware.py) |
-| `dfu_read_uid` | 112 |  | todo (только install: A5; hardware.py) |
+| `byid_find` | 71 | hardware.byid_find | done |
+| `dfu_count` | 77 | hardware.dfu_count | done |
+| `dfu_family` | 80 | hardware.dfu_family | done |
+| `family_name` | 92 | hardware.family_name | done |
+| `uid_addr` | 104 | hardware.uid_addr | done |
+| `dfu_read_uid` | 112 | hardware.dfu_read_uid | done |
 | `can_uuid_from_serial` | 126 | can_uuid.can_uuid(bytes.fromhex(serial)) | done |
-| `bridge_usb_serial` | 131 |  | todo (только install: A5; hardware.py) |
-| `show_usb_state` | 140 | configurator.show_usb_state | done |
+| `bridge_usb_serial` | 131 | hardware.bridge_usb_serial | done |
+| `show_usb_state` | 140 | hardware.show_usb_state | done |
 | `mb` | 158 | Configurator._board_field / Hardware.board.field | done |
 | `set_main_board` | 161 | Hardware.set_main_board (чип - Hardware.main) | done |
 | `main_boards_hint` | 167 | HardwareDetector.main_boards_hint | done |
 | `main_board_from_opt` | 177 | HardwareDetector.board_from_opt | done |
-| `print_boards` | 186 |  | todo (--list-boards install: A5) |
+| `print_boards` | 186 | install.print_boards | done |
 | `prev_main_board` | 200 | HardwareDetector.prev_main_board | done |
 | `main_candidates` | 214 | HardwareDetector.main_candidates + configurator.rank_main_boards (точка расширения под board_rank) | done |
 | `ask_board` | 235 | HardwareDetector.ask_board | done |
@@ -293,7 +293,7 @@
 
 | файл | куда | статус |
 |---|---|---|
-| `tools/gen_electronics.py` | `vostok/electronics.py` (A4): Generator/GenOptions/GenResult, main() с прежними флагами и протоколом NAME/WARN/FILL/EMPTY | done (старый файл пока не тронут) |
+| `tools/gen_electronics.py` | `vostok/electronics.py` (A4): Generator/GenOptions/GenResult, main() с прежними флагами и протоколом NAME/WARN/FILL/EMPTY | done (A5: файл стал тонкой обёрткой, путь сохранён ради golden gen_matrix) |
 | `tools/mcu_merge.py` | `vostok/cfgfile.py` (A1): list_mcus, merge_mcus, set_canbus_uuid | done (старый файл пока не тронут) |
 | `tools/pin_conflicts.py` | `vostok/cfgfile.py` (A1): pin_conflicts | done (старый файл пока не тронут) |
 | `tools/can_uuid.py` | `vostok/can_uuid.py` (A1, отдельный модуль, не electronics/hardware) | done (старый файл пока не тронут) |
@@ -302,8 +302,8 @@
 
 | где | куда | статус |
 |---|---|---|
-| `install_vostok.sh` kiauh_set_fork_repo | `host.py` (A5) | todo |
-| `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1), вызывается из `Configurator._write_config` (A4) | done (heredoc в lib/vostok_config.sh остаётся для install_vostok.sh до A5) |
+| `install_vostok.sh` kiauh_set_fork_repo | `host.kiauh_cfg_with_repo` / `host.Software.kiauh_set_fork_repo` | done |
+| `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1), вызывается из `Configurator._write_config` (A4) | done (A5: lib/vostok_config.sh удалён; heredoc сохранён эталоном в tests/fixtures/legacy_rewrite_printer_cfg.py) |
 | `update_klipper_mcu.sh` json_get/cfg_mcus/cfg_mcu_versions | `update.Moonraker` (A2) | done |
 | `install_fluidd_theme.sh` py -c (db_get_theme, edit_fluidd_cfg, preset_json) | `integrations.py` (A3) | done |
 | `install_klipperscreen_theme.sh` edit_ks_conf/current_theme | `integrations.py` (A3) | done |

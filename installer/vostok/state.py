@@ -16,6 +16,26 @@ class Device:
     role: str
 
 
+def _atomic_write(path: Path, text: str) -> None:
+    """Записать файл целиком через временный файл и rename (читатели не увидят усечённый файл)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=path.name + ".", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+        try:
+            os.chmod(tmp, os.stat(path).st_mode & 0o7777)    # права прежнего файла
+        except OSError:
+            os.chmod(tmp, 0o644)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 def _read_lines(path: Path) -> List[str]:
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
@@ -42,11 +62,8 @@ class DevicesFile:
         return res
 
     def save(self, devices: List[Device]) -> None:
-        """Перезаписать файл целиком (каталог создаётся)."""
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        text = "".join("%s\t%s\t%s\n" % (d.key, d.cfg, d.role) for d in devices)
-        with open(self.path, "w", encoding="utf-8") as f:
-            f.write(text)
+        """Перезаписать файл целиком атомарно (tmp + rename, каталог создаётся)."""
+        _atomic_write(self.path, "".join("%s\t%s\t%s\n" % (d.key, d.cfg, d.role) for d in devices))
 
     def lookup(self, key: str) -> Optional[Device]:
         """Первая запись с таким ключом или None (как awk в devices_lookup)."""
@@ -76,14 +93,4 @@ class FlashedLog:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         keep = [ln for ln in _read_lines(self.path) if ln and ln.split("\t")[0] != key]
         keep.append("%s\t%s" % (key, version))
-        fd, tmp = tempfile.mkstemp(prefix=self.path.name + ".", dir=str(self.path.parent))
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                f.write("\n".join(keep) + "\n")
-            os.replace(tmp, self.path)
-        except BaseException:
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-            raise
+        _atomic_write(self.path, "\n".join(keep) + "\n")

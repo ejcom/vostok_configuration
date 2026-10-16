@@ -117,10 +117,20 @@ class UiTest(unittest.TestCase):
             self.assertEqual(ui.ask_choice("Q", "b", ["a", "b"]), "b")
 
     def test_need_tty(self):
-        with mock.patch("os.access", return_value=False):
+        with mock.patch.object(ui, "have_tty", return_value=False):
             with self.assertRaises(VostokError) as cm:
                 ui.ask_yn("Q?")
             self.assertEqual(str(cm.exception), "нужен терминал: установка просит переключать платы и нажимать Enter")
+
+    def test_need_tty_uses_open_not_access(self):
+        # M4: узел /dev/tty читаем и без управляющего терминала, поэтому решает реальный open()
+        with mock.patch("os.access", return_value=True), mock.patch("builtins.open", side_effect=OSError(6, "ENXIO")):
+            self.assertFalse(ui.have_tty())
+            with self.assertRaises(VostokError):
+                ui.need_tty()
+            with self.assertRaises(VostokError) as cm:
+                ui.confirm("Q")
+            self.assertEqual(str(cm.exception), "нет терминала для подтверждения, используйте -y")
 
     def test_ask_choice(self):
         fake, prompts = self.answers("2", "", "0", "9", "x", "1")
@@ -137,12 +147,12 @@ class UiTest(unittest.TestCase):
 
     def test_confirm(self):
         fake, prompts = self.answers("y", "n", "")
-        with mock.patch.object(ui, "_read_tty", fake), mock.patch("os.access", return_value=True):
+        with mock.patch.object(ui, "_read_tty", fake), mock.patch.object(ui, "have_tty", return_value=True):
             self.assertTrue(ui.confirm("Продолжить?"))
             self.assertFalse(ui.confirm("Продолжить?"))
             self.assertFalse(ui.confirm("Продолжить?"))
         self.assertEqual(prompts[0], "Продолжить? [y/N] ")
-        with mock.patch("os.access", return_value=False):
+        with mock.patch.object(ui, "have_tty", return_value=False):
             with self.assertRaises(VostokError) as cm:
                 ui.confirm("Q")
             self.assertEqual(str(cm.exception), "нет терминала для подтверждения, используйте -y")
@@ -166,7 +176,7 @@ class UiTest(unittest.TestCase):
         self.assertEqual((res, out), ("", "\n>>> Сделайте что-то\n[dry-run] ожидание Enter\n"))
 
     def test_pause_hw_no_tty(self):
-        with mock.patch("os.access", return_value=False):
+        with mock.patch.object(ui, "have_tty", return_value=False):
             with self.assertRaises(VostokError):
                 self.capture(ui.pause_hw, "x")
 

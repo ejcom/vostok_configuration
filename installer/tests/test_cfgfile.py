@@ -21,7 +21,8 @@ ROOT = os.path.join(FIX, "repo_root")
 ELEC = "electronics_octopus_pro_v1.1_h723_5x2240_2xH36v1.3.cfg"
 MCU_MERGE = os.path.join(INSTALL, "tools", "mcu_merge.py")
 PIN_CONFLICTS = os.path.join(INSTALL, "tools", "pin_conflicts.py")
-VCONFIG = os.path.join(INSTALL, "lib", "vostok_config.sh")
+LEGACY_REWRITE = os.path.join(FIX, "legacy_rewrite_printer_cfg.py")   # heredoc из lib/vostok_config.sh 1.3a
+LEGACY_MODULES = os.path.join(FIX, "legacy_modules.sh")
 
 BLOCKS = (
     "[mcu]\ncanbus_uuid: 821a4dc3b8eb\n\n"                                          # OK
@@ -225,10 +226,7 @@ class PinConflictsTest(Base):
 
 class StateAndRewriteTest(Base):
     def heredoc(self):
-        src = Path(VCONFIG).read_text(encoding="utf-8")
-        m = re.search(r"<<'PYEND'\n(.*?)\nPYEND\n", src, re.S)
-        self.assertIsNotNone(m, "heredoc правки printer.cfg не найден в lib/vostok_config.sh")
-        return m.group(1)
+        return Path(LEGACY_REWRITE).read_text(encoding="utf-8")
 
     def old_rewrite(self, path, el, blocks):
         bpath = path.parent / "blocks.tmp"
@@ -299,13 +297,7 @@ class ModulesTest(Base):
     FUNCS = None
 
     def bash_funcs(self):
-        src = Path(VCONFIG).read_text(encoding="utf-8")
-        parts = []
-        for fn in ("module_state", "module_add_include"):
-            m = re.search(r"^%s\(\) .*?^}\n" % fn, src, re.S | re.M)
-            self.assertIsNotNone(m, fn)
-            parts.append(m.group(0))
-        return "\n".join(parts)
+        return Path(LEGACY_MODULES).read_text(encoding="utf-8")
 
     def old(self, func, cfg, name):
         pr = subprocess.run(["bash", "-c", self.bash_funcs() + "\n" + func + ' "$1" "$2"', "bash", str(cfg), name],

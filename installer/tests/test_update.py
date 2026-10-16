@@ -20,7 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 INSTALLER = os.path.dirname(HERE)
 sys.path.insert(0, INSTALLER)
 
-from vostok import VostokError, firmware, hardware, ui, update  # noqa: E402
+from vostok import VostokError, firmware, hardware, system, ui, update  # noqa: E402
 from vostok.state import FlashedLog  # noqa: E402
 
 GIT_ENV = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@example.invalid",
@@ -403,12 +403,12 @@ class FlowTest(BaseTest):
     def test_confirm_declined_and_no_tty(self):
         u, ev = self.make_updater([self.mcu("main", 3)])
         out = io.StringIO()
-        with mock.patch.object(ui, "_read_tty", return_value="n"), mock.patch.object(ui.os, "access", return_value=True), \
+        with mock.patch.object(ui, "_read_tty", return_value="n"), mock.patch.object(ui, "have_tty", return_value=True), \
                 contextlib.redirect_stdout(out):
             self.assertEqual(u.run(), 0)
         self.assertEqual(ev, [])
         self.assertIn("отменено", out.getvalue())
-        with mock.patch.object(ui.os, "access", return_value=False), contextlib.redirect_stdout(io.StringIO()):
+        with mock.patch.object(ui, "have_tty", return_value=False), contextlib.redirect_stdout(io.StringIO()):
             with self.assertRaises(VostokError) as cm:
                 u.run()
         self.assertEqual(str(cm.exception), "нет терминала для подтверждения, используйте -y")
@@ -516,8 +516,12 @@ class FakeRunner:
     def __init__(self, stdout="v0.12.0-1-gabcdef0\n", rc=0):
         self.stdout, self.rc, self.calls = stdout, rc, []
 
+    dry_run = False
+
     def run(self, cmd, **kw):
         self.calls.append(list(cmd))
+        if cmd[0] == "make":      # make в тестах - заглушка из PATH (запускается по-настоящему), describe - подделка
+            return system.Runner(dry_run=False).run(cmd, **kw)
         return subprocess.CompletedProcess(cmd, self.rc, self.stdout, "")
 
 

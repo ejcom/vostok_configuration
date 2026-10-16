@@ -320,7 +320,7 @@ The reference (the user's own config) always wins over the preset: the preset on
 - **`SAVE_CONFIG` is not carried over** only on a clean install over a foreign or empty `printer.cfg` (see above).
 - **ALPS as the probe** needs an edit of `printer_base.cfg` (the block in the config is commented out).
 - In the installer, `--skip-flash` skips the whole configuration stage: the `[mcu]` values come from the flashing stage. To set up the config without flashing, use `configure_vostok.sh`.
-- Not tested on hardware: running the configurator on real H36 and EBB42 toolhead boards and on the Octopus Pro F446. Tested on copies of the config directory and in `--dry-run`: all combinations of toolhead boards and drivers, parsing the result as a Klipper config.
+- Not tested on hardware: running the configurator on the Octopus Pro F446. Tested on copies of the config directory and in `--dry-run`: all combinations of toolhead boards and drivers, parsing the result as a Klipper config.
 
 ## Internals (for developers)
 

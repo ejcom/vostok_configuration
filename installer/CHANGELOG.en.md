@@ -12,6 +12,9 @@ The installer was ported from bash to Python 3.8+ (standard library only). Comma
 - Added unit tests (`python3 -m unittest discover tests`) and golden output references taken from the old scripts (`tests/run_golden.sh`).
 - Minor differences from 1.3a: Moonraker and the configuration download use `urllib`, `curl` is not called for them; without a terminal and without `-y` a question immediately gives `ОШИБКА: нужен терминал…` instead of bash internals (`/dev/tty: No such device`, `ans: unbound variable`), exit code 1 as before; files (`devices.tsv`, `moonraker.asvc`, `mcu_update.cfg`, themes) are written atomically; a failed external command or an unexpected error gives one `ОШИБКА: …` line instead of aborting the script or a traceback; `flash_can` looks for the bridge's katapult in `BYID_DIR` instead of a hard-coded `/dev/serial/by-id`; the configurator's temporary directory is always removed; the "bash 4.4+" check is gone.
 - `python3` 3.8 or newer is required (Debian 11 has it); other requirements are unchanged.
+- 1.4 includes the 1.3b changes (ported from bash to `vostok/`): marked as verified on hardware (from user reports): Manta M8P v2.0 (with CB1 and CB2), Fysetc H36 v1.3 and v2, BTT EBB36 (the `ebb42` entry, label "BTT EBB42/EBB36", alias `ebb36`). Confirmed: the USB→CAN bridge on the M8P v2.0, flashing toolheads "on the bench" and over CAN, `--check-can`. `VERIFIED="yes"` in `boards/*.board`; the installer plan no longer warns for these boards.
+- Default mainboard choice: on the H723 the guide board (Octopus Pro) is offered first, then verified boards, then the rest (`Registry.rank` in `vostok/boards.py`, ordering in `rank_main_boards` in `vostok/configurator.py`), so the Manta M8P v2.0 does not displace the Octopus Pro once marked verified.
+- Documentation: the warning in `docs/hardware.en.md` is cut to one paragraph, the details live in `docs/tested.en.md` (verified / dry-run only / not verified).
 
 ## 1.3a — 2026-10-15
 

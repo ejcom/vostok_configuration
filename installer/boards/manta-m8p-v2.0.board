@@ -1,7 +1,7 @@
-# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает lib/boards.sh).
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
 # Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
 #       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
-#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.sh.
+#       TEMPLATE HEAD_NAMES VERIFIED DOC NOTE. Конфиги сборки создаёт tools/gen_configs.py.
 LABEL="BTT Manta M8P v2.0"
 ROLE="main"
 CHIP="stm32h723xx"

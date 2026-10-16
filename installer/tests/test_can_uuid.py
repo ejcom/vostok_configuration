@@ -1,9 +1,7 @@
-"""Тесты vostok.can_uuid: векторы из C-реализации (lib/fast-hash из Klipper) и сверка со старым tools/can_uuid.py."""
+"""Тесты vostok.can_uuid: векторы из C-реализации (lib/fast-hash из Klipper); tools/can_uuid.py - обёртка над ним."""
 import contextlib
-import importlib.util
 import io
 import os
-import random
 import sys
 import tempfile
 import unittest
@@ -31,13 +29,6 @@ C_VECTORS = [
 ]
 
 
-def _load_old():
-    spec = importlib.util.spec_from_file_location("old_can_uuid", os.path.join(INSTALL, "tools", "can_uuid.py"))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def _run(argv):
     out, err = io.StringIO(), io.StringIO()
     with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
@@ -49,18 +40,6 @@ class CanUuidTest(unittest.TestCase):
     def test_c_vectors(self):
         for uid, want in C_VECTORS:
             self.assertEqual(cu.can_uuid(bytes.fromhex(uid)), want, uid)
-
-    def test_same_as_old_tool(self):
-        old = _load_old()
-        rnd = random.Random(1)
-        for _ in range(200):
-            uid = bytes(rnd.randrange(256) for _ in range(12))
-            if len(set(uid)) == 1:
-                continue
-            self.assertEqual(cu.can_uuid(uid), old.can_uuid(uid))
-        for n in (0, 1, 7, 8, 9, 13, 16):  # fasthash64 на других длинах (хвост и целые слова)
-            buf = bytes(range(1, n + 1))
-            self.assertEqual(cu.fasthash64(buf, cu.SEED), old.fasthash64(buf, old.SEED))
 
     def test_bad_uid(self):
         for uid in (b"", b"\x01\x02", b"\x00" * 12, b"\xff" * 12, bytes(range(13))):

@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 
 from . import INSTALL_DIR, VostokError
 
-# Все поля формата .board (порядок как в lib/boards.sh)
+# Все поля формата .board (порядок как в прежнем bash-реестре lib/boards.sh)
 BOARD_KEYS = ("LABEL", "ROLE", "CHIP", "FAMILY", "MACH", "CLOCK", "APP_OFFSET", "USB", "CAN", "CAN_KIND",
               "INITIAL_PINS", "BRIDGE_INITIAL_PINS", "KATAPULT_INITIAL_PINS", "KATAPULT_LED",
               "KATAPULT_DOUBLE_RESET", "CFG", "ALIASES", "DFU_HINT", "DFU_HOW", "ELEC_PATTERN",
@@ -72,7 +72,7 @@ def _err(msg: str) -> BoardError:
 
 
 def parse_board_file(id: str, path: Path) -> Board:
-    """Разобрать один файл .board (без исполнения кода); тексты ошибок как в lib/boards.sh."""
+    """Разобрать один файл .board (без исполнения кода); тексты ошибок как в прежнем bash-реестре lib/boards.sh."""
     if not _ID_RE.match(id) or not path.is_file():
         raise _err("нет описания платы '%s' (%s)" % (id, path))
     vals: Dict[str, str] = {}
@@ -211,7 +211,7 @@ class Registry:
 
 
 def registry() -> Registry:
-    """Реестр по окружению (BOARDS_DIR, CONFIGS_DIR, KATAPULT_CONFIGS), как lib/boards.sh."""
+    """Реестр по окружению (BOARDS_DIR, CONFIGS_DIR, KATAPULT_CONFIGS), как в прежнем lib/boards.sh."""
     return Registry(os.environ.get("BOARDS_DIR") or INSTALL_DIR / "boards",
                     os.environ.get("CONFIGS_DIR") or None,
                     os.environ.get("KATAPULT_CONFIGS") or None)

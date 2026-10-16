@@ -68,6 +68,7 @@ class Runner:
             if tee:
                 cp = self._run_tee(argv, penv, cwd, timeout)
             elif stdout_file is not None:
+                os.makedirs(os.path.dirname(os.path.abspath(str(stdout_file))), exist_ok=True)
                 with open(stdout_file, "ab" if append else "wb") as f:
                     try:
                         rc = subprocess.run(argv, env=penv, cwd=cwd, timeout=timeout, stdout=f,

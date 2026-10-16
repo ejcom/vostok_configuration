@@ -13,7 +13,6 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import List, Optional, Sequence
 
 from . import VostokError, cfgfile, hardware, ui, update

@@ -15,7 +15,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from . import VostokError, cfgfile, firmware, hardware, ui, update
+from . import cfgfile, firmware, hardware, ui, update
 from . import configurator as cf
 from .configurator import Hardware, McuValues
 from .state import Device

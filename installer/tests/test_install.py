@@ -774,6 +774,16 @@ class TestMain(Base):
                       self.err.getvalue())
         self.assertLess(self.err.getvalue().index("ОШИБКА"), self.err.getvalue().index("Klipper остановлен"))
 
+    def test_cli_broken_pipe_and_unexpected_errors(self):
+        from vostok import cli
+        with mock.patch.dict(cli.COMMANDS, {"install": mock.Mock(side_effect=BrokenPipeError())}), \
+                mock.patch.object(cli.os, "dup2"):
+            self.assertEqual(cli.main(["install"]), 141)
+        self.assertEqual(self.err.getvalue(), "")
+        with mock.patch.dict(cli.COMMANDS, {"install": mock.Mock(side_effect=OSError(28, "No space left on device"))}):
+            self.assertEqual(cli.main(["install"]), 1)
+        self.assertIn("ОШИБКА: OSError: [Errno 28] No space left on device", self.err.getvalue())
+
     def test_hint_only_when_stopped_and_failed(self):
         with mock.patch.object(install, "run", return_value=1), mock.patch.object(install, "Env") as E:
             E.from_environ.return_value = self.env

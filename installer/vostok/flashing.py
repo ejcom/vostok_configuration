@@ -131,7 +131,9 @@ class Flasher:
         return firmware.host_version_or_empty(self.env.klipper_dir, self.runner)
 
     def state_set(self, key: str, version: Optional[str] = None) -> None:
-        """Записать в журнал прошивок «ключ -> версия хоста»."""
+        """Записать в журнал прошивок «ключ -> версия хоста» (в dry-run ничего не пишет)."""
+        if self.dry:
+            return
         self.flashed.set(key, self.host_version() if version is None else version)
 
     def version_ok(self, key: str) -> bool:

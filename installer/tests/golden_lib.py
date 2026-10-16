@@ -181,6 +181,10 @@ class Sandbox:
         # эталоны сняты с bash 1.3a: номер версии релиза не должен влиять на сравнение вывода
         with open(os.path.join(self.install, "VERSION"), "w", encoding="utf-8") as f:
             f.write(GOLDEN_VERSION + "\n")
+        # firmware/, build/ и devices.tsv в копию не попадают (рабочие данные), но их появление или
+        # изменение должно ловиться: заводим пустые каталоги/файл и снимаем их вместе с остальным деревом
+        for d in ("firmware", "build"):
+            os.makedirs(os.path.join(self.install, d), exist_ok=True)
         self.install_snapshot = self._tree_snapshot(self.install)
 
     def _make_shims(self):
@@ -272,6 +276,9 @@ class Sandbox:
                 p = os.path.join(dp, n)
                 rel = os.path.relpath(p, root)
                 snap[rel] = sha256_file(p) if not os.path.islink(p) else "link"
+            for n in dn:
+                if not os.listdir(os.path.join(dp, n)):
+                    snap[os.path.relpath(os.path.join(dp, n), root) + "/"] = "emptydir"
         return snap
 
     def violations(self):

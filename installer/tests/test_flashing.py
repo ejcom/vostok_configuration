@@ -582,6 +582,20 @@ class TestDevicesAndBridge(Base):
         self.fl.set_bridge_uuid()
         self.assertEqual(self.res.mcu.bridge_uuid, "")
 
+    def test_state_set_dry_run_writes_nothing(self):
+        """dry-run: журнал прошивок flashed.tsv не создаётся и не меняется."""
+        path = Path(self.env.cfg.state_file)
+        self.runner.dry_run = True
+        self.fl.state_set("000000000000")
+        self.assertFalse(path.exists())
+        self.runner.dry_run = False
+        self.fl.state_set("REAL")
+        before = path.read_text(encoding="utf-8")
+        self.runner.dry_run = True
+        self.fl.state_set("000000000000")
+        self.fl.state_set("REAL", "other")
+        self.assertEqual(path.read_text(encoding="utf-8"), before)
+
     def test_version_ok(self):
         self.fl.flashed.set("K", "v0.12.0-1-gabc-dirty")
         self.assertTrue(self.fl.version_ok("K"))                 # -dirty и «*» не мешают

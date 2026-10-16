@@ -300,7 +300,7 @@ class Sandbox:
         env = {
             "PATH": self.bin + os.pathsep + os.environ.get("PATH", "/usr/bin:/bin"),
             "HOME": home, "USER": "golden", "LOGNAME": "golden",
-            "LC_ALL": "C.UTF-8", "LANG": "C.UTF-8", "TZ": "UTC", "TERM": "dumb",
+            "PYTHONDONTWRITEBYTECODE": "1", "LC_ALL": "C.UTF-8", "LANG": "C.UTF-8", "TZ": "UTC", "TERM": "dumb",
             "PRINTER_DATA": os.path.join(case_dir, "pd"),
             "DEVICES_FILE": os.path.join(case_dir, "devices.tsv"),
             "BUILD_DIR": os.path.join(case_dir, "build"),

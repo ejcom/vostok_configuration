@@ -636,6 +636,25 @@ class TestCheckCan(Base):
         self.cfg.unlink()
         install.write_uuid_to_cfg(c, "mcu", "f" * 12)               # нет printer.cfg - тихо
 
+    def test_write_uuid_to_cfg_makes_backup(self):
+        c = self.c()
+        self.assertTrue(install.write_uuid_to_cfg(c, "mcu T0CB", "f" * 12))      # было ЗАПОЛНИТЕ
+        baks = [p for p in self.cfg.parent.iterdir() if ".bak" in p.name]
+        self.assertTrue(baks)
+        self.assertIn("ЗАПОЛНИТЕ", baks[0].read_text())
+        self.assertNotIn("f" * 12, baks[0].read_text())
+
+    def test_write_failure_is_not_reported_as_confirmed(self):
+        c = self.c()
+        with mock.patch.object(install.cfgfile, "atomic_write", side_effect=OSError("диск только для чтения")):
+            res, _ = self.run_check(c, [["b" * 12, "1" * 12, "9" * 12]])    # на шине вместо 2*12 найден 9*12
+        self.assertFalse(res)
+        self.assertIn("не удалось записать printer.cfg", self.err.getvalue())
+        self.assertNotIn("подтверждены", self.text())
+        with mock.patch.object(install.cfgfile, "atomic_write", side_effect=OSError("ro")):
+            with mock.patch.object(ui, "ask_yn", return_value=True):
+                self.assertFalse(install.write_uuid_to_cfg(c, "mcu", "f" * 12))      # DIFF -> замена -> сбой
+
     def test_check_can_main_reads_devices_and_printer_cfg(self):
         DevicesFile(self.env.devices_file).save([
             Device("b" * 12, "stm32h723xx-canbridge.config", "bridge"), Device("1" * 12, "stm32g431xx-can.config", "can"),

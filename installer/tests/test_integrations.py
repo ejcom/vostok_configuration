@@ -205,7 +205,7 @@ class FluiddThemeTest(Base):
         self.moon.theme = {"logo": {"src": "x/other.svg"}}
         ui.set_options(yes=False)
         o = ig.FluiddThemeOptions(printer_data=str(self.pd), fluidd_dir=str(self.fd), moonraker_url="http://m")
-        with mock.patch("os.access", return_value=False):
+        with mock.patch.object(ui, "have_tty", return_value=False):
             rc, out, err = self.call(ig.FluiddTheme(o, http=self.moon).run)
         self.assertEqual(rc, 0)
         self.assertIn("тему не меняю", err)

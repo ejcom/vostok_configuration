@@ -39,20 +39,27 @@ class Runner:
 
     def run(self, cmd: Cmd, *, sudo: bool = False, check: bool = True, capture: bool = False,
             tee: bool = False, env: Optional[Mapping[str, str]] = None, cwd: Optional[str] = None,
-            timeout: Optional[float] = None) -> "subprocess.CompletedProcess[str]":
+            timeout: Optional[float] = None, quiet: bool = False, stdout_file=None, append: bool = False,
+            readonly: bool = False) -> "subprocess.CompletedProcess[str]":
         """Выполнить команду. Dry-run: печатает ``[dry-run] <команда>`` и возвращает код 0 (stdout пустой);
         иначе пишет в журнал ``$ <команда>``. sudo - добавить ``sudo`` в начало. capture - собрать stdout
         в результат (text; stderr остаётся на экране, как у ``$(...)``). tee - выводить на экран (stdout+stderr)
         и дописывать вывод в журнал; вместе с capture вывод попадает и в результат. check - при коде != 0
-        CommandError. env дополняет окружение процесса."""
+        CommandError. env дополняет окружение процесса.
+
+        quiet - stderr в /dev/null (``2>/dev/null``), в журнал строка команды не пишется.
+        stdout_file - stdout и stderr команды в файл (``>файл 2>&1``; append - дописывать); нет программы -
+        код 127 и текст ошибки в файле. readonly - запрос состояния: команда выполняется и в dry-run, без
+        строки ``[dry-run]`` (для ``git rev-parse``, ``ip link show``, ``lsusb`` и т. п.)."""
         argv: List[str] = shlex.split(cmd) if isinstance(cmd, str) else [str(a) for a in cmd]
         if sudo:
             argv = ["sudo"] + argv
         text = " ".join(argv)
-        if self.dry_run:
+        if self.dry_run and not readonly:
             ui.info("[dry-run] " + text)
             return subprocess.CompletedProcess(argv, 0, "", "")
-        ui.log("$ " + text)
+        if not quiet:
+            ui.log("$ " + text)
         penv = None
         if env is not None:
             penv = dict(os.environ)
@@ -60,9 +67,19 @@ class Runner:
         try:
             if tee:
                 cp = self._run_tee(argv, penv, cwd, timeout)
+            elif stdout_file is not None:
+                with open(stdout_file, "ab" if append else "wb") as f:
+                    try:
+                        rc = subprocess.run(argv, env=penv, cwd=cwd, timeout=timeout, stdout=f,
+                                            stderr=subprocess.STDOUT).returncode
+                    except OSError as e:
+                        f.write(("%s: %s\n" % (argv[0], e)).encode("utf-8"))
+                        rc = 127
+                cp = subprocess.CompletedProcess(argv, rc, "", "")
             else:
                 cp = subprocess.run(argv, env=penv, cwd=cwd, timeout=timeout, universal_newlines=True,
-                                    stdout=subprocess.PIPE if capture else None)
+                                    stdout=subprocess.PIPE if capture else None,
+                                    stderr=subprocess.DEVNULL if quiet else None)
         except FileNotFoundError:
             cp = subprocess.CompletedProcess(argv, 127, "", "")
         if check and cp.returncode != 0:
@@ -122,13 +139,14 @@ class Runner:
 
     @contextmanager
     def sudo_keepalive(self, enabled: bool = True) -> Iterator[None]:
-        """Один раз запросить пароль sudo (``sudo -v``) и поддерживать его фоновым потоком (каждые 50 с).
-        В dry-run или enabled=False ничего не делает. Нет sudo/прав - VostokError."""
+        """Проверить наличие sudo (всегда, как ``command -v sudo || die`` в bash), затем один раз запросить пароль
+        (``sudo -v``) и поддерживать его фоновым потоком (каждые 50 с). В dry-run или enabled=False пароль не
+        запрашивается. Нет sudo/прав - VostokError."""
+        if not any(os.access(os.path.join(d, "sudo"), os.X_OK) for d in os.environ.get("PATH", "").split(":")):
+            raise VostokError("нет sudo")
         if not enabled or self.dry_run:
             yield
             return
-        if not any(os.access(os.path.join(d, "sudo"), os.X_OK) for d in os.environ.get("PATH", "").split(":")):
-            raise VostokError("нет sudo")
         ui.info("Потребуется пароль sudo (запрашивается один раз).")
         if subprocess.run(["sudo", "-v"]).returncode != 0:
             raise VostokError("нет прав sudo")

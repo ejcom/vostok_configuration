@@ -170,13 +170,43 @@ class SystemTest(unittest.TestCase):
             self.assertEqual(str(cm.exception), "нет прав sudo")
 
     def test_sudo_keepalive_dry_run_and_missing(self):
-        with system.Runner(dry_run=True).sudo_keepalive():
-            pass
+        self.stub("sudo", "exit 1")
+        with self.path():
+            with system.Runner(dry_run=True).sudo_keepalive():
+                pass
         with mock.patch.dict(os.environ, {"PATH": str(self.bin)}):
-            with self.assertRaises(VostokError) as cm:
-                with system.Runner(dry_run=False).sudo_keepalive():
-                    pass
-            self.assertEqual(str(cm.exception), "нет sudo")
+            for r in (system.Runner(dry_run=False), system.Runner(dry_run=True)):   # L1: проверка и в dry-run
+                (self.bin / "sudo").rename(self.bin / "sudo.off")
+                self.addCleanup(lambda: (self.bin / "sudo.off").rename(self.bin / "sudo")
+                                if (self.bin / "sudo.off").exists() else None)
+                with self.assertRaises(VostokError) as cm:
+                    with r.sudo_keepalive():
+                        pass
+                self.assertEqual(str(cm.exception), "нет sudo")
+                (self.bin / "sudo.off").rename(self.bin / "sudo")
+
+    def test_run_quiet_stdout_file_readonly(self):
+        self.stub("noisy", 'echo out; echo err >&2; exit 3')
+        r = system.Runner(dry_run=False)
+        with self.path():
+            cp, = [r.run(["noisy"], quiet=True, capture=True, check=False)]
+            self.assertEqual((cp.returncode, cp.stdout), (3, "out\n"))
+            f = self.dir / "o.log"
+            self.assertEqual(r.run(["noisy"], check=False, stdout_file=f).returncode, 3)
+            self.assertEqual(f.read_text(), "out\nerr\n")
+            r.run(["noisy"], check=False, stdout_file=f, append=True)
+            self.assertEqual(f.read_text(), "out\nerr\nout\nerr\n")
+            self.assertEqual(r.run(["no-such-cmd-xyz"], check=False, stdout_file=f).returncode, 127)
+            self.assertIn("no-such-cmd-xyz", f.read_text())
+            # dry-run: обычная команда только печатается, readonly выполняется
+            d = system.Runner(dry_run=True)
+            cp, out = self.out(d.run, ["noisy"], capture=True, check=False)
+            self.assertEqual((cp.returncode, out), (0, "[dry-run] noisy\n"))
+            cp, out = self.out(d.run, ["noisy"], capture=True, check=False, quiet=True, readonly=True)
+            self.assertEqual((cp.returncode, cp.stdout, out), (3, "out\n", ""))
+            marker = self.dir / "m"
+            self.out(d.run, ["touch", str(marker)], stdout_file=self.dir / "x.log")
+            self.assertFalse(marker.exists() or (self.dir / "x.log").exists())
 
 
 if __name__ == "__main__":

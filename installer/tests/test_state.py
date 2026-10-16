@@ -67,6 +67,23 @@ class StateTest(unittest.TestCase):
         self.assertEqual(p.read_text(encoding="utf-8"), "b\tv0.12-2-gdef\na\tv0.12-3-g123-dirty\n")
         self.assertEqual([x.name for x in p.parent.iterdir()], ["flashed.tsv"])  # временных файлов нет
 
+    def test_devices_save_atomic(self):
+        p = self.dir / "sub" / "devices.tsv"
+        df = DevicesFile(p)
+        df.save([Device("k1", "a.config", "usb")])
+        p.chmod(0o640)
+        df.save([Device("k2", "b.config", "can")])
+        self.assertEqual(p.read_text(encoding="utf-8"), "k2\tb.config\tcan\n")
+        self.assertEqual(p.stat().st_mode & 0o777, 0o640)           # права сохраняются
+        self.assertEqual([x.name for x in p.parent.iterdir()], ["devices.tsv"])
+        # сбой записи не портит прежний файл
+        import unittest.mock as mock
+        with mock.patch("vostok.state.os.replace", side_effect=OSError("диск")):
+            with self.assertRaises(OSError):
+                df.save([Device("k3", "c.config", "usb")])
+        self.assertEqual(p.read_text(encoding="utf-8"), "k2\tb.config\tcan\n")
+        self.assertEqual([x.name for x in p.parent.iterdir()], ["devices.tsv"])
+
     def test_flashed_get_same_as_awk(self):
         p = self.dir / "flashed.tsv"
         p.write_text("a\t1\nb\t2\na\t3\nc\t\nd\n\n", encoding="utf-8")

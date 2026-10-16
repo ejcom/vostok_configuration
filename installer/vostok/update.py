@@ -12,7 +12,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 import time
 import urllib.parse
@@ -756,6 +755,16 @@ class Updater:
     # ---- main
 
     def run(self) -> int:
+        """Основной сценарий; при любой ошибке после остановки Klipper напоминает, как его запустить."""
+        try:
+            return self._run()
+        except Exception:
+            if self.klipper_stopped:
+                sys.stderr.write("Klipper остановлен. После устранения проблемы запустите обновление снова или: "
+                                 "sudo systemctl start klipper\n")
+            raise
+
+    def _run(self) -> int:
         c, o = self.cfg, self.opts
         # В bash аргументы к этому моменту уже сняты (shift), поэтому в журнал попадал пустой список
         ui.log("=== запуск (VOSTOK installer %s):  ===" % read_version(c.install_dir))

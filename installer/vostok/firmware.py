@@ -8,7 +8,6 @@ from __future__ import annotations
 import os
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -23,7 +22,7 @@ def host_version(klipper_dir, runner: Optional[Runner] = None) -> str:
     """Версия хоста: ``git describe --always --tags --long`` в каталоге klipper."""
     runner = runner or Runner()
     cp = runner.run(["git", "-C", str(klipper_dir), "describe", "--always", "--tags", "--long"],
-                    capture=True, check=False)
+                    capture=True, check=False, readonly=True)
     if cp.returncode != 0:
         raise VostokError("git describe в %s не удался" % klipper_dir)
     return (cp.stdout or "").rstrip("\n")
@@ -72,14 +71,9 @@ def _tail(path: Path, n: int) -> None:
     sys.stderr.flush()
 
 
-def _make(argv: List[str], log: Path, append: bool) -> int:
+def _make(runner: Runner, argv: List[str], log: Path, append: bool) -> int:
     """make с выводом (stdout+stderr) в файл; нет make - код 127. Вывод make не идёт на экран (как в bash)."""
-    with open(log, "ab" if append else "wb") as f:
-        try:
-            return subprocess.call(argv, stdout=f, stderr=subprocess.STDOUT)
-        except OSError as e:
-            f.write(("%s: %s\n" % (argv[0], e)).encode())
-            return 127
+    return runner.run(argv, check=False, stdout_file=log, append=append).returncode
 
 
 def build_firmware(cfg, chip: str, *, klipper_dir, build_dir, firmware_dir, built: Dict[str, str],
@@ -89,11 +83,17 @@ def build_firmware(cfg, chip: str, *, klipper_dir, build_dir, firmware_dir, buil
     ``built`` - кэш «конфиг -> bin» (повторно один конфиг не собирается). Сборка вне репозитория:
     KCONFIG_CONFIG и OUT указывают в build_dir/<ключ>. Ошибки - VostokError с теми же текстами, что в bash.
     """
+    runner = runner or Runner()
     cfg = str(cfg)
     key = os.path.basename(cfg)[:-len(".config")] if cfg.endswith(".config") else os.path.basename(cfg)
     if built.get(cfg):
         return built[cfg]
     work = Path(build_dir) / key
+    if runner.dry_run:
+        # dry-run: ни каталогов, ни конфига не трогаем, make только печатается
+        ui.info("[dry-run] сборка %s: make -C %s KCONFIG_CONFIG=%s OUT=%s" % (key, klipper_dir, work / ".config",
+                                                                            work / "out") + "/")
+        return str(Path(firmware_dir) / ("%s-%s.bin" % (key, host_version(klipper_dir, runner))))
     out = str(work / "out") + "/"
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True, exist_ok=True)
@@ -102,13 +102,13 @@ def build_firmware(cfg, chip: str, *, klipper_dir, build_dir, firmware_dir, buil
     ui.info("сборка %s ..." % key)
     log = work / "make.log"
     mk = ["make", "-C", str(klipper_dir), "KCONFIG_CONFIG=%s" % (work / ".config"), "OUT=%s" % out]
-    if _make(mk + ["olddefconfig"], log, append=False) != 0:
+    if _make(runner, mk + ["olddefconfig"], log, append=False) != 0:
         _tail(log, 20)
         raise VostokError("make olddefconfig (%s) не удался" % key)
     cfg_mcu = config_mcu(work / ".config")
     if cfg_mcu != chip:
         raise VostokError("конфиг %s собирает CONFIG_MCU=%s, а устройству нужен %s" % (cfg, cfg_mcu, chip))
-    if _make(mk + ["-j%d" % cpu_count()], log, append=True) != 0:
+    if _make(runner, mk + ["-j%d" % cpu_count()], log, append=True) != 0:
         _tail(log, 30)
         raise VostokError("сборка %s не удалась, лог: %s" % (key, log))
     binpath = Path(out) / "klipper.bin"

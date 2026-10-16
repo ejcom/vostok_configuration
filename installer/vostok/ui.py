@@ -104,7 +104,7 @@ def have_tty() -> bool:
 
 def need_tty() -> None:
     """Требует читаемый /dev/tty, иначе VostokError «нужен терминал: …»."""
-    if not os.access("/dev/tty", os.R_OK):
+    if not have_tty():
         raise VostokError("нужен терминал: установка просит переключать платы и нажимать Enter")
 
 
@@ -162,7 +162,7 @@ def confirm(q: str, need: bool = True) -> bool:
     Нет терминала: need=True - VostokError «нет терминала для подтверждения, используйте -y», иначе False."""
     if opts.yes:
         return True
-    if not os.access("/dev/tty", os.R_OK):
+    if not have_tty():
         if need:
             raise VostokError("нет терминала для подтверждения, используйте -y")
         return False

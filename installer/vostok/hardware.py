@@ -8,21 +8,20 @@ from __future__ import annotations
 import os
 import re
 import shutil
-import subprocess
 import time
 from typing import List, Optional, Tuple
+
+from .system import Runner
 
 # usb-Klipper_<чип>_<серийный номер>-if00 (как sed в bash: чип жадный, серийный без "_")
 _BYID_RE = re.compile(r"^usb-Klipper_(.*)_([^_]*)-if[0-9]*$")
 
 
-def run_quiet(argv: List[str]) -> Tuple[int, str]:
-    """Запустить команду без вывода ошибок на экран (``2>/dev/null``): (код, stdout).
-    Нет программы - код 127. Отдельно от system.Runner.run, потому что тот не умеет глушить stderr."""
-    try:
-        cp = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, universal_newlines=True)
-    except OSError:
-        return 127, ""
+def run_quiet(argv: List[str], runner: Optional[Runner] = None) -> Tuple[int, str]:
+    """Запрос состояния без вывода ошибок на экран (``2>/dev/null``): (код, stdout). Нет программы - код 127.
+    Выполняется и в dry-run (readonly), потому что ничего не меняет."""
+    runner = runner or Runner()
+    cp = runner.run(argv, quiet=True, capture=True, check=False, readonly=True)
     return cp.returncode, cp.stdout or ""
 
 
@@ -64,9 +63,9 @@ def can_iface_exists(iface: str) -> bool:
     return run_quiet(["ip", "link", "show", iface])[0] == 0
 
 
-def ifup(iface: str) -> None:
-    """``sudo -n ifup <iface>`` без вывода; результат игнорируется (как в bash)."""
-    run_quiet(["sudo", "-n", "ifup", iface])
+def ifup(iface: str, runner: Optional[Runner] = None) -> None:
+    """``sudo -n ifup <iface>`` без вывода; результат игнорируется (как в bash). В dry-run только печатается."""
+    (runner or Runner()).run(["sudo", "-n", "ifup", iface], quiet=True, check=False)
 
 
 def have_ip() -> bool:

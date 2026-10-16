@@ -32,4 +32,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     except KeyboardInterrupt:
         sys.stderr.write("\n")
         return 130
+    except Exception as e:     # непредвиденная ошибка (диск полон, права): сообщение вместо traceback, подробности в журнал
+        import traceback
+        ui.error("%s: %s" % (type(e).__name__, e))
+        ui.log(traceback.format_exc().rstrip("\n"))
+        return 1
     return 0 if rc is None else int(rc)

@@ -997,11 +997,7 @@ KIAUH: install fluidd --install-config
   2. Прошивки собираются из <INSTALL>/configs и <INSTALL>/configs/katapult
 
 == Octopus Pro v1.1 H723 ==
-Как прошить Octopus Pro v1.1 H723?
-  1) katapult и Klipper сразу по DFU (рекомендуется)
-  2) katapult по DFU, затем Klipper через katapult
-<INSTALL>/lib/vostok_config.sh: line 53: /dev/tty: No such device or address
-<INSTALL>/lib/vostok_config.sh: line 54: ans: unbound variable
+ОШИБКА: нужен терминал: установка просит переключать платы и нажимать Enter
 @@@@ CASE install/dry_skip_all
 $ install_vostok.sh --dry-run --main h723 --heads none --alps 0 -y --skip-software --skip-flash --skip-config --skip-button --skip-theme
 # rc=0

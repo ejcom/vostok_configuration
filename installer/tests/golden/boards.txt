@@ -31,26 +31,7 @@ $ configure_vostok.sh --alps 9
 ОШИБКА: --alps: 0, 1 или 2
 $ configure_vostok.sh --printer-data <CASE>/no-such-dir
 # rc=1
-
-== Настройка конфига VOSTOK (версия 1.3a) ==
-Каталог конфига: <CASE>/no-such-dir/config
-
-== Определение подключённых MCU ==
-Устройства в /dev/serial/by-id:
-  <список by-id хоста скрыт нормализацией>
-Устройств в режиме DFU (0483:df11): 0
-Главная плата:
-  1) Mellow FLY-C8 (fly-c8)
-  2) BTT Manta M8P v1.0 (manta-m8p-v1.0)
-  3) BTT Manta M8P v1.1 (manta-m8p-v1.1)
-  4) BTT Manta M8P v2.0 (manta-m8p-v2.0)
-  5) BTT Octopus Pro v1.0 F429 (octopus-pro-f429)
-  6) Octopus Pro F446 (octopus-pro-f446)
-  7) Octopus Pro v1.1 H723 (octopus-pro-h723)
-  8) Fysetc Spider v2.x (spider-v2-f446)
-  9) Fysetc Spider v3.0 F446 (spider-v3-f446)
-  10) Fysetc Spider v3.0 H723 (spider-v3-h723)
-Номер [по умолчанию: Octopus Pro v1.1 H723 (octopus-pro-h723)]: ОШИБКА: нужен терминал: установка просит переключать платы и нажимать Enter
+ОШИБКА: нет каталога <CASE>/no-such-dir (укажите --printer-data)
 @@@@ CASE boards/list_boards
 $ install_vostok.sh --list-boards
 # rc=0

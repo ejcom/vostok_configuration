@@ -235,12 +235,12 @@
 | `warn` | 44 | ui.warn | done |
 | `die` | 45 | ui.die (VostokError; печать в cli.main) | done |
 | `step` | 46 | ui.step | done |
-| `usage` | 48 |  | todo |
+| `usage` | 48 | integrations.USAGE_BUTTON | done |
 | `confirm` | 67 | ui.confirm | done |
 | `run` | 76 | system.Runner.run | done |
-| `render_unit` | 102 |  | todo |
+| `render_unit` | 102 | integrations.FluiddButton.render_unit | done |
 | `can_manage_services` | 114 | system.can_manage_services(allow_sudo=False) | done |
-| `restart_moonraker` | 118 |  | todo |
+| `restart_moonraker` | 118 | integrations.FluiddButton.restart_moonraker (Runner.systemctl) | done |
 
 ## install_fluidd_theme.sh
 
@@ -251,14 +251,14 @@
 | `warn` | 39 | ui.warn | done |
 | `die` | 40 | ui.die (VostokError; печать в cli.main) | done |
 | `step` | 41 | ui.step | done |
-| `usage` | 43 |  | todo |
+| `usage` | 43 | integrations.USAGE_THEME | done |
 | `confirm` | 64 | ui.confirm(need=False) | done |
-| `py` | 100 |  | todo |
-| `db_get_theme` | 103 |  | todo |
-| `db_theme_logo` | 111 |  | todo |
-| `is_ours` | 119 |  | todo |
-| `edit_fluidd_cfg` | 122 |  | todo |
-| `preset_json` | 140 |  | todo |
+| `py` | 100 | не нужен (json в stdlib) | done |
+| `db_get_theme` | 103 | integrations.FluiddTheme.db_get_theme (urllib вместо curl) | done |
+| `db_theme_logo` | 111 | integrations.FluiddTheme.db_theme_logo | done |
+| `is_ours` | 119 | integrations.FluiddTheme.is_ours | done |
+| `edit_fluidd_cfg` | 122 | integrations.FluiddTheme.edit_fluidd_cfg | done |
+| `preset_json` | 140 | integrations.FluiddTheme.preset | done |
 
 ## install_klipperscreen_theme.sh
 
@@ -269,12 +269,12 @@
 | `warn` | 41 | ui.warn | done |
 | `die` | 42 | ui.die (VostokError; печать в cli.main) | done |
 | `step` | 43 | ui.step | done |
-| `usage` | 45 |  | todo |
+| `usage` | 45 | integrations.USAGE_KS | done |
 | `confirm` | 63 | ui.confirm(need=False) | done |
-| `py` | 95 |  | todo |
-| `is_ours` | 98 |  | todo |
-| `edit_ks_conf` | 103 |  | todo |
-| `current_theme` | 145 |  | todo |
+| `py` | 95 | не нужен (stdlib) | done |
+| `is_ours` | 98 | integrations.KlipperScreenTheme.is_ours | done |
+| `edit_ks_conf` | 103 | integrations.edit_ks_conf | done |
+| `current_theme` | 145 | integrations.current_ks_theme | done |
 
 ## tools/gen_configs.sh
 
@@ -305,5 +305,5 @@
 | `install_vostok.sh` kiauh_set_fork_repo | `host.py` (A5) | todo |
 | `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1) | done (heredoc в bash пока на месте) |
 | `update_klipper_mcu.sh` json_get/cfg_mcus/cfg_mcu_versions | `update.py` (A2) | todo |
-| `install_fluidd_theme.sh` py -c (db_get_theme, edit_fluidd_cfg, preset_json) | `integrations.py` (A3) | todo |
-| `install_klipperscreen_theme.sh` edit_ks_conf/current_theme | `integrations.py` (A3) | todo |
+| `install_fluidd_theme.sh` py -c (db_get_theme, edit_fluidd_cfg, preset_json) | `integrations.py` (A3) | done |
+| `install_klipperscreen_theme.sh` edit_ks_conf/current_theme | `integrations.py` (A3) | done |

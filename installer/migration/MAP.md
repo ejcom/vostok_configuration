@@ -139,61 +139,61 @@
 | `need_tty` | 29 | ui.need_tty | done |
 | `ask_yn` | 32 | ui.ask_yn | done |
 | `ask_choice` | 43 | ui.ask_choice | done |
-| `prev_keys` | 64 |  | todo |
-| `byid_find` | 71 |  | todo |
-| `dfu_count` | 77 |  | todo |
-| `dfu_family` | 80 |  | todo |
-| `family_name` | 92 |  | todo |
-| `uid_addr` | 104 |  | todo |
-| `dfu_read_uid` | 112 |  | todo |
+| `prev_keys` | 64 | Configurator.prev_keys | done |
+| `byid_find` | 71 | configurator.byid_find | done |
+| `dfu_count` | 77 | configurator.dfu_count | done |
+| `dfu_family` | 80 | configurator.dfu_family | done |
+| `family_name` | 92 |  | todo (только install: A5; hardware.py) |
+| `uid_addr` | 104 |  | todo (только install: A5; hardware.py) |
+| `dfu_read_uid` | 112 |  | todo (только install: A5; hardware.py) |
 | `can_uuid_from_serial` | 126 | can_uuid.can_uuid(bytes.fromhex(serial)) | done |
-| `bridge_usb_serial` | 131 |  | todo |
-| `show_usb_state` | 140 |  | todo |
-| `mb` | 158 |  | todo |
-| `set_main_board` | 161 |  | todo |
-| `main_boards_hint` | 167 |  | todo |
-| `main_board_from_opt` | 177 |  | todo |
-| `print_boards` | 186 |  | todo |
-| `prev_main_board` | 200 |  | todo |
-| `main_candidates` | 214 |  | todo |
-| `ask_board` | 235 |  | todo |
-| `detect_main_board` | 249 |  | todo |
-| `check_main_bridge` | 284 |  | todo |
-| `detect_hardware` | 290 |  | todo |
-| `main_label` | 334 |  | todo |
-| `main_short` | 336 |  | todo |
-| `alps_side` | 337 |  | todo |
-| `head_board_id` | 340 |  | todo |
-| `hb` | 345 |  | todo |
-| `set_head_names` | 346 |  | todo |
-| `head_side` | 352 |  | todo |
-| `head_label` | 353 |  | todo |
-| `head_chip` | 354 |  | todo |
-| `head_cfg_name` | 355 |  | todo |
-| `head_dfu_hint` | 359 |  | todo |
-| `klipper_cfg_for_main` | 361 |  | todo |
-| `katapult_cfg_for_main` | 364 |  | todo |
-| `drv_pick` | 381 |  | todo |
-| `drivers_wizard` | 391 |  | todo |
-| `stock_electronics` | 425 |  | todo |
-| `elec_named_board` | 437 |  | todo |
-| `el_for_board` | 449 |  | todo |
+| `bridge_usb_serial` | 131 |  | todo (только install: A5; hardware.py) |
+| `show_usb_state` | 140 | configurator.show_usb_state | done |
+| `mb` | 158 | Configurator._board_field / Hardware.board.field | done |
+| `set_main_board` | 161 | Hardware.set_main_board (чип - Hardware.main) | done |
+| `main_boards_hint` | 167 | HardwareDetector.main_boards_hint | done |
+| `main_board_from_opt` | 177 | HardwareDetector.board_from_opt | done |
+| `print_boards` | 186 |  | todo (--list-boards install: A5) |
+| `prev_main_board` | 200 | HardwareDetector.prev_main_board | done |
+| `main_candidates` | 214 | HardwareDetector.main_candidates + configurator.rank_main_boards (точка расширения под board_rank) | done |
+| `ask_board` | 235 | HardwareDetector.ask_board | done |
+| `detect_main_board` | 249 | HardwareDetector.detect_main_board | done |
+| `check_main_bridge` | 284 | HardwareDetector.check_main_bridge | done |
+| `detect_hardware` | 290 | HardwareDetector.detect (+ detect_heads, detect_alps) -> Hardware | done |
+| `main_label` | 334 | Hardware.main_label | done |
+| `main_short` | 336 | Hardware.main_short | done |
+| `alps_side` | 337 | Hardware.alps_side | done |
+| `head_board_id` | 340 | Hardware.head_board_id | done |
+| `hb` | 345 | Hardware.head_field | done |
+| `set_head_names` | 346 | Hardware.set_head_names | done |
+| `head_side` | 352 | Hardware.head_side | done |
+| `head_label` | 353 | Hardware.head_label | done |
+| `head_chip` | 354 | Hardware.head_chip | done |
+| `head_cfg_name` | 355 | Hardware.head_cfg_name | done |
+| `head_dfu_hint` | 359 | Hardware.head_dfu_hint | done |
+| `klipper_cfg_for_main` | 361 | Hardware.klipper_cfg | done |
+| `katapult_cfg_for_main` | 364 | Hardware.katapult_cfg | done |
+| `drv_pick` | 381 | Configurator.drv_pick | done |
+| `drivers_wizard` | 391 | Configurator.drivers_wizard | done |
+| `stock_electronics` | 425 | Configurator.stock_electronics | done |
+| `elec_named_board` | 437 | Configurator.elec_named_board | done |
+| `el_for_board` | 449 | Configurator.el_for_board | done |
 | `cfg_state` | 472 | cfgfile.cfg_state | done |
-| `find_reference` | 479 |  | todo |
-| `gen_custom_electronics` | 508 |  | todo |
-| `print_gen_warnings` | 554 |  | todo |
+| `find_reference` | 479 | Configurator.find_reference | done |
+| `gen_custom_electronics` | 508 | Configurator.gen_custom_electronics (-> electronics.Generator) | done |
+| `print_gen_warnings` | 554 | Configurator.print_gen_warnings | done |
 | `merge_mcus_into_cfg` | 577 | cfgfile.merge_mcus (логика и .bak; сообщения info/ok/warn по Result - у вызывающего, A4) | done |
-| `el_matches` | 608 |  | todo |
-| `pick_electronics` | 618 |  | todo |
-| `sync_head_names` | 694 |  | todo |
-| `mcu_blocks` | 708 |  | todo |
-| `local_cfg_root` | 725 |  | todo |
-| `stage_config` | 736 |  | todo |
+| `el_matches` | 608 | Configurator.el_matches | done |
+| `pick_electronics` | 618 | Configurator.pick_electronics (+ _ask_source) | done |
+| `sync_head_names` | 694 | Configurator.sync_head_names | done |
+| `mcu_blocks` | 708 | configurator.mcu_blocks | done |
+| `local_cfg_root` | 725 | Configurator.local_cfg_root | done |
+| `stage_config` | 736 | Configurator.stage_config (+ _config_root, _write_config, _finish_config) | done |
 | `report_pin_conflicts` | 884 | cfgfile.pin_conflicts (вывод предупреждения - у вызывающего, A4) | done |
 | `module_state` | 894 | cfgfile.module_state | done |
-| `module_wanted` | 901 |  | todo |
+| `module_wanted` | 901 | Configurator.module_wanted | done |
 | `module_add_include` | 915 | cfgfile.module_add_include | done |
-| `stage_modules` | 929 |  | todo |
+| `stage_modules` | 929 | Configurator.stage_modules (+ new_module_conflicts) | done |
 
 ## lib/boards.sh
 
@@ -219,12 +219,12 @@
 
 | bash-функция | строка | Python | статус |
 |---|---|---|---|
-| `usage` | 36 |  | todo |
-| `parse_args` | 66 |  | todo |
-| `guess_main_board` | 95 |  | todo |
-| `guess_from_printer_cfg` | 117 |  | todo |
-| `collect_mcu_state` | 138 |  | todo |
-| `main` | 177 |  | todo |
+| `usage` | 36 | configurator.USAGE | done |
+| `parse_args` | 66 | configurator.parse_args | done |
+| `guess_main_board` | 95 | Configurator.guess_main_board (порядок - rank_main_boards) | done |
+| `guess_from_printer_cfg` | 117 | Configurator.guess_from_printer_cfg | done |
+| `collect_mcu_state` | 138 | Configurator.collect_mcu_state | done |
+| `main` | 177 | configurator.main (команда configure) | done |
 
 ## install_fluidd_button.sh
 
@@ -293,7 +293,7 @@
 
 | файл | куда | статус |
 |---|---|---|
-| `tools/gen_electronics.py` | `vostok/electronics.py` (A4) | todo |
+| `tools/gen_electronics.py` | `vostok/electronics.py` (A4): Generator/GenOptions/GenResult, main() с прежними флагами и протоколом NAME/WARN/FILL/EMPTY | done (старый файл пока не тронут) |
 | `tools/mcu_merge.py` | `vostok/cfgfile.py` (A1): list_mcus, merge_mcus, set_canbus_uuid | done (старый файл пока не тронут) |
 | `tools/pin_conflicts.py` | `vostok/cfgfile.py` (A1): pin_conflicts | done (старый файл пока не тронут) |
 | `tools/can_uuid.py` | `vostok/can_uuid.py` (A1, отдельный модуль, не electronics/hardware) | done (старый файл пока не тронут) |
@@ -303,7 +303,7 @@
 | где | куда | статус |
 |---|---|---|
 | `install_vostok.sh` kiauh_set_fork_repo | `host.py` (A5) | todo |
-| `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1) | done (heredoc в bash пока на месте) |
+| `lib/vostok_config.sh` stage_config (правка printer.cfg) | `cfgfile.rewrite_printer_cfg` / `rewrite_printer_text` (A1), вызывается из `Configurator._write_config` (A4) | done (heredoc в lib/vostok_config.sh остаётся для install_vostok.sh до A5) |
 | `update_klipper_mcu.sh` json_get/cfg_mcus/cfg_mcu_versions | `update.py` (A2) | todo |
 | `install_fluidd_theme.sh` py -c (db_get_theme, edit_fluidd_cfg, preset_json) | `integrations.py` (A3) | todo |
 | `install_klipperscreen_theme.sh` edit_ks_conf/current_theme | `integrations.py` (A3) | todo |

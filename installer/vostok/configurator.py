@@ -12,7 +12,6 @@ dry-run, как в bash.
 from __future__ import annotations
 
 import glob
-import io
 import os
 import re
 import shutil
@@ -23,7 +22,7 @@ import time
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from . import INSTALL_DIR, VostokError, cfgfile, ui
 from .boards import Board, Registry, registry as default_registry

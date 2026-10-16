@@ -1019,7 +1019,7 @@ class TestWrapper(unittest.TestCase):
 
     def test_wrapper_is_thin(self):
         text = (INSTALLER / "configure_vostok.sh").read_text(encoding="utf-8")
-        self.assertIn('PYTHONPATH="$INSTALL_DIR" exec python3 -m vostok configure "$@"', text)
+        self.assertIn('PYTHONPATH="$INSTALL_DIR${PYTHONPATH:+:$PYTHONPATH}" PYTHONDONTWRITEBYTECODE=1 exec python3 -m vostok configure "$@"', text)
         self.assertNotIn("python3 -I", text)
         self.assertLess(len(text.splitlines()), 30)
 

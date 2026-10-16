@@ -4,8 +4,10 @@
 """
 import contextlib
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -1002,7 +1004,32 @@ class TestLoader(unittest.TestCase):
         for bad in ("source ", "lib/", "update_klipper_mcu.sh", "vostok_config.sh", "BASH_SOURCE[0]\" == "):
             self.assertNotIn(bad, text, bad)
         self.assertTrue(os.access(INSTALLER / "install_vostok.sh", os.X_OK))
-        self.assertIn('PYTHONPATH="$INSTALL_DIR" PYTHONDONTWRITEBYTECODE=1 exec python3 -m vostok install "$@"', text)
+        self.assertIn('PYTHONPATH="$INSTALL_DIR${PYTHONPATH:+:$PYTHONPATH}" PYTHONDONTWRITEBYTECODE=1 exec python3 -m vostok install "$@"', text)
+
+
+class TestThinWrappers(unittest.TestCase):
+    """Тонкие обёртки *.sh: единый вид (проверка python3, PYTHONPATH с сохранением чужого, без .pyc)."""
+
+    WRAPPERS = {"configure_vostok.sh": "configure", "update_klipper_mcu.sh": "update", "install_fluidd_button.sh": "button",
+                "install_fluidd_theme.sh": "theme", "install_klipperscreen_theme.sh": "ks-theme"}
+
+    def test_uniform_text(self):
+        for name, sub in self.WRAPPERS.items():
+            text = (INSTALLER / name).read_text(encoding="utf-8")
+            self.assertIn("command -v python3", text, name)
+            self.assertIn('PYTHONPATH="$INSTALL_DIR${PYTHONPATH:+:$PYTHONPATH}"', text, name)
+            self.assertIn("PYTHONDONTWRITEBYTECODE=1", text, name)
+            self.assertIn('python3 -m vostok %s "$@"' % sub, text, name)
+
+    def test_no_python3_gives_russian_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            for tool in ("dirname", "readlink"):
+                os.symlink(shutil.which(tool), os.path.join(d, tool))
+            for name in self.WRAPPERS:
+                r = subprocess.run([shutil.which("bash"), str(INSTALLER / name), "--help"], env={"PATH": d},
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                self.assertEqual(r.returncode, 1, name)
+                self.assertIn("ОШИБКА: нужен python3", r.stderr, name)
 
 
 if __name__ == "__main__":

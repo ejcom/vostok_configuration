@@ -57,4 +57,4 @@ if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' 2
     exit 1
 fi
 
-PYTHONPATH="$INSTALL_DIR" PYTHONDONTWRITEBYTECODE=1 exec python3 -m vostok install "$@"
+PYTHONPATH="$INSTALL_DIR${PYTHONPATH:+:$PYTHONPATH}" PYTHONDONTWRITEBYTECODE=1 exec python3 -m vostok install "$@"

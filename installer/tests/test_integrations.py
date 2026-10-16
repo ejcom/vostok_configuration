@@ -574,5 +574,13 @@ class ButtonTest(Base):
         self.assertEqual(self.runner.calls, [])
 
 
+class TestHttpRequest(unittest.TestCase):
+    def test_http_exception_gives_none(self):
+        import http.client
+        for exc in (http.client.BadStatusLine("x"), http.client.IncompleteRead(b""), OSError("x")):
+            with mock.patch.object(ig.urllib.request, "urlopen", side_effect=exc):
+                self.assertIsNone(ig.http_request("GET", "http://127.0.0.1:1/x"))
+
+
 if __name__ == "__main__":
     unittest.main()

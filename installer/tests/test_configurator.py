@@ -789,6 +789,37 @@ class TestStageConfig(Base):
         self.assertFalse((self.tmp / "escaped.txt").exists())
         self.assertFalse((self.tmp.parent / "escaped.txt").exists())
 
+    def test_tarball_links_are_skipped_with_warning(self):
+        arc = self.tmp / "links.tgz"
+        with tarfile.open(arc, "w:gz") as t:
+            data = b"[a]\n"
+            info = tarfile.TarInfo("top/printer.cfg")
+            info.size = len(data)
+            t.addfile(info, io.BytesIO(data))
+            sym = tarfile.TarInfo("top/fluidd.cfg")
+            sym.type = tarfile.SYMTYPE
+            sym.linkname = "../../etc/passwd"
+            t.addfile(sym)
+            hard = tarfile.TarInfo("top/copy.cfg")
+            hard.type = tarfile.LNKTYPE
+            hard.linkname = "top/printer.cfg"
+            t.addfile(hard)
+        dest = self.tmp / "dest_links"
+        with mock.patch.object(ui, "warn") as warn:
+            cf._fetch_tarball("file://" + str(arc), dest, self.tmp)
+        self.assertEqual(sorted(p.name for p in dest.iterdir()), ["printer.cfg"])
+        msg = warn.call_args[0][0]
+        self.assertIn("пропущено ссылок", msg)
+        self.assertIn("fluidd.cfg", msg)
+        self.assertIn("copy.cfg", msg)
+
+    def test_tarball_http_exception_is_reported(self):
+        import http.client
+        with mock.patch.object(cf.urllib.request, "urlopen", side_effect=http.client.BadStatusLine("x")):
+            with self.assertRaises(VostokError) as cm:
+                cf._fetch_tarball("http://example.invalid/a.tgz", self.tmp / "d", self.tmp)
+        self.assertIn("не удалось скачать", str(cm.exception))
+
     def test_local_cfg_root(self):
         self.assertEqual(self.configurator().local_cfg_root(), ROOT)
         for mode in ("0", "no", "off"):

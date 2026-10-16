@@ -211,6 +211,12 @@ class MoonrakerTest(unittest.TestCase):
         m.ok = False
         self.assertEqual(m.mcu_sections(), [])
 
+    def test_http_exception_gives_none(self):
+        import http.client
+        m = update.Moonraker(self.url)
+        with mock.patch.object(update.urllib.request, "urlopen", side_effect=http.client.BadStatusLine("x")):
+            self.assertIsNone(m.fetch("/server/info"))
+
     def test_unreachable(self):
         m = update.Moonraker("http://127.0.0.1:1", timeout=1)
         self.assertIsNone(m.fetch("/server/info"))

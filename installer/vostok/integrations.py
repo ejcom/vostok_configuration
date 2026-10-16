@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import glob
+import http.client
 import json
 import os
 import pwd
@@ -146,7 +147,7 @@ def http_request(method: str, url: str, data: Optional[bytes] = None, timeout: f
         req = urllib.request.Request(url, data=data, method=method, headers=headers)
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.read()
-    except (urllib.error.URLError, OSError, ValueError):
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException):
         return None
 
 

@@ -12,6 +12,7 @@ dry-run, как в bash.
 from __future__ import annotations
 
 import glob
+import http.client
 import os
 import re
 import shutil
@@ -450,18 +451,27 @@ def _fetch_tarball(url: str, dest_root: Path, workdir: Path) -> None:
     try:
         with urllib.request.urlopen(url, timeout=60) as resp, open(tarball, "wb") as out:
             shutil.copyfileobj(resp, out)
-    except (OSError, ValueError) as e:     # URLError, HTTPError, таймаут - подклассы OSError
+    except (OSError, ValueError, http.client.HTTPException) as e:     # URLError, HTTPError, таймаут - подклассы OSError
         ui.log("загрузка %s: %s" % (url, e))
         raise VostokError("не удалось скачать %s" % url)
     dest_root.mkdir(parents=True, exist_ok=True)
     try:
+        links = []
         with tarfile.open(tarball, "r:*") as tar:
             for m in tar.getmembers():
                 parts = [p for p in m.name.split("/") if p not in ("", ".")]
-                if len(parts) < 2 or ".." in parts or not (m.isfile() or m.isdir()):
-                    continue          # верхний каталог архива, небезопасные пути и ссылки пропускаются
+                if len(parts) < 2 or ".." in parts:
+                    continue          # верхний каталог архива и небезопасные пути пропускаются
+                if m.issym() or m.islnk():
+                    links.append("/".join(parts[1:]))    # ссылки не создаём (могут вести за пределы каталога)
+                    continue
+                if not (m.isfile() or m.isdir()):
+                    continue
                 m.name = "/".join(parts[1:])
                 tar.extract(m, str(dest_root))
+        if links:
+            shown = ", ".join(links[:5]) + (" и ещё %d" % (len(links) - 5) if len(links) > 5 else "")
+            ui.warn("в архиве конфигурации пропущено ссылок (символических/жёстких): %d (%s); они не созданы" % (len(links), shown))
     except (tarfile.TarError, OSError, EOFError):
         raise VostokError("не удалось распаковать конфигурацию")
 

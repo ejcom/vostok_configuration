@@ -74,7 +74,7 @@ How to add your own board: [build-configs.en.md](build-configs.en.md#how-to-add-
 | `install_klipperscreen_theme.sh`, `klipperscreen-theme/` | K3D VOSTOK theme for KlipperScreen: `style.css`, `style.conf`, K3D mark, Tektur font |
 | `vostok/` | the Python package with all installer logic (stdlib only, Python 3.8+); the `*.sh` files in the root are thin wrappers over `python3 -m vostok <command>` |
 | `templates/` | blank electronics config without boards and drivers (`electronics_blank.cfg`), board presets (`boards/`) and driver presets (`drivers/`) |
-| `tools/` | `gen_electronics.py` (electronics config generator), `mcu_merge.py` (adds `[mcu]` sections, `--set` for `canbus_uuid`), `can_uuid.py` (canbus_uuid from the chip UID), `pin_conflicts.py` (finds duplicated pins); `mcu_merge.py`, `pin_conflicts.py`, `can_uuid.py` and `gen_electronics.py` are wrappers over the `vostok/` modules, `gen_configs.py` (firmware build configs from the `boards/` registry) |
+| `tools/` | `gen_electronics.py` (electronics config generator; a wrapper over `vostok/electronics.py`), `gen_configs.py` (firmware build configs from the `boards/` registry) |
 | `boards/` | board registry: one `<id>.board` file per board (build parameters, labels, DFU hints, whether verified on hardware) |
 | `tests/` | unit tests (`python3 -m unittest discover tests`) and golden output references (`tests/run_golden.sh`) |
 | `configs/` | Klipper and katapult build configs |

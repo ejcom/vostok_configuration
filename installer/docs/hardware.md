@@ -74,7 +74,7 @@ Katapult у всех плат пишется по DFU с 0x08000000. USB у вс
 | `install_klipperscreen_theme.sh`, `klipperscreen-theme/` | тема K3D VOSTOK для KlipperScreen: `style.css`, `style.conf`, знак K3D, шрифт Tektur |
 | `vostok/` | Python-пакет, в котором работает вся логика установщика (stdlib, Python 3.8+); `*.sh` в корне - тонкие обёртки над `python3 -m vostok <команда>` |
 | `templates/` | шаблон конфига электроники без плат и драйверов (`electronics_blank.cfg`), пресеты плат (`boards/`) и драйверов (`drivers/`) |
-| `tools/` | `gen_electronics.py` (генерация конфига электроники), `mcu_merge.py` (дописывание `[mcu]`, `--set` для `canbus_uuid`), `can_uuid.py` (canbus_uuid по UID чипа), `pin_conflicts.py` (поиск повторяющихся пинов); `mcu_merge.py`, `pin_conflicts.py`, `can_uuid.py`, `gen_electronics.py` - обёртки над модулями `vostok/`, `gen_configs.py` (конфиги сборки прошивок по реестру `boards/`) |
+| `tools/` | `gen_electronics.py` (генерация конфига электроники; обёртка над `vostok/electronics.py`), `gen_configs.py` (конфиги сборки прошивок по реестру `boards/`) |
 | `boards/` | реестр плат: по файлу `<id>.board` на плату (параметры сборки, подписи, подсказки DFU, проверена ли на железе) |
 | `tests/` | юнит-тесты (`python3 -m unittest discover tests`) и golden-эталоны вывода (`tests/run_golden.sh`) |
 | `configs/` | конфиги сборки Klipper и katapult |

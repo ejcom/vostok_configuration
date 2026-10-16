@@ -372,37 +372,3 @@ def atomic_write(path, text: str, backup: bool = True) -> Optional[Path]:
             pass
         raise
     return bak
-
-
-# ------------------------------------------------------------------ командная строка (tools/mcu_merge.py, tools/pin_conflicts.py)
-
-def mcu_merge_main(argv: List[str]) -> int:
-    """CLI прежнего tools/mcu_merge.py (argv без имени программы):
-    ``printer.cfg blocks.txt [--dry]`` | ``printer.cfg --list`` | ``printer.cfg --set ИМЯ UUID [--force]``.
-    Вывод - строки Result.line() (поля через TAB); .bak не создаётся, как у прежнего скрипта."""
-    import sys
-    if len(argv) > 3 and argv[1] == "--set":
-        print(set_canbus_uuid(argv[0], argv[2], argv[3], force="--force" in argv[4:], backup=False).line())
-        return 0
-    if len(argv) > 1 and argv[1] == "--list":
-        for n, key, val in list_mcus(argv[0]):
-            print("%s\t%s\t%s" % (n, key, val))
-        return 0
-    if len(argv) < 2:
-        sys.stderr.write("использование: mcu_merge.py printer.cfg blocks.txt [--dry] | --list | --set ИМЯ UUID [--force]\n")
-        return 2
-    blocks = _read_text(argv[1])
-    for r in merge_mcus(argv[0], blocks, dry="--dry" in argv[2:], backup=False):
-        print(r.line())
-    return 0
-
-
-def pin_conflicts_main(argv: List[str]) -> int:
-    """CLI прежнего tools/pin_conflicts.py: ``printer.cfg``; по строке CONFLICT на пин, занятый несколькими секциями."""
-    import sys
-    if not argv:
-        sys.stderr.write("использование: pin_conflicts.py printer.cfg\n")
-        return 2
-    for r in pin_conflicts(argv[0]):
-        print(r.line())
-    return 0

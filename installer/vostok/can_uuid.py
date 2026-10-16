@@ -13,8 +13,7 @@ SEED = 0xA16231A7
 
 USAGE = """Вычисляет canbus_uuid платы Klipper/katapult по UID чипа STM32 (12 байт).
 
-Запуск: python3 -I can_uuid.py --uid-hex 0123456789ABCDEF01234567
-        python3 -I can_uuid.py --uid-file файл_с_12_байтами
+Запуск: см. main(): --uid-hex 0123456789ABCDEF01234567 | --uid-file файл_с_12_байтами
 Печатает 12 hex-символов (canbus_uuid). Код возврата 1 - UID некорректен.
 
 Алгоритм как в прошивке (src/generic/canserial.c, canserial_set_uuid):
@@ -55,7 +54,7 @@ def can_uuid(uid: bytes) -> str:
 
 
 def main(argv: Sequence[str]) -> int:
-    """CLI как у tools/can_uuid.py: ``--uid-hex HEX`` | ``--uid-file ФАЙЛ``. argv[0] - имя программы."""
+    """CLI (бывший tools/can_uuid.py): ``--uid-hex HEX`` | ``--uid-file ФАЙЛ``. argv[0] - имя программы."""
     if len(argv) != 3 or argv[1] not in ("--uid-hex", "--uid-file"):
         print(USAGE, file=sys.stderr)
         return 2

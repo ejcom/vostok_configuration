@@ -1,4 +1,4 @@
-"""Тесты vostok.can_uuid: векторы из C-реализации (lib/fast-hash из Klipper); tools/can_uuid.py - обёртка над ним."""
+"""Тесты vostok.can_uuid: векторы из C-реализации (lib/fast-hash из Klipper)."""
 import contextlib
 import io
 import os

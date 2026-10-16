@@ -12,7 +12,7 @@ Tested only in `--dry-run` and on copies of the config directory: generating the
 
 **Boards not verified on hardware:** mainboards: Octopus Pro F446, Octopus Pro v1.0 F429, Manta M8P v1.0 / v1.1 / v2.0, Spider v3.0 H723, Spider v3.0 F446, Spider v2.x, FLY-C8; toolhead boards: Fysetc H36 v1.3 and v2, BTT EBB42. Only the Octopus Pro v1.1 H723 and ALPS are verified.
 
-**The new registry boards** (Octopus Pro F429, Manta M8P v1.0/v1.1/v2.0, Spider v3.0 H723/F446, Spider v2.x, FLY-C8) have not been tested on hardware at all. Only host-side checks were done: building their Klipper and katapult configs (`tools/gen_configs.sh --check --build`), `--dry-run`, and choosing parameters from the manufacturers' documentation. Not tested on hardware:
+**The new registry boards** (Octopus Pro F429, Manta M8P v1.0/v1.1/v2.0, Spider v3.0 H723/F446, Spider v2.x, FLY-C8) have not been tested on hardware at all. Only host-side checks were done: building their Klipper and katapult configs (`tools/gen_configs.py --check --build`), `--dry-run`, and choosing parameters from the manufacturers' documentation. Not tested on hardware:
 
 - entering DFU (BOOT/BT0 buttons, the Spider v2.x jumper, `fly-flash` and the FLY-C8 DIP switches) and the whole katapult and Klipper flashing;
 - Option Bytes family detection for F4 and G0/G4, and telling apart boards that share a chip (H723: Octopus, Manta v2.0, Spider v3.0);

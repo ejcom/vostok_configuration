@@ -4,6 +4,15 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.4 — 2026-10-16
+
+The installer was ported from bash to Python 3.8+ (standard library only). Commands, flags, environment variables, output texts, exit codes and file formats (`devices.tsv`, `*.board`, build configs) are unchanged: `install_vostok.sh`, `configure_vostok.sh`, `update_klipper_mcu.sh`, `install_fluidd_button.sh`, `install_fluidd_theme.sh` and `install_klipperscreen_theme.sh` remain the entry points and now run `python3 -m vostok <command>`.
+
+- All logic lives in the `vostok/` package; `lib/vostok_config.sh` and `lib/boards.sh` are removed. `tools/gen_configs.sh` is replaced by `tools/gen_configs.py` (same `--force`, `--board`, `--check`, `--build` options, same 36 configs); `tools/gen_electronics.py`, `mcu_merge.py`, `pin_conflicts.py` and `can_uuid.py` keep their path and arguments but are now wrappers over `vostok/`.
+- Added unit tests (`python3 -m unittest discover tests`) and golden output references taken from the old scripts (`tests/run_golden.sh`).
+- Minor differences from 1.3a: Moonraker and the configuration download use `urllib`, `curl` is not called for them; without a terminal and without `-y` a question immediately gives `ОШИБКА: нужен терминал…` instead of bash internals (`/dev/tty: No such device`, `ans: unbound variable`), exit code 1 as before; files (`devices.tsv`, `moonraker.asvc`, `mcu_update.cfg`, themes) are written atomically; a failed external command or an unexpected error gives one `ОШИБКА: …` line instead of aborting the script or a traceback; `flash_can` looks for the bridge's katapult in `BYID_DIR` instead of a hard-coded `/dev/serial/by-id`; the configurator's temporary directory is always removed; the "bash 4.4+" check is gone.
+- `python3` 3.8 or newer is required (Debian 11 has it); other requirements are unchanged.
+
 ## 1.3a — 2026-10-15
 
 - Configurator: main-board pin presets in `templates/boards/main/` (`octopus_pro_v1.0`, `manta_m8p_v1.0`, `manta_m8p_v1.1`, `manta_m8p_v2.0`); the `TEMPLATE` field of a `.board` file points at the preset and `tools/gen_configs.sh --check` verifies the file exists. For these boards `gen_electronics.py --template <name>` fills motors, sockets and driver SPI, bed, fans, endstops, probe, hotends (without head boards) and the "equipment → connector" table in the header; blocks carry the СВЕРЬТЕ note. The boards are not verified on hardware. Spider v2.x / v3.0 and FLY-C8 have no preset: no reliable pin source was found.

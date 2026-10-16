@@ -181,7 +181,7 @@ def build_katapult(cfg, *, katapult_dir, build_dir, runner: Optional[Runner] = N
     work = katapult_work_dir(build_dir, cfg)
     key = katapult_key(cfg)
     if not os.path.isfile(cfg):
-        raise VostokError("нет конфига katapult: %s (создайте: tools/gen_configs.sh)" % cfg)
+        raise VostokError("нет конфига katapult: %s (создайте: tools/gen_configs.py)" % cfg)
     binpath = work / "out" / "katapult.bin"
     if runner.dry_run:
         ui.info("[dry-run] сборка katapult (%s)" % key)

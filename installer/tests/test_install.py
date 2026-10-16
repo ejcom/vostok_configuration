@@ -86,7 +86,8 @@ class TestParseArgs(Base):
         self.assertIsNone(self.parse("-h"))
         self.assertTrue(self.out.getvalue().startswith("Использование: install_vostok.sh [опции]\n"))
         self.assertIsNone(self.parse("--main", "bogus", "-V"))        # проверки значений - после цикла, версия раньше
-        self.assertIn("VOSTOK installer 1.3a", self.out.getvalue())
+        version = (Path(INSTALLER) / "VERSION").read_text(encoding="utf-8").strip()
+        self.assertIn("VOSTOK installer " + version, self.out.getvalue())
         self.assertIsNone(self.parse("--heads", "bogus", "--list-boards"))
         t = self.out.getvalue()
         self.assertIn("id                   chip         can  ok   название [роль] (алиасы)", t)

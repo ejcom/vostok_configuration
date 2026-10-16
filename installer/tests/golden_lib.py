@@ -17,7 +17,8 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
-INSTALLER_SRC = os.path.dirname(TESTS_DIR)           # реальный installer/ (исходник для копии)
+GOLDEN_VERSION = "1.3a"                               # версия, с которой сняты эталоны (VERSION в песочнице)
+INSTALLER_SRC = os.path.dirname(TESTS_DIR)          # реальный installer/ (исходник для копии)
 FIXTURES = os.path.join(TESTS_DIR, "fixtures")
 GOLDEN_DIR = os.path.join(TESTS_DIR, "golden")
 
@@ -177,6 +178,9 @@ class Sandbox:
         ign = shutil.ignore_patterns("tests", "migration", "__pycache__", "build", "firmware",
                                      "devices.tsv", ".DS_Store", "*.pyc")
         shutil.copytree(INSTALLER_SRC, self.install, ignore=ign, symlinks=True)
+        # эталоны сняты с bash 1.3a: номер версии релиза не должен влиять на сравнение вывода
+        with open(os.path.join(self.install, "VERSION"), "w", encoding="utf-8") as f:
+            f.write(GOLDEN_VERSION + "\n")
         self.install_snapshot = self._tree_snapshot(self.install)
 
     def _make_shims(self):

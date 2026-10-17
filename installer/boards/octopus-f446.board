@@ -1,0 +1,34 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT PINOUT_NOTE NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
+# PINOUT_NOTE - необязательное поле: предупреждение, которое печатается рядом с картинкой (например, пины не совпадают с листом).
+LABEL="BTT Octopus v1.0/v1.1 F446 (не Pro)"
+ROLE="main"
+CHIP="stm32f446xx"
+FAMILY="f4"
+MACH="STM32F446"
+CLOCK="12M"
+APP_OFFSET="8000"
+USB="PA11_PA12"
+CAN="PD0_PD1"
+CAN_KIND="cmenu"
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS=""
+KATAPULT_INITIAL_PINS=""
+KATAPULT_LED=""
+KATAPULT_DOUBLE_RESET="y"
+CFG="octopus-f446"
+ALIASES="octopus-v1.1-f446 octopus-v1.0-f446"
+DFU_HINT="поставьте джампер BOOT0 (J75, рядом с USB-C) и нажмите RESET (после прошивки джампер снять)"
+DFU_HOW="jumper"
+ELEC_PATTERN=""
+TEMPLATE="octopus_pro_v1.0"
+HEAD_NAMES=""
+VERIFIED="no"
+DOC="klipper/config/generic-bigtreetech-octopus-v1.1.cfg; https://github.com/bigtreetech/BIGTREETECH-OCTOPUS-V1.0 (Firmware/DFU Update bootloader, Firmware/Klipper/Images/octopus_pinout.png)"
+PINOUT=""
+PINOUT_NOTE=""
+NOTE="Octopus без Pro: 8 драйверов, пины в Klipper те же, что у Pro v1.0 (пресет octopus_pro_v1.0). Не путать с Octopus Pro v1.1: другие пины нагревателей. CAN: RJ11, RX=PD0/TX=PD1 по картинке распиновки BTT; мост USB-CAN на железе не проверен. Отличия v1.0 и v1.1 (не Pro) в документах BTT не найдены, VOSTOK их не различает. Версия H723 у не-Pro Octopus не подтверждена и не добавлена."

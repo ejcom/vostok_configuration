@@ -72,7 +72,7 @@ class TestParseArgs(Base):
     def test_errors(self):
         cases = [(["--main"], "--main требует аргумент"), (["--h36"], "--h36 требует аргумент"),
                  (["--skip-board"], "--skip-board требует аргумент"), (["--main", "bogus"], "--main: неизвестная плата 'bogus'"),
-                 (["--heads", "x"], "--heads: none, v1.3, v2 или ebb42"),
+                 (["--heads", "x"], "--heads: none, v1.3, v2, ebb42, ebb-gen2, ebb36-v1.0, sht36-v2"),
                  (["--config-source", "x"], "--config-source: standard, user, generate или skip"),
                  (["--main-flash", "x"], "--main-flash: dfu или katapult"), (["--heads-flash", "x"], "--heads-flash: dfu или can"),
                  (["--alps", "3"], "--alps: 0, 1 или 2"), (["--skip-board", "x"], "--skip-board: alps, alps0, alps1, main или heads"),
@@ -82,6 +82,19 @@ class TestParseArgs(Base):
                 self.parse(*args)
             self.assertIn(msg, str(cm.exception), args)
         self.assertIn("Использование: install_vostok.sh [опции]", self.err.getvalue())        # справка к неизвестной опции
+
+    def test_heads_from_registry(self):
+        """--heads: значения из реестра (ROLE=head); старые значения и --h36 как раньше, голова без шаблона - отказ."""
+        for args, want in ((["--heads", "v2"], "v2"), (["--h36", "v1.3"], "v1.3"), (["--heads", "ebb42"], "ebb42"),
+                           (["--heads", "ebb36"], "ebb42"), (["--heads", "none"], "none"), ([], "")):
+            self.assertEqual(self.parse(*args).conf.heads, want, args)
+        for name in ("ebb36-v1.0", "ebb-gen2", "sht36-v2", "sht42"):
+            for opt in ("--heads", "--h36"):
+                with self.assertRaises(VostokError) as cm:
+                    self.parse(opt, name)
+                self.assertIn("нет шаблона электроники", str(cm.exception))
+        with self.assertRaises(VostokError):
+            self.parse("--heads", "alps")          # ALPS - не плата головы
 
     def test_help_version_list_are_immediate(self):
         # опции обрабатываются по порядку: до справки ошибок нет, после - не доходим

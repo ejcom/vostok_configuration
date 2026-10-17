@@ -303,6 +303,27 @@ class DiscoverTest(BaseTest):
             u.discover_mcus()
         self.assertIn("на чипе stm32h723xx бывают разные платы; беру stm32h723xx.config", err.getvalue())
 
+    def test_f446_known_in_devices_tsv_no_warning(self):
+        # F446 после слияния плат 1.7: плат несколько (Octopus Pro, Octopus, LDO, Spider); запись devices.tsv снимает вопрос
+        self.touch("usb-Klipper_stm32f446xx_SER446-if00")
+        (self.d / "devices.tsv").write_text("SER446\tldo-leviathan-v1.2.config\tusb\n", encoding="utf-8")
+        u = self.updater(FakeMoon(ok=False))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            u.discover_mcus()
+        self.assertEqual(os.path.basename(u.mcus[0].cfg), "ldo-leviathan-v1.2.config")
+        self.assertNotIn("бывают разные платы", err.getvalue())
+
+    def test_f446_unknown_serial_warns_and_keeps_chip_config(self):
+        # серийника нет в devices.tsv: как и раньше, берётся конфиг чипа (Octopus Pro), с предупреждением; вопросов нет
+        self.touch("usb-Klipper_stm32f446xx_SER446-if00")
+        u = self.updater(FakeMoon(ok=False))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            u.discover_mcus()
+        self.assertEqual(os.path.basename(u.mcus[0].cfg), "stm32f446xx.config")
+        self.assertIn("на чипе stm32f446xx бывают разные платы; беру stm32f446xx.config", err.getvalue())
+
     def test_print_mcus_table(self):
         self.touch("usb-Klipper_stm32f072xb_S1-if00")
         u = self.updater(FakeMoon(ok=False))

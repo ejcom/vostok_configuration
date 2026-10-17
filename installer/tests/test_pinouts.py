@@ -14,7 +14,10 @@ from vostok import boards  # noqa: E402
 DIR = INSTALL / "pinouts"
 COLUMNS = ["path", "board_id", "source_url", "permalink", "license", "sha256", "size", "note"]
 # Платы без картинки распиновки: официального листа нет (причина - в NOTE платы и в pinouts/README)
-NO_PINOUT = {"alps", "spider-v3-h723"}
+NO_PINOUT = {"alps", "spider-v3-h723",
+             # платы реестра 1.7: лицензия на картинки не указана (смотрите DOC платы)
+             "octopus-f446", "octopus-f429", "octopus-max-ez", "kraken", "ldo-leviathan-v1.2", "fly-super8-pro-h723",
+             "fly-super8", "mks-monster8-v2", "ebb36-v1.0", "ebb-gen2", "sht36-v2"}
 MAX_SIZE = 3 * 1024 * 1024
 EXTRA_FILES = {"SOURCES.tsv", "README.md", "README.en.md"}
 

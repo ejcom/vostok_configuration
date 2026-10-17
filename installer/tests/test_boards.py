@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 INSTALL = os.path.dirname(HERE)
 sys.path.insert(0, INSTALL)
 
-from vostok import boards  # noqa: E402
+from vostok import VostokError, boards  # noqa: E402
 
 GOOD = '''# комментарий
 LABEL="Тестовая плата"
@@ -110,6 +110,42 @@ class BoardsTest(unittest.TestCase):
         for i in r.list("main"):
             want = 0 if i == r.resolve("h723") else (1 if r.get(i).verified == "yes" else 2)
             self.assertEqual(r.rank(i), want, i)
+
+    def test_rank_pro_wins_in_f4_families(self):
+        """Регрессия слияния плат 1.7: по умолчанию в семействах F446/F429 остаётся Octopus Pro, а не Octopus без Pro / LDO."""
+        from vostok import configurator
+        r = boards.registry()
+        self.assertEqual(r.resolve("f446"), "octopus-pro-f446")
+        self.assertEqual(r.resolve("f429"), "octopus-pro-f429")
+        for chip, want in (("stm32f446xx", "octopus-pro-f446"), ("stm32f429xx", "octopus-pro-f429"),
+                           ("stm32h723xx", "octopus-pro-h723")):
+            ids = r.for_chip(chip, "main")
+            self.assertEqual(configurator.rank_main_boards(r, ids)[0], want, chip)
+        f4 = configurator.rank_main_boards(r, r.for_family("f4", "main"))      # выбор по семейству (DFU без by-id)
+        self.assertEqual(f4[0], "octopus-pro-f446")
+        self.assertLess(f4.index("octopus-pro-f429"), f4.index("octopus-f429"))
+        self.assertEqual(r.guide_ids(), ["octopus-pro-h723", "octopus-pro-f446", "octopus-pro-f429"])
+        self.assertIn("octopus-f446", r.for_chip("stm32f446xx", "main"))      # конкуренты в списке есть, но не первые
+        self.assertIn("octopus-f429", r.for_chip("stm32f429xx", "main"))
+
+    def test_head_values_from_registry(self):
+        """--heads: значения берутся из реестра (ROLE=head); старые значения прежние, голова без шаблона - отказ."""
+        r = boards.registry()
+        self.assertEqual(r.head_choices(True), ["v1.3", "v2", "ebb42"])
+        for old in ("v1.3", "v2", "ebb42", "none", "V2"):
+            self.assertEqual(r.head_value(old), old.lower())
+        self.assertEqual(r.head_value("ebb36"), "ebb42")                  # алиас ebb42 (v1.1/v1.2, G0B1)
+        self.assertEqual(r.head_value("h36-v2"), "v2")
+        for bad in ("alps", "octopus-pro-h723", "bogus"):
+            with self.assertRaises(VostokError, msg=bad) as cm:
+                r.head_value(bad)
+            self.assertIn("--heads: none, v1.3, v2, ebb42", str(cm.exception))
+        for name in ("ebb36-v1.0", "ebb-gen2", "sht36-v2", "sht42", "ebb42-gen2"):
+            with self.assertRaises(VostokError, msg=name) as cm:
+                r.head_value(name)
+            self.assertIn("нет шаблона электроники", str(cm.exception))
+        for i in r.head_ids(True):                                         # у голов с шаблоном файл пресета существует
+            self.assertTrue((boards.INSTALL_DIR / "templates/boards" / (r.get(i).template + ".cfg")).is_file(), i)
 
     def test_ebb_alias_and_verified(self):
         r = boards.registry()

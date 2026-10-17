@@ -260,7 +260,7 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 | Опция | Назначение |
 |---|---|
 | `--main <id\|алиас>` | главная плата: любая из реестра `boards/` (`h723`, `f446`, `fly-c8` и др.; список: `install_vostok.sh --list-boards`), иначе определит или спросит |
-| `--heads none\|v1.3\|v2\|ebb42` | платы голов по CAN |
+| `--heads none\|v1.3\|v2\|ebb42` | платы голов по CAN (допустимы id и алиасы голов реестра с шаблоном электроники) |
 | `--alps 0\|1\|2` | число датчиков ALPS |
 | `--config-source standard\|user\|generate\|skip` | источник конфига электроники |
 | `--electronics ФАЙЛ` | конкретный `electronics_*.cfg` (для `standard`/`user`) |
@@ -338,7 +338,7 @@ electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>…][_2x<го
 Как расширять:
 
 - **Новый драйвер**: файл `templates/drivers/tmcNNNN.cfg` и строка в `DRIVER_TYPES`, `DRIVER_FILES`, `DRIVER_TOKEN`, `DRIVER_TITLE` в `vostok/electronics.py`, пункт в `Configurator.drv_pick` в `vostok/configurator.py`.
-- **Новая плата головы**: файл `templates/boards/<имя>.cfg` с блоками `@@T0@@`/`@@T1@@` и `{M}` вместо имени MCU, значение в `--heads` и методы `Hardware.head_*` в `vostok/configurator.py`.
+- **Новая плата головы**: `boards/<id>.board` с `ROLE=head`, файл `templates/boards/<имя>.cfg` с блоками `@@T0@@`/`@@T1@@` и `{M}` вместо имени MCU и его имя в поле `TEMPLATE` платы; значение `--heads` берётся из реестра (код менять не нужно). Без `TEMPLATE` голова не выбирается (ошибка «нет шаблона электроники»).
 - **Новый модуль**: строка `"файл.cfg|Название"` в `CFG_MODULES` (`vostok/configurator.py`) и сам файл в корне репозитория.
 
 Как тестировать, не затрагивая рабочий конфиг: копируйте `~/printer_data` в временный каталог и запускайте с `--printer-data` или `PRINTER_DATA=`. Проверка генератора: запустить `tools/gen_electronics.py` с `--out-dir` для всех сочетаний `--heads` и `--drivers` и разобрать результат `configparser` (как это делает Klipper).

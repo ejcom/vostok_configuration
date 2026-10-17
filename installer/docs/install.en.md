@@ -53,7 +53,7 @@ Do by hand afterwards: check `electronics_*.cfg` against your wiring (for a gene
 |---|---|
 | `--main <id\|alias>` | mainboard: an id from the `boards/` registry or an alias (`h723`, `f446` — Octopus Pro, as before; the others are in the [table](hardware.en.md#mainboards)); otherwise detected/asked |
 | `--list-boards` | print the registry boards (id, chip, USB-CAN bridge, verified on hardware) and exit |
-| `--heads none\|v1.3\|v2\|ebb42` | toolhead boards (`--h36` is the old name) |
+| `--heads none\|v1.3\|v2\|ebb42` | toolhead boards (`--h36` is the old name); the id and aliases of registry toolhead boards (`ROLE=head`) are also accepted, but heads without an electronics template (`ebb36-v1.0`, `ebb-gen2`, `sht36-v2`) are rejected with an error, see [hardware.en.md](hardware.en.md#toolhead-boards) |
 | `--heads-flash dfu\|can` | how to flash toolhead boards: `dfu` — "on the bench", katapult and Klipper over USB without 24 V or CAN (the default, also with `-y`); `can` — katapult over DFU, Klipper over CAN (24 V and CAN cables required) |
 | `--check-can` | after installing the electronics in the printer: read `canbus_uuid` from the CAN bus (24 V required), compare with the computed values, fix `devices.tsv` and `printer.cfg`, restart Klipper; flashes nothing |
 | `--alps 0\|1\|2` | number of ALPS |

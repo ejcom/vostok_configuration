@@ -27,6 +27,7 @@ The web address comes from `VOSTOK_PINOUT_URL` (default `https://github.com/dmit
 | `h36-v1.3` | `Fysetc/H36/v1_3/schematic.pdf` | Fysetc H36 v1.3: a **schematic**, not a pinout image (there is no separate pinout for v1.3) |
 | `fly-c8` | `Mellow/FLY-C8/pinout.jpg` | Mellow FLY-C8 (named `.png` upstream, but it is a JPEG) |
 | `alps` | — | There is no official ALPS pinout: the installer shows `DOC` |
+| `octopus-f446`, `octopus-f429`, `octopus-max-ez`, `kraken`, `ldo-leviathan-v1.2`, `fly-super8-pro-h723`, `fly-super8`, `mks-monster8-v2`, `ebb36-v1.0`, `ebb-gen2`, `sht36-v2` | — | 1.7 boards: the image licence is not stated, so they were not added; the installer shows `DOC` |
 
 ## VOSTOK wiring diagrams
 

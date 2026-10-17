@@ -30,7 +30,7 @@ File names come from the board's `CFG` field: Klipper USB is `configs/<CFG>.conf
    | `ALIASES` | space-separated aliases for `--main` |
    | `DFU_HINT`, `DFU_HOW` | DFU entry hint text; `jumper` or `button` |
    | `ELEC_PATTERN` | part of an `electronics_*.cfg` name that ties a file to the board (empty means no stock config) |
-   | `TEMPLATE` | `octopus_pro` (Octopus pin presets) or empty |
+   | `TEMPLATE` | for a mainboard: `octopus_pro` (Octopus pin presets) or the name of `templates/boards/main/<name>.cfg`; for a toolhead board: the name of `templates/boards/<name>.cfg` (head pin preset); empty means no template, the head cannot be selected with `--heads` |
    | `HEAD_NAMES` | toolhead section names (for `ROLE=head`) |
    | `VERIFIED` | `yes` if verified on hardware, `no` if only from documentation |
    | `DOC`, `NOTE` | data source and a note |

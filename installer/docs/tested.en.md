@@ -12,13 +12,14 @@ Tested only in `--dry-run` and on copies of the config directory: generating the
 
 ## Not tested on hardware
 
-Registry boards: Octopus Pro F446 and F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8. For them only the build of the Klipper and katapult configs (`tools/gen_configs.py --check --build`) and `--dry-run` were checked; the parameters come from the manufacturers' documentation. Specifically not verified:
+Registry boards: Octopus Pro F446 and F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8, and those added in 1.7: the non-Pro Octopus F446 / F429, Octopus Max EZ, Kraken, LDO Leviathan v1.2, FLY Super8 / Super8 Pro H723, MKS Monster8 V2 and the toolhead boards BTT EBB36/42 v1.0, BTT EBB Gen2, FLY SHT36 v2 / SHT42 (these heads cannot be selected with `--heads` yet, they have no electronics template). For them only the build of the Klipper and katapult configs (`tools/gen_configs.py --check --build`) and `--dry-run` were checked; the parameters come from the manufacturers' documentation. Specifically not verified:
 
 - entering DFU (BOOT/BT0 buttons, the Spider v2.x jumper, `fly-flash` and the FLY-C8 DIP switches) and the whole katapult and Klipper flashing;
 - Option Bytes family detection for F4; boards that share a chip (H723: Octopus, Manta v2.0, Spider v3.0) cannot be told apart over DFU, only your choice distinguishes them;
 - the bridge CAN pins: Manta M8P v1.1 PD12/PD13, FLY-C8 PB8/PB9; for the Spider v3.0 F446 PD0/PD1 the documentation does not confirm them;
 - katapult application offsets and double reset; writing katapult over DFU with `mass-erase` wipes the whole flash, including the manufacturer's bootloader (it can only be restored from its `.bin` through the STM32 ROM bootloader; DFU is always available);
 - the assumption that "Fly C6" means the FLY-C8;
+- 1.7 boards: the Super8 Pro chip and crystal (H743 and 8 MHz on the schematic, H723 and 25 MHz in the documentation), the 32KiB bootloader offset of the Monster8 V2 (from a community report), the Kraken having no bridge, the Leviathan driver count, the SHT36 v2 chip variant (F072, APM32F072 or GD32F103), and the DFU procedure and USB-CAN bridge of the Octopus F446/F429 and Max EZ;
 - the configurator's pin presets for the Manta M8P and Octopus Pro F446/F429, and the Octopus Pro connector table pins for heads without toolhead boards on the H723 (taken from the F446 configs): the config is generated from them, but the pins have not been checked against real wiring.
 
 If something does not match your board or you found a bug, open an issue with the log (`~/printer_data/logs/vostok_install.log`) or ask in the Telegram channel [K_3_D](http://t.me/K_3_D), mentioning Dmitry Kostenko.

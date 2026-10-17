@@ -27,6 +27,7 @@
 | `h36-v1.3` | `Fysetc/H36/v1_3/schematic.pdf` | Fysetc H36 v1.3: **принципиальная схема**, а не картинка pinout (отдельного pinout для v1.3 нет) |
 | `fly-c8` | `Mellow/FLY-C8/pinout.jpg` | Mellow FLY-C8 (в репозитории файл назван `.png`, но это JPEG) |
 | `alps` | — | Официальной распиновки ALPS нет: установщик показывает `DOC` |
+| `octopus-f446`, `octopus-f429`, `octopus-max-ez`, `kraken`, `ldo-leviathan-v1.2`, `fly-super8-pro-h723`, `fly-super8`, `mks-monster8-v2`, `ebb36-v1.0`, `ebb-gen2`, `sht36-v2` | — | Платы версии 1.7: лицензия на картинки не указана, они не добавлены; установщик показывает `DOC` |
 
 ## Схемы подключения VOSTOK
 

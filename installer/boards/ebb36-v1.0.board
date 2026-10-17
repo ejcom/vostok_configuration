@@ -1,0 +1,33 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT PINOUT_NOTE NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
+# PINOUT_NOTE - необязательное поле: предупреждение, которое печатается рядом с картинкой (например, пины не совпадают с листом).
+LABEL="BTT EBB36/EBB42 CAN v1.0 (F072)"
+ROLE="head"
+CHIP="stm32f072xb"
+FAMILY="f0"
+MACH="STM32F072"
+CLOCK="8M"
+APP_OFFSET="2000"
+USB=""
+CAN="PB8_PB9"
+CAN_KIND="mmenu"
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS=""
+KATAPULT_INITIAL_PINS=""
+KATAPULT_LED=""
+KATAPULT_DOUBLE_RESET="y"
+CFG="ebb36-v1.0"
+ALIASES="ebb42-v1.0"
+DFU_HINT="зажмите BOOT, нажмите RESET, отпустите BOOT"
+DFU_HOW="button"
+ELEC_PATTERN=""
+TEMPLATE=""
+HEAD_NAMES="T0_EBB,T1_EBB"
+VERIFIED="no"
+DOC="https://github.com/bigtreetech/EBB (каталог EBB CAN V1.0 (STM32F072), EBB36 и EBB42)"
+PINOUT=""
+NOTE="Не проверено на железе. Чип STM32F072 (не G0B1, как у v1.1/v1.2): 8 МГц, USB PA11/PA12, CAN PB8/PB9, загрузчик 8KiB с CanBoot (README bigtreetech/EBB, klipper/config/sample-bigtreetech-ebb-canbus-v1.0.cfg). Вход в DFU BOOT+RESET - по BTT wiki (один источник). Распиновка не включена (лицензия не указана): установщик показывает DOC."

@@ -113,7 +113,7 @@ $ install_vostok.sh --only-detect
 Устройства в /dev/serial/by-id:
   <список by-id хоста скрыт нормализацией>
 Устройств в режиме DFU (0483:df11): 0
-На найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 spider-v3-h723; выбрана octopus-pro-h723 (уточните: --main <id>)
+На найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 fly-super8-pro-h723 kraken octopus-max-ez spider-v3-h723; выбрана octopus-pro-h723 (уточните: --main <id>)
 
 План установки:
   Главная плата: Octopus Pro v1.1 H723, режим: USB

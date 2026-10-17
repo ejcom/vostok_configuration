@@ -70,7 +70,7 @@ Toolhead boards are in the registry too (`ROLE=head`), and `--heads` accepts `no
 | `h36-v1.3` (`v1.3`) | STM32G0B1 | 12 MHz | PB0/PB1 | **yes**, `v1.3` | **yes** |
 | `h36-v2` (`v2`) | STM32G431 | 12 MHz | PB0/PB1 | **yes**, `v2` | **yes** |
 | `ebb42` (`ebb36`) | STM32G0B1 | 8 MHz | PB0/PB1 | **yes**, `ebb42` (`ebb36` selects the same) | **yes** (EBB36) |
-| `ebb36-v1.0` (`ebb42-v1.0`) | STM32F072 | 8 MHz | PB8/PB9 | no: no electronics template (v1.0 pins differ from v1.1/v1.2) | no |
+| `ebb36-v1.0` (`ebb42-v1.0`) | STM32F072 | 8 MHz | PB8/PB9 | yes (since 1.8, `--heads ebb36-v1.0`; endstop and probe pins read from the picture, the installer asks to double-check) | no |
 | `ebb-gen2` (`ebb36-gen2`, `ebb42-gen2`) | STM32G0B1 | 8 MHz | PB12/PB13 | no: no electronics template (Gen2 pins not confirmed) | no |
 | `sht36-v2` (`sht42`, `sht36v2`) | STM32F072 | 8 MHz | PB8/PB9 | no: no electronics template | no |
 

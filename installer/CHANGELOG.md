@@ -6,12 +6,14 @@
 
 ## 1.8 — 2026-10-17
 
-Пресеты пинов конфигуратора для плат, у которых их не было (в работе: сделаны Spider v2.x и Kraken).
+Пресеты пинов конфигуратора для плат, у которых их не было (сделаны Spider v2.x, Kraken, Octopus Max EZ и голова EBB36/42 v1.0).
 
 - Spider v2.2 / v2.3 (`spider-v2-f446`, `templates/boards/main/spider_v2.cfg`): пины моторов и UART/CS из `printer.cfg` Fysetc, экструдер E1, терморезисторы, вентиляторы и разъёмы - с листов pinout. M1..M5 = X, W, Y левый, Y правый, Z; M6/M7 (E2/E3) = экструдеры без голов. У платы нет выхода питания зонда: `[output_pin probe_enable]` остаётся ЗАПОЛНИТЕ.
 - BTT Kraken (`kraken`, `templates/boards/main/kraken.cfg`): пины из `generic-bigtreetech-kraken.cfg` BTT; S1..S5 = X, W, Y левый, Y правый, Z, S6/S7 = экструдеры без голов. Драйвер TMC2160 (`templates/drivers/tmc2160.cfg`, тип `2160` в `--drivers`); для Kraken драйверы заданы платой (`all=2160`, вопросов нет). Новая секция пресета `@@SENSE@@` (мотор: sense_resistor): для S1..S4 0.05 (v1.1; у v1.0 - 0.022, исправьте).
-- Без пресета остались Octopus Max EZ, LDO Leviathan, MKS Monster8 V2, Spider v3.0, FLY-C8, Super8 / Super8 Pro и головы EBB v1.0 / Gen2 / SHT36 v2 (в `--heads` по-прежнему недоступны).
-- Тесты: golden переснятые для `help/*` (`--drivers`), `gen_matrix/*` и `install_matrix/*` по Kraken и Spider v2.x, `gen_matrix/err_bad_args`.
+- Octopus Max EZ (`octopus-max-ez`, `templates/boards/main/octopus_max_ez.cfg`): Motor-1,2,3,5, нагреватели, термисторы, CS/UART - по cfg BTT; слоты Motor-4, 6, 7, концевики MIN1..4 и вентиляторы FAN1..FAN3 прочитаны с картинки pinout (шапка пресета и `NOTE` просят сверить). Питания зонда на листе нет: `probe_enable` остаётся ЗАПОЛНИТЕ.
+- Голова BTT EBB36/EBB42 v1.0 (`ebb36-v1.0`, `templates/boards/ebb36_v1.0.cfg`) теперь доступна в `--heads`: пины экструдера по sample-конфигу BTT, концевик (PC13) и зонд (PA4/PA5) с картинки. Пресет голов может нести строку `# СВЕРЬТЕ: …` в шапке: она добавляется к предупреждению конфигуратора (`Generator.head_warn`); у EBB v1.0 она есть.
+- Без пресета остались LDO Leviathan, MKS Monster8 V2, Spider v3.0, FLY-C8, Super8 / Super8 Pro и головы EBB Gen2 / SHT36 v2 (в `--heads` по-прежнему недоступны; у Gen2 пины EBB36 и EBB42 различаются).
+- Тесты: golden переснятые для `help/*` (`--drivers`), `gen_matrix/*` и `install_matrix/*` по Kraken, Spider v2.x и Octopus Max EZ, `gen_matrix/err_bad_args`, `boards/bad_args` (список `--heads`); новые `test_new_presets_1_8`, `test_head_preset_warning`.
 
 ## 1.7 — 2026-10-17
 

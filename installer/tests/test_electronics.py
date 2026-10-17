@@ -179,6 +179,31 @@ class TestGeneratorState(unittest.TestCase):
         self.assertEqual(res.all_warnings()[0], res.table_warn)
         self.assertIn("ЗАПОЛНИТЕ", res.path.read_text(encoding="utf-8"))
 
+    def test_new_presets_1_8(self):
+        """Пресеты 1.8 (Spider v2.x, Kraken, Octopus Max EZ): пины подставлены, пересечений нет; probe_enable без пина - ЗАПОЛНИТЕ."""
+        for tmpl, name, drv in (("spider_v2", "Fysetc Spider v2", "all=2209"), ("kraken", "BTT Kraken", "all=2160"),
+                                ("octopus_max_ez", "BTT Octopus Max EZ", "all=2209")):
+            _, res = self.gen(template=tmpl, board_name=name, board_file=tmpl, drivers=drv)
+            self.assertEqual([w for w in res.warns if "run_current" not in w], [], tmpl)   # пересечений пинов нет
+            text = res.path.read_text(encoding="utf-8")
+            self.assertEqual(text.count("ЗАПОЛНИТЕ") - 1, 0 if tmpl == "kraken" else 1, tmpl)   # шапка + probe_enable
+        _, res = self.gen(template="kraken", board_name="BTT Kraken", board_file="kraken", drivers="all=2160")
+        text = res.path.read_text(encoding="utf-8")
+        self.assertIn("[tmc2160 stepper motor_x]", text)
+        self.assertRegex(text, r"\[tmc2160 stepper motor_x\][^\[]*sense_resistor: 0\.05")
+        self.assertRegex(text, r"\[tmc2160 stepper motor_z\][^\[]*sense_resistor: 0\.075")
+        self.assertEqual(res.empty, [])
+
+    def test_head_preset_warning(self):
+        """Пресет головы с «# СВЕРЬТЕ:» в шапке добавляет предупреждение к результату; у проверенных голов его нет."""
+        _, res = self.gen(template="octopus_max_ez", board_name="BTT Octopus Max EZ", board_file="octopus_max_ez",
+                          drivers="all=2209", heads="ebb36-v1.0", head_template="ebb36_v1.0", head_names="T0_EBB,T1_EBB")
+        self.assertIn("EBB v1.0", res.table_warn)
+        self.assertIn("T0_EBB:PC13", res.path.read_text(encoding="utf-8"))
+        _, res = self.gen(template="octopus_max_ez", board_name="BTT Octopus Max EZ", board_file="octopus_max_ez",
+                          drivers="all=2209", heads="ebb42", head_template="ebb42", head_names="T0_EBB,T1_EBB")
+        self.assertNotIn("EBB v1.0", res.table_warn)
+
     def test_out_file_name_override(self):
         d = tempfile.mkdtemp()
         self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))

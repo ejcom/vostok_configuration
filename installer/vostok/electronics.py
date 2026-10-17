@@ -400,6 +400,7 @@ class Generator:
         self.sverit = SVERIT_OCTOPUS
         self.mainp: Optional[Dict[str, str]] = None
         self.sense: Dict[str, str] = {}
+        self.head_warn = ""          # предупреждение пресета головы (строка «# СВЕРЬТЕ: …» в шапке)
         self.octopus_heads = opts.octopus_heads
         self.octopus_extruders = opts.octopus_extruders
         self.has_heads = opts.heads != "none"
@@ -493,6 +494,8 @@ class Generator:
             names = o.head_names.split(",")
             preset = self._read_template("boards/%s.cfg" % (o.head_template or ("h36_" + o.heads if o.heads != "ebb42" else "ebb42")))
             parts = re.split(r"^@@T([01])@@\s*$", preset, flags=re.M)
+            m_warn = re.search(r"^# СВЕРЬТЕ: (.+)$", parts[0], flags=re.M)
+            self.head_warn = m_warn.group(1).strip() if m_warn else ""
             # parts: [шапка, '0', текст T0, '1', текст T1]
             for idx in range(1, len(parts), 2):
                 n = int(parts[idx])
@@ -717,6 +720,12 @@ class Generator:
         return out_lines, empty
 
     def _table_warning(self) -> Optional[str]:
+        base = self._main_table_warning()
+        if not self.head_warn:
+            return base
+        return "%s; %s" % (base, self.head_warn) if base else self.head_warn
+
+    def _main_table_warning(self) -> Optional[str]:
         if not (self.sverit_sections or self.filled["octopus"] or self.filled["board"]):
             return None
         secs = [b.name for b in self.blocks if b.note]

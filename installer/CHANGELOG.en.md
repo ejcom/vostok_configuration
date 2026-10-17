@@ -6,12 +6,14 @@ The current version is stored in the `VERSION` file (`-V`/`--version` in every s
 
 ## 1.8 — 2026-10-17
 
-Configurator pin presets for boards that had none (in progress: Spider v2.x and Kraken done).
+Configurator pin presets for boards that had none (done: Spider v2.x, Kraken, Octopus Max EZ and the EBB36/42 v1.0 head).
 
 - Spider v2.2 / v2.3 (`spider-v2-f446`, `templates/boards/main/spider_v2.cfg`): motor and UART/CS pins from Fysetc `printer.cfg`; extruder E1, thermistors, fans and connectors from the pinout sheets. M1..M5 = X, W, Y left, Y right, Z; M6/M7 (E2/E3) = extruders without heads. The board has no probe power output: `[output_pin probe_enable]` stays ЗАПОЛНИТЕ.
 - BTT Kraken (`kraken`, `templates/boards/main/kraken.cfg`): pins from BTT `generic-bigtreetech-kraken.cfg`; S1..S5 = X, W, Y left, Y right, Z, S6/S7 = extruders without heads. TMC2160 driver (`templates/drivers/tmc2160.cfg`, type `2160` in `--drivers`); the board fixes the drivers (`all=2160`, no questions). New preset section `@@SENSE@@` (motor: sense_resistor): 0.05 for S1..S4 (v1.1; v1.0 is 0.022, edit it).
-- Still without presets: Octopus Max EZ, LDO Leviathan, MKS Monster8 V2, Spider v3.0, FLY-C8, Super8 / Super8 Pro and the EBB v1.0 / Gen2 / SHT36 v2 heads (still not selectable with `--heads`).
-- Tests: golden references re-recorded for `help/*` (`--drivers`), `gen_matrix/*` and `install_matrix/*` of Kraken and Spider v2.x, `gen_matrix/err_bad_args`.
+- Octopus Max EZ (`octopus-max-ez`, `templates/boards/main/octopus_max_ez.cfg`): Motor-1,2,3,5, heaters, thermistors, CS/UART from the BTT cfg; slots Motor-4, 6, 7, endstops MIN1..4 and fans FAN1..FAN3 read from the pinout picture (the preset header and `NOTE` ask to double-check). The sheet has no probe power pin: `probe_enable` stays ЗАПОЛНИТЕ.
+- BTT EBB36/EBB42 v1.0 head (`ebb36-v1.0`, `templates/boards/ebb36_v1.0.cfg`) is now selectable with `--heads`: extruder pins from the BTT sample cfg, endstop (PC13) and probe (PA4/PA5) from the picture. A head preset may carry a `# СВЕРЬТЕ: …` header line, which is appended to the configurator warning (`Generator.head_warn`); EBB v1.0 has one.
+- Still without presets: LDO Leviathan, MKS Monster8 V2, Spider v3.0, FLY-C8, Super8 / Super8 Pro and the EBB Gen2 / SHT36 v2 heads (still not selectable with `--heads`; Gen2 pins differ between EBB36 and EBB42).
+- Tests: golden references re-recorded for `help/*` (`--drivers`), `gen_matrix/*` and `install_matrix/*` of Kraken, Spider v2.x and Octopus Max EZ, `gen_matrix/err_bad_args`, `boards/bad_args` (the `--heads` list); new `test_new_presets_1_8`, `test_head_preset_warning`.
 
 ## 1.7 — 2026-10-17
 

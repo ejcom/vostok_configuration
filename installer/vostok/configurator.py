@@ -46,10 +46,12 @@ SRC_LBL_USR = "Пользовательский (user_configs)"
 SRC_LBL_GEN = "Сгенерировать свой конфиг"
 SRC_LBL_SKIP = "Пропустить редактирование конфига"
 
-DRV_LABELS = [("2130", "TMC2130 (SPI)"), ("2208", "TMC2208 (UART)"), ("2209", "TMC2209 (UART)"),
+DRV_LABELS = [("2130", "TMC2130 (SPI)"), ("2160", "TMC2160 (SPI, sense 0.075)"), ("2208", "TMC2208 (UART)"), ("2209", "TMC2209 (UART)"),
               ("2240", "TMC2240 (SPI)"), ("5160", "TMC5160 / 5160T Pro (SPI, sense 0.075)"),
               ("5160plus", "TMC5160T Plus (SPI, sense 0.022)")]
 DRIVER_DEFAULT_SPEC = "x=2240,w=2240,yl=2240,yr=2240,z=2240,e0=2209,e1=2209"
+# Платы со встроенными (неснимаемыми) драйверами: спецификация драйверов задана платой
+DRIVER_BOARD_SPEC = {"kraken": "all=2160"}
 MOTOR_QUESTIONS = {
     "e0": "экструдера T0 (левая голова)", "e1": "экструдера T1 (правая голова)", "x": "мотора X",
     "w": "мотора W (правая голова по X)", "yl": "левого мотора Y", "yr": "правого мотора Y", "z": "мотора Z",
@@ -68,7 +70,7 @@ USAGE = """Использование: configure_vostok.sh [опции]
                         сгенерировать свой (шаблон без плат и драйверов) или пропустить редактирование
                         (только дописать недостающие [mcu] в существующий printer.cfg); иначе спросит
   --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (для standard/user)
-  --drivers СПЕК        драйверы для generate: all=2130|2208|2209|2240|5160|5160plus или список по моторам
+  --drivers СПЕК        драйверы для generate: all=2130|2160|2208|2209|2240|5160|5160plus или список по моторам
                         x=5160,w=5160,yl=5160,yr=5160,z=2209,e0=2209,e1=2209 (иначе спросит; с -y как в стоке)
   --reference ФАЙЛ|none эталон для пинов и параметров. По умолчанию ваш текущий electronics-файл
                         (активный include в printer.cfg), при чистой установке стоковый main (H723).
@@ -670,7 +672,7 @@ class Configurator:
     # --- драйверы и генерация
 
     def drv_pick(self, question: str) -> str:
-        """Тип драйвера по вопросу: 2130|2208|2209|2240|5160|5160plus (по умолчанию 2240)."""
+        """Тип драйвера по вопросу: 2130|2160|2208|2209|2240|5160|5160plus (по умолчанию 2240)."""
         labels = [lbl for _, lbl in DRV_LABELS]
         ans = ui.ask_choice(question, dict(DRV_LABELS)["2240"], labels)
         for kind, lbl in DRV_LABELS:
@@ -682,6 +684,11 @@ class Configurator:
         """Пошаговый выбор драйверов: «все одинаковые» или по каждому мотору. Результат в drivers_spec."""
         if self.opts.drivers:
             self.drivers_spec = self.opts.drivers
+            return
+        fixed = DRIVER_BOARD_SPEC.get(self.hw.board.id)
+        if fixed:
+            self.drivers_spec = fixed
+            ui.info("Драйверы моторов: на %s они встроены и неизменны (%s)." % (self.hw.main_label(), fixed))
             return
         if ui.opts.yes or not ui.have_tty():
             self.drivers_spec = DRIVER_DEFAULT_SPEC

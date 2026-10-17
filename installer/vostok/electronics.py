@@ -51,9 +51,9 @@ DEFAULT_PARAMS = {
     "e1": {"run_current": "0.7", "stealthchop_threshold": "0", "interpolate": "false"},
 }
 PARAM_KEYS = ("run_current", "stealthchop_threshold", "interpolate")
-DRIVER_TYPES = ("2130", "2208", "2209", "2240", "5160", "5160plus")
+DRIVER_TYPES = ("2130", "2160", "2208", "2209", "2240", "5160", "5160plus")
 # Имя файла пресета в templates/drivers/ для каждого типа
-DRIVER_FILES = {"2130": "tmc2130", "2208": "tmc2208", "2209": "tmc2209", "2240": "tmc2240",
+DRIVER_FILES = {"2130": "tmc2130", "2160": "tmc2160", "2208": "tmc2208", "2209": "tmc2209", "2240": "tmc2240",
                 "5160": "tmc5160", "5160plus": "tmc5160t_plus"}
 # Драйверы с малым током: для них предупреждаем, если ток из конфига под TMC2240 слишком велик
 LOW_CURRENT = ("2130", "2208", "2209")
@@ -71,8 +71,8 @@ SVERIT_OCTOPUS = ("# !!! СВЕРЬТЕ СО СВОЕЙ СХЕМОЙ: пины �
 SVERIT_PRESET = ("# !!! СВЕРЬТЕ СО СВОЕЙ СХЕМОЙ: пины подставлены по разъёмам %s из пресета VOSTOK "
                  "(плата не проверена на железе)")
 
-DRIVER_TOKEN = {"2130": "2130", "2208": "2208", "2209": "2209", "2240": "2240", "5160": "5160", "5160plus": "5160tplus"}
-DRIVER_TITLE = {"2130": "tmc2130", "2208": "tmc2208", "2209": "tmc2209", "2240": "tmc2240", "5160": "tmc5160",
+DRIVER_TOKEN = {"2130": "2130", "2160": "2160", "2208": "2208", "2209": "2209", "2240": "2240", "5160": "5160", "5160plus": "5160tplus"}
+DRIVER_TITLE = {"2130": "tmc2130", "2160": "tmc2160", "2208": "tmc2208", "2209": "tmc2209", "2240": "tmc2240", "5160": "tmc5160",
                 "5160plus": "tmc5160 (T Plus)"}
 HEAD_FILE = {"v1.3": "2xH36v1.3", "v2": "2xH36v2.0", "ebb42": "2xebb42"}
 HEAD_TITLE = {"none": "нет (головы подключены к Octopus)", "v1.3": "2x Fysetc H36 v1.3", "v2": "2x Fysetc H36 v2.0",
@@ -399,6 +399,7 @@ class Generator:
         self.table_src = "Octopus Pro"   # плата, по разъёмам которой подставлены пины (для текстов предупреждений)
         self.sverit = SVERIT_OCTOPUS
         self.mainp: Optional[Dict[str, str]] = None
+        self.sense: Dict[str, str] = {}
         self.octopus_heads = opts.octopus_heads
         self.octopus_extruders = opts.octopus_extruders
         self.has_heads = opts.heads != "none"
@@ -439,6 +440,10 @@ class Generator:
             if not re.fullmatch(r"[A-Za-z0-9_.]+", o.template) or not pf.is_file():
                 raise ElectronicsUsageError("нет пресета платы %r (ожидается %s)" % (o.template, pf))
             self.mainp = load_preset(pf.read_text(encoding="utf-8"))
+            # SENSE: «мотор: sense_resistor» для плат со встроенными драйверами (Kraken)
+            self.sense = {k.strip(): v.strip() for k, _, v in
+                          (ln.partition(":") for ln in self.mainp.get("SENSE", "").splitlines()
+                           if ln.strip() and not ln.lstrip().startswith("#"))}
         if o.template == "none" or self.mainp:
             self.octopus_heads = self.octopus_extruders = False
         if self.mainp:
@@ -554,6 +559,9 @@ class Generator:
             for key in PARAM_KEYS:
                 if b.find(key) is None:
                     b.set(key, ["%s: %s" % (key, p[key])])
+            sense = self.sense.get(motor)
+            if sense and b.find("sense_resistor") is not None:
+                b.set("sense_resistor", ["sense_resistor: %s" % sense])
         return drv_blocks, warns
 
     # --- пины моторов и драйверов

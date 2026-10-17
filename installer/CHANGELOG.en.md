@@ -4,6 +4,15 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.8 — 2026-10-17
+
+Configurator pin presets for boards that had none (in progress: Spider v2.x and Kraken done).
+
+- Spider v2.2 / v2.3 (`spider-v2-f446`, `templates/boards/main/spider_v2.cfg`): motor and UART/CS pins from Fysetc `printer.cfg`; extruder E1, thermistors, fans and connectors from the pinout sheets. M1..M5 = X, W, Y left, Y right, Z; M6/M7 (E2/E3) = extruders without heads. The board has no probe power output: `[output_pin probe_enable]` stays ЗАПОЛНИТЕ.
+- BTT Kraken (`kraken`, `templates/boards/main/kraken.cfg`): pins from BTT `generic-bigtreetech-kraken.cfg`; S1..S5 = X, W, Y left, Y right, Z, S6/S7 = extruders without heads. TMC2160 driver (`templates/drivers/tmc2160.cfg`, type `2160` in `--drivers`); the board fixes the drivers (`all=2160`, no questions). New preset section `@@SENSE@@` (motor: sense_resistor): 0.05 for S1..S4 (v1.1; v1.0 is 0.022, edit it).
+- Still without presets: Octopus Max EZ, LDO Leviathan, MKS Monster8 V2, Spider v3.0, FLY-C8, Super8 / Super8 Pro and the EBB v1.0 / Gen2 / SHT36 v2 heads (still not selectable with `--heads`).
+- Tests: golden references re-recorded for `help/*` (`--drivers`), `gen_matrix/*` and `install_matrix/*` of Kraken and Spider v2.x, `gen_matrix/err_bad_args`.
+
 ## 1.7 — 2026-10-17
 
 New boards in the registry (all `VERIFIED="no"`, documentation only) and `--heads` choices taken from the registry.

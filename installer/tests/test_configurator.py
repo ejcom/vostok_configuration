@@ -735,7 +735,7 @@ class TestStageConfig(Base):
         res, out, err = capture(c.stage_config)
         self.assertIsInstance(res, VostokError)
         self.assertEqual(str(res), "не удалось сгенерировать конфиг электроники")
-        self.assertIn("--drivers: драйвер '9999' не из 2130/2208/2209/2240/5160/5160plus", err)
+        self.assertIn("--drivers: драйвер '9999' не из 2130/2160/2208/2209/2240/5160/5160plus", err)
 
     def test_generate_clean_install_uses_stock_reference(self):
         c, out, err = self.run_stage(cf.Options(config_source="generate", drivers="all=5160", modules="none"))

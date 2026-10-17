@@ -245,7 +245,7 @@ class TestHelpers(unittest.TestCase):
         self.assertIn("gen_electronics.py: error: для платы 'nope' нужны --board-name и --board-file", err)
         rc, out, err = run_new(base + ["--drivers", "all=9999"])
         self.assertEqual((rc, out), (1, ""))
-        self.assertEqual(err, "--drivers: драйвер '9999' не из 2130/2208/2209/2240/5160/5160plus\n")
+        self.assertEqual(err, "--drivers: драйвер '9999' не из 2130/2160/2208/2209/2240/5160/5160plus\n")
 
 
 if __name__ == "__main__":

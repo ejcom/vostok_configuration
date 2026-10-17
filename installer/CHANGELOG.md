@@ -4,6 +4,15 @@
 
 Текущая версия записана в файле `VERSION` (`-V`/`--version` у всех скриптов). Описание: [README.md](README.md).
 
+## 1.8 — 2026-10-17
+
+Пресеты пинов конфигуратора для плат, у которых их не было (в работе: сделаны Spider v2.x и Kraken).
+
+- Spider v2.2 / v2.3 (`spider-v2-f446`, `templates/boards/main/spider_v2.cfg`): пины моторов и UART/CS из `printer.cfg` Fysetc, экструдер E1, терморезисторы, вентиляторы и разъёмы - с листов pinout. M1..M5 = X, W, Y левый, Y правый, Z; M6/M7 (E2/E3) = экструдеры без голов. У платы нет выхода питания зонда: `[output_pin probe_enable]` остаётся ЗАПОЛНИТЕ.
+- BTT Kraken (`kraken`, `templates/boards/main/kraken.cfg`): пины из `generic-bigtreetech-kraken.cfg` BTT; S1..S5 = X, W, Y левый, Y правый, Z, S6/S7 = экструдеры без голов. Драйвер TMC2160 (`templates/drivers/tmc2160.cfg`, тип `2160` в `--drivers`); для Kraken драйверы заданы платой (`all=2160`, вопросов нет). Новая секция пресета `@@SENSE@@` (мотор: sense_resistor): для S1..S4 0.05 (v1.1; у v1.0 - 0.022, исправьте).
+- Без пресета остались Octopus Max EZ, LDO Leviathan, MKS Monster8 V2, Spider v3.0, FLY-C8, Super8 / Super8 Pro и головы EBB v1.0 / Gen2 / SHT36 v2 (в `--heads` по-прежнему недоступны).
+- Тесты: golden переснятые для `help/*` (`--drivers`), `gen_matrix/*` и `install_matrix/*` по Kraken и Spider v2.x, `gen_matrix/err_bad_args`.
+
 ## 1.7 — 2026-10-17
 
 Новые платы в реестре (все `VERIFIED="no"`, только по документации) и выбор плат голов в `--heads` из реестра.

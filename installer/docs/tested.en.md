@@ -18,7 +18,6 @@ Registry boards: Octopus Pro F446 and F429, Manta M8P v1.0 / v1.1, Spider v3.0 H
 - Option Bytes family detection for F4; boards that share a chip (H723: Octopus, Manta v2.0, Spider v3.0) cannot be told apart over DFU, only your choice distinguishes them;
 - the bridge CAN pins: Manta M8P v1.1 PD12/PD13, FLY-C8 PB8/PB9; for the Spider v3.0 F446 PD0/PD1 the documentation does not confirm them;
 - katapult application offsets and double reset; writing katapult over DFU with `mass-erase` wipes the whole flash, including the manufacturer's bootloader (it can only be restored from its `.bin` through the STM32 ROM bootloader; DFU is always available);
-- the assumption that "Fly C6" means the FLY-C8;
 - 1.7 boards: the Super8 Pro chip and crystal (H743 and 8 MHz on the schematic, H723 and 25 MHz in the documentation), the 32KiB bootloader offset of the Monster8 V2 (from a community report), the Kraken having no bridge, the Leviathan driver count, the SHT36 v2 chip variant (F072, APM32F072 or GD32F103), and the DFU procedure and USB-CAN bridge of the Octopus F446/F429 and Max EZ;
 - the configurator's pin presets for the Manta M8P and Octopus Pro F446/F429, and the Octopus Pro connector table pins for heads without toolhead boards on the H723 (taken from the F446 configs): the config is generated from them, but the pins have not been checked against real wiring.
 

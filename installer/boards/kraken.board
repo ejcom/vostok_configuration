@@ -1,0 +1,34 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT PINOUT_NOTE NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
+# PINOUT_NOTE - необязательное поле: предупреждение, которое печатается рядом с картинкой (например, пины не совпадают с листом).
+LABEL="BTT Kraken v1.0/v1.1"
+ROLE="main"
+CHIP="stm32h723xx"
+FAMILY="h7"
+MACH="STM32H723"
+CLOCK="25M"
+APP_OFFSET="20000"
+USB="PA11_PA12"
+CAN="PD0_PD1"
+CAN_KIND="cmenu"
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS=""
+KATAPULT_INITIAL_PINS=""
+KATAPULT_LED=""
+KATAPULT_DOUBLE_RESET="y"
+CFG="kraken"
+ALIASES="kraken-v1.0 kraken-v1.1 btt-kraken"
+DFU_HINT="зажмите кнопку BOOT, нажмите RESET, отпустите BOOT"
+DFU_HOW="button"
+ELEC_PATTERN=""
+TEMPLATE=""
+HEAD_NAMES=""
+VERIFIED="no"
+DOC="https://github.com/bigtreetech/BIGTREETECH-Kraken (Firmware/README.md, Firmware/generic-bigtreetech-kraken.cfg, Hardware SCH); https://global.bttwiki.com/Kraken.html"
+PINOUT=""
+PINOUT_NOTE=""
+NOTE="8 встроенных TMC2160 (SPI, 24-60 В), заменить драйвер нельзя: TMC2240/5160 из гайда VOSTOK не применимы. Пресета пинов нет, электроника - пустой шаблон. CAN: трансивер SIT1042 на PD0/PD1 есть на схеме, USB-C на PA11/PA12 есть, режим моста BTT явно не описывает (README даёт USB или CAN в menuconfig); на железе не проверено. У v1.0 и v1.1 пины одинаковы, отличаются Rsense встроенных драйверов (v1.0 S1-S4 0.022; v1.1 S1-S4 0.05, S5-S8 0.075). Загрузчик 128KiB ставится из Firmware/Kraken_H723_bootloader.bin по DFU (0x8000000)."

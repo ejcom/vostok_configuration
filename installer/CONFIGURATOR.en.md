@@ -260,7 +260,7 @@ Example: with heads without toolhead boards the head thermistors sit on `PF4`/`P
 | Option | Purpose |
 |---|---|
 | `--main <id\|alias>` | mainboard: any from the `boards/` registry (`h723`, `f446`, `fly-c8`, etc.; list: `install_vostok.sh --list-boards`), otherwise detected or asked |
-| `--heads none\|v1.3\|v2\|ebb42` | CAN toolhead boards |
+| `--heads none\|v1.3\|v2\|ebb42` | CAN toolhead boards (the id and aliases of registry heads that have an electronics template are accepted) |
 | `--alps 0\|1\|2` | number of ALPS sensors |
 | `--config-source standard\|user\|generate\|skip` | electronics config source |
 | `--electronics FILE` | a specific `electronics_*.cfg` (for `standard`/`user`) |
@@ -338,7 +338,7 @@ The reference (the user's own config) always wins over the preset: the preset on
 How to extend:
 
 - **A new driver**: a file `templates/drivers/tmcNNNN.cfg` and an entry in `DRIVER_TYPES`, `DRIVER_FILES`, `DRIVER_TOKEN`, `DRIVER_TITLE` in `vostok/electronics.py`, an item in `Configurator.drv_pick` in `vostok/configurator.py`.
-- **A new toolhead board**: a file `templates/boards/<name>.cfg` with `@@T0@@`/`@@T1@@` blocks and `{M}` instead of the MCU name, a value for `--heads` and the `Hardware.head_*` methods in `vostok/configurator.py`.
+- **A new toolhead board**: `boards/<id>.board` with `ROLE=head`, a file `templates/boards/<name>.cfg` with `@@T0@@`/`@@T1@@` blocks and `{M}` instead of the MCU name, and that name in the board's `TEMPLATE` field; the `--heads` values come from the registry (no code changes). Without `TEMPLATE` the head cannot be selected (the error says there is no electronics template).
 - **A new module**: an `"file.cfg|Title"` entry in `CFG_MODULES` (`vostok/configurator.py`) and the file itself in the repository root.
 
 How to test without touching the working config: copy `~/printer_data` to a temporary directory and run with `--printer-data` or `PRINTER_DATA=`. To check the generator: run `tools/gen_electronics.py` with `--out-dir` for all combinations of `--heads` and `--drivers` and parse the result with `configparser` (as Klipper does).

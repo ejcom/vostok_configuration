@@ -204,17 +204,18 @@ def do_check(reg, ids, klipper_dir, katapult_dir, tmp, root):
                 print("    " + l)
             bad += 1
     # пресет пинов главной платы (TEMPLATE) должен существовать: octopus_pro - встроенный,
-    # прочие - templates/boards/main/<имя>.cfg
+    # прочие - templates/boards/main/<имя>.cfg; у плат голов (ROLE=head) TEMPLATE - templates/boards/<имя>.cfg
     for i in ids:
         b = reg.get(i)
         t = b.template
         if not t or t == "octopus_pro":
             continue
         n += 1
-        if os.path.isfile(os.path.join(root, "templates", "boards", "main", t + ".cfg")):
+        sub = os.path.join("templates", "boards") if b.role == "head" else os.path.join("templates", "boards", "main")
+        if os.path.isfile(os.path.join(root, sub, t + ".cfg")):
             print("совпадает: пресет пинов %s -> %s" % (i, t))
         else:
-            print("НЕТ ФАЙЛА: templates/boards/main/%s.cfg (TEMPLATE платы %s)" % (t, i))
+            print("НЕТ ФАЙЛА: %s/%s.cfg (TEMPLATE платы %s)" % (sub, t, i))
             bad += 1
     print("проверено: %d, расхождений: %d" % (n, bad))
     return 0 if bad == 0 else 1

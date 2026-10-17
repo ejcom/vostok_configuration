@@ -77,6 +77,8 @@ DRIVER_TITLE = {"2130": "tmc2130", "2208": "tmc2208", "2209": "tmc2209", "2240":
 HEAD_FILE = {"v1.3": "2xH36v1.3", "v2": "2xH36v2.0", "ebb42": "2xebb42"}
 HEAD_TITLE = {"none": "нет (головы подключены к Octopus)", "v1.3": "2x Fysetc H36 v1.3", "v2": "2x Fysetc H36 v2.0",
               "ebb42": "2x BTT EBB42"}
+# Головы, которые были до реестра голов: имена файла/заголовка и значения --heads прежние. Допустимые значения --heads
+# и пресеты (поле TEMPLATE платы с ROLE=head) берутся из реестра; для остальных голов имена строятся по значению.
 HEADS_CHOICES = ("none", "v1.3", "v2", "ebb42")
 
 # Платы со старыми именами файлов (в реестре CFG == CHIP, Octopus Pro): название в шапке и часть имени файла
@@ -329,7 +331,7 @@ def config_name(board_file, heads, groups):
     """Имя файла по образцу user_configs: electronics_<плата>_<N>x<драйвер>[_<N>x<драйвер>][_2x<головы>].cfg"""
     parts = ["electronics", board_file] + ["%dx%s" % (n, DRIVER_TOKEN[d]) for n, d in groups]
     if heads != "none":
-        parts.append(HEAD_FILE[heads])
+        parts.append(HEAD_FILE.get(heads, "2x" + heads))
     return "_".join(parts) + ".cfg"
 
 
@@ -353,6 +355,7 @@ class GenOptions:
     octopus_extruders: bool = False
     octopus_heads: bool = False
     heads: str = "none"
+    head_template: str = ""      # пресет голов templates/boards/<имя>.cfg (поле TEMPLATE платы головы); пусто - прежний по heads
     head_names: str = "T0CB,T1CB"
     alps: int = 0
     drivers: str = ""
@@ -483,7 +486,7 @@ class Generator:
             self.sverit_sections = True
         if self.has_heads:
             names = o.head_names.split(",")
-            preset = self._read_template("boards/%s.cfg" % ("h36_" + o.heads if o.heads != "ebb42" else "ebb42"))
+            preset = self._read_template("boards/%s.cfg" % (o.head_template or ("h36_" + o.heads if o.heads != "ebb42" else "ebb42")))
             parts = re.split(r"^@@T([01])@@\s*$", preset, flags=re.M)
             # parts: [шапка, '0', текст T0, '1', текст T1]
             for idx in range(1, len(parts), 2):
@@ -680,7 +683,7 @@ class Generator:
         warns.extend(self.resolve_table_conflicts(self.blocks + self.new_extras + drv_blocks))
         groups = driver_groups(self.drv, self.needed)
         result = render(self.blocks, collapse_notes=bool(self.mainp))
-        heads_title = HEAD_TITLE[o.heads]
+        heads_title = HEAD_TITLE.get(o.heads, "2x " + o.heads)
         if not self.has_heads and o.template != "octopus_pro":
             heads_title = "нет (головы подключены к основной плате)"
         result = (result.replace("{BOARD}", o.board_name).replace("{HEADS}", heads_title)
@@ -724,7 +727,8 @@ def _build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--main-cfg", default="", help="стоковый main-файл: запасной источник тока и режимов драйверов")
     ap.add_argument("--octopus-extruders", action="store_true",
                     help="без плат голов взять пины моторов экструдеров из templates/boards/octopus_extruders.cfg, если их нет в эталоне")
-    ap.add_argument("--heads", default="none", choices=list(HEADS_CHOICES))
+    ap.add_argument("--heads", default="none",
+                    help="none или плата головы из реестра (id или алиас, ROLE=head; нужен шаблон электроники, поле TEMPLATE)")
     ap.add_argument("--head-names", default="T0CB,T1CB")
     ap.add_argument("--alps", type=int, default=0)
     ap.add_argument("--drivers", default="")
@@ -749,6 +753,11 @@ def main(argv: Optional[Sequence[str]] = None, registry=None) -> int:
     if registry is None:
         from .boards import registry as _registry
         registry = _registry()
+    try:
+        heads = a.heads if a.heads == "none" else registry.head_value(a.heads)
+    except VostokError as e:
+        ap.error(str(e))
+    head_template = registry.get(registry.resolve(heads)).template if heads != "none" else ""
     legacy_name, legacy_file = board_naming(registry, a.main)
     board_name = a.board_name or legacy_name
     board_file = a.board_file or legacy_file
@@ -756,7 +765,8 @@ def main(argv: Optional[Sequence[str]] = None, registry=None) -> int:
         ap.error("для платы %r нужны --board-name и --board-file" % a.main)
     opts = GenOptions(
         templates=a.templates, board_name=board_name, board_file=board_file, ref_cfg=a.ref_cfg, main_cfg=a.main_cfg,
-        octopus_extruders=a.octopus_extruders, octopus_heads=a.octopus_heads, heads=a.heads,
+        octopus_extruders=a.octopus_extruders, octopus_heads=a.octopus_heads, heads=heads,
+        head_template=head_template,
         head_names=a.head_names, alps=a.alps, drivers=a.drivers, template=a.template, out=a.out, out_dir=a.out_dir)
     try:
         res = Generator(opts).generate()

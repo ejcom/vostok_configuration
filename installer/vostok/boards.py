@@ -208,6 +208,43 @@ class Registry:
             return 0
         return 1 if self.get(id).verified == "yes" else 2
 
+    # --- платы голов (--heads): допустимые значения берутся из реестра (ROLE=head), а не из кода
+
+    @staticmethod
+    def head_value_of(id: str) -> str:
+        """Каноническое значение --heads для платы головы: id без префикса h36- (v1.3, v2), у остальных id (ebb42, ...)."""
+        return id[len("h36-"):] if id.startswith("h36-") else id
+
+    def head_ids(self, supported_only: bool = False) -> List[str]:
+        """id плат голов (ROLE=head); supported_only - только с шаблоном электроники (поле TEMPLATE).
+        Порядок: сначала Fysetc H36 (v1.3, v2, как раньше), затем головы с шаблоном, затем остальные, внутри - по id."""
+        ids = [i for i in self.list("head") if not supported_only or self.get(i).template]
+        return sorted(ids, key=lambda i: (not i.startswith("h36-"), not self.get(i).template, i))
+
+    def head_choices(self, supported_only: bool = False) -> List[str]:
+        """Допустимые значения --heads (без none): канонические значения плат голов."""
+        return [self.head_value_of(i) for i in self.head_ids(supported_only)]
+
+    def head_value(self, name: str) -> str:
+        """Значение --heads (none, id или алиас платы головы) -> каноническое (none, v1.3, v2, ebb42, id ...).
+        VostokError: неизвестная плата или голова без шаблона электроники (пины не выдумываем)."""
+        low = name.lower()
+        if low == "none":
+            return "none"
+        bid = self.resolve(low)
+        if not bid or bid not in self.head_ids():
+            raise VostokError("--heads: " + ", ".join(["none"] + self.head_choices()))
+        b = self.get(bid)
+        if not b.template:
+            raise VostokError("--heads %s: для платы %s нет шаблона электроники (templates/boards/); поддерживаются головы: %s"
+                              % (name, b.label, ", ".join(self.head_choices(True))))
+        return self.head_value_of(bid)
+
+    def guide_ids(self) -> List[str]:
+        """Платы Octopus Pro по алиасам семейств (h723, f446, f429): при равенстве rank и чипа предлагаются первыми,
+        чтобы платы с тем же чипом (Octopus без Pro, LDO и др.) не меняли выбор по умолчанию."""
+        return [b for b in (self.resolve(a) for a in ("h723", "f446", "f429")) if b]
+
     def has_bridge(self, id: str) -> bool:
         """Есть ли режим USB-CAN моста: ROLE=main, заданы USB и CAN."""
         b = self.get(id)

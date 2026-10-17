@@ -32,7 +32,8 @@ USAGE = """\
                         иначе определит по подключённому железу/спросит
   --list-boards         показать платы реестра (id, чип, наличие моста USB-CAN, проверена ли на железе) и выйти
   --heads none|v1.3|v2|ebb42  платы голов по CAN: нет, Fysetc H36 v1.3/v2, BTT EBB42 (иначе спросит);
-                        с платами голов главная плата прошивается мостом USB-CAN. --h36 - то же, прежнее имя
+                        с платами голов главная плата прошивается мостом USB-CAN. --h36 - то же, прежнее имя.
+                        Допустимы id и алиасы плат голов реестра (ROLE=head); без шаблона электроники - отказ
   --alps 0|1|2          сколько датчиков ALPS подключено по USB (иначе определит/спросит)
   --electronics ФАЙЛ    имя electronics_*.cfg из vostok_configuration (иначе предложит по железу)
   --config-source standard|user|generate|skip  откуда брать конфиг: корень main, user_configs, сгенерировать свой
@@ -70,7 +71,6 @@ USAGE = """\
 Переменные окружения: PRINTER_DATA, KLIPPER_DIR, KATAPULT_DIR, KIAUH_DIR, CAN_IFACE (can0).
 """
 
-HEADS_VALUES = ("", "none", "v1.3", "v2", "ebb42")
 SKIP_BOARD_VALUES = ("alps", "alps0", "alps1", "main", "heads")
 
 # опции со значением -> (атрибут Options.conf | Options, имя)
@@ -146,8 +146,8 @@ def parse_args(argv: Sequence[str], env: Env, reg: Registry) -> Optional[Options
     o.conf.only_detect = o.only_detect
     if o.conf.main:
         HardwareDetector(o.conf, env.conf_env, reg).board_from_opt(o.conf.main)
-    if o.conf.heads not in HEADS_VALUES:
-        raise VostokError("--heads: none, v1.3, v2 или ebb42")
+    if o.conf.heads:
+        o.conf.heads = reg.head_value(o.conf.heads)      # допустимые головы - из реестра (ROLE=head), значение каноническое
     if o.conf.config_source not in ("",) + cf.CONFIG_SOURCES:
         raise VostokError("--config-source: standard, user, generate или skip")
     if o.main_flash not in ("", "dfu", "katapult"):
@@ -853,8 +853,9 @@ def check_can_main(ctx: InstallContext) -> None:
             bid = detector.ask_board("Главная плата:", default, bridge_boards)
         hw.set_main_board(bid)
     if not hw.heads or hw.heads == "none":
-        ans = ui.ask_choice("Платы голов:", "v2", ["v1.3", "v2", "ebb42"])
-        hw.heads = ans if ans in ("v1.3", "ebb42") else "v2"
+        choices = reg.head_choices(True)
+        ans = ui.ask_choice("Платы голов:", "v2", choices)
+        hw.heads = ans if ans in choices else "v2"
     if o.conf.heads:
         hw.heads = o.conf.heads
     hw.set_head_names()

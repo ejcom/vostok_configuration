@@ -20,7 +20,7 @@ cd vostok_configuration/installer
 
 The installer detects the boards, installs the software, flashes the boards, builds the printer config, and installs the update button and the Fluidd theme. Afterwards check `electronics_*.cfg` against your wiring and check the toolhead thermistors ([details](docs/install.en.md)). Keep the clone directory in place: the update button runs the scripts from it.
 
-Mainboards: Octopus Pro (H723 — verified; F446, F429), Manta M8P (v2.0 — verified), Fysetc Spider, FLY-C8; select with `--main <id>`, list with `./install_vostok.sh --list-boards`. ⚠️ The other boards are **not yet verified on hardware**; the list of what is unverified: [docs/hardware.en.md](docs/hardware.en.md#mainboards).
+Mainboards: Octopus Pro (H723 — verified; F446, F429), Manta M8P (v2.0 — verified), Fysetc Spider, FLY-C8, Octopus (non-Pro) and Max EZ, Kraken, LDO Leviathan, FLY Super8 / Super8 Pro, MKS Monster8 V2; select with `--main <id>`, list with `./install_vostok.sh --list-boards`. ⚠️ The other boards are **not yet verified on hardware**; the list of what is unverified: [docs/hardware.en.md](docs/hardware.en.md#mainboards).
 
 ## Contents
 

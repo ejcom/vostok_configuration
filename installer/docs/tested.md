@@ -12,13 +12,14 @@
 
 ## Не проверено на железе
 
-Платы реестра: Octopus Pro F446 и F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8. Для них проверена только сборка конфигов Klipper и katapult (`tools/gen_configs.py --check --build`) и `--dry-run`; параметры взяты из документации производителей. Конкретно не проверено:
+Платы реестра: Octopus Pro F446 и F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8, а также добавленные в 1.7: Octopus F446 / F429 (не Pro), Octopus Max EZ, Kraken, LDO Leviathan v1.2, FLY Super8 / Super8 Pro H723, MKS Monster8 V2 и платы голов BTT EBB36/42 v1.0, BTT EBB Gen2, FLY SHT36 v2 / SHT42 (выбрать эти головы в `--heads` пока нельзя, у них нет шаблона электроники). Для них проверена только сборка конфигов Klipper и katapult (`tools/gen_configs.py --check --build`) и `--dry-run`; параметры взяты из документации производителей. Конкретно не проверено:
 
 - вход в DFU (кнопки BOOT/BT0, перемычка у Spider v2.x, `fly-flash` и DIP-переключатели FLY-C8) и вся прошивка katapult и Klipper;
 - определение семейства F4 по Option Bytes; платы на одном чипе (H723: Octopus, Manta v2.0, Spider v3.0) по DFU неразличимы, их различает только ваш выбор;
 - пины CAN моста: Manta M8P v1.1 PD12/PD13, FLY-C8 PB8/PB9; у Spider v3.0 F446 PD0/PD1 документацией не подтверждены;
 - смещения приложения katapult и двойной RESET; запись katapult по DFU с `mass-erase` стирает весь флеш, включая штатный загрузчик производителя (вернуть его можно только его `.bin` через ROM-загрузчик STM32, DFU остаётся доступным всегда);
 - допущение, что «Fly C6» — это FLY-C8;
+- платы 1.7: чип и кварц Super8 Pro (в схеме H743 и 8 МГц, в документации H723 и 25 МГц), смещение загрузчика 32KiB у Monster8 V2 (по отчёту сообщества), отсутствие моста у Kraken, число драйверов Leviathan, вариант чипа SHT36 v2 (F072, APM32F072 или GD32F103), порядок входа в DFU и мост USB-CAN у Octopus F446/F429 и Max EZ;
 - пресеты пинов конфигуратора для Manta M8P и Octopus Pro F446/F429, а также пины из таблицы разъёмов Octopus Pro для голов без плат голов на H723 (взята из конфигов F446): конфиг по ним генерируется, но с реальной проводкой пины не сверены.
 
 Если что-то не сходится с вашей платой или нашли баг — создайте issue с логом (`~/printer_data/logs/vostok_install.log`) или спросите в Telegram-канале [K_3_D](http://t.me/K_3_D), упомянув Dmitry Kostenko.

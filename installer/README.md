@@ -20,7 +20,7 @@ cd vostok_configuration/installer
 
 Установщик сам определит платы, поставит ПО, прошьёт платы, соберёт конфиг принтера, поставит кнопку обновления и тему Fluidd. После установки сверьте `electronics_*.cfg` со своей проводкой и проверьте термисторы голов ([подробнее](docs/install.md)). Каталог клона должен остаться на месте: кнопка обновления запускает скрипты из него.
 
-Главные платы: Octopus Pro (H723 — проверена; F446, F429), Manta M8P (v2.0 — проверена), Fysetc Spider, FLY-C8; выбор — `--main <id>`, список — `./install_vostok.sh --list-boards`. ⚠️ Остальные платы пока **не проверены на железе**; список непроверенного: [docs/hardware.md](docs/hardware.md#главные-платы).
+Главные платы: Octopus Pro (H723 — проверена; F446, F429), Manta M8P (v2.0 — проверена), Fysetc Spider, FLY-C8, Octopus (не Pro) и Max EZ, Kraken, LDO Leviathan, FLY Super8 / Super8 Pro, MKS Monster8 V2; выбор — `--main <id>`, список — `./install_vostok.sh --list-boards`. ⚠️ Остальные платы пока **не проверены на железе**; список непроверенного: [docs/hardware.md](docs/hardware.md#главные-платы).
 
 ## Содержание
 

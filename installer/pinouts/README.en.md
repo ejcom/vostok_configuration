@@ -27,6 +27,16 @@ The web address comes from `VOSTOK_PINOUT_URL` (default `https://github.com/dmit
 | `h36-v1.3` | `Fysetc/H36/v1_3/schematic.pdf` | Fysetc H36 v1.3: a **schematic**, not a pinout image (there is no separate pinout for v1.3) |
 | `fly-c8` | `Mellow/FLY-C8/pinout.jpg` | Mellow FLY-C8 (named `.png` upstream, but it is a JPEG) |
 | `alps` | — | There is no official ALPS pinout: the installer shows `DOC` |
+| `octopus-f446`, `octopus-f429` | `BTT/Octopus/v1_0_v1_1/pinout.jpg` | BIGTREETECH Octopus (non-Pro) v1.0/v1.1; the sheet revision is not stated in the file |
+| `octopus-max-ez` | `BTT/Octopus_Max_EZ/v1_0/pinout.png` | BIGTREETECH Octopus Max EZ V1.0 |
+| `kraken` | `BTT/Kraken/v1_0/pinout.png` | BIGTREETECH Kraken V1.0 (v1.1 differs only in driver Rsense) |
+| `ebb36-v1.0` | `BTT/EBB/ebb36_v1_0/pinout.png`, `BTT/EBB/ebb42_v1_0/pinout.png` | BIGTREETECH EBB36 / EBB42 CAN V1.0 (F072) |
+| `ebb-gen2` | `BTT/EBB/ebb36_gen2/pinout.jpg`, `BTT/EBB/ebb42_gen2/pinout.jpg` | BIGTREETECH EBB36 / EBB42 Gen2, English version of the sheet |
+| `mks-monster8-v2` | `MKS/Monster8/v2_0/pinout.pdf` | MKS Monster8 V2.0_003 (repository licence GPL-3.0) |
+| `ldo-leviathan-v1.2` | `LDO/Leviathan/v1_2/pinout.jpg` | LDO Leviathan: a pin assignment table, sheet revision not stated (repository licence GPL-3.0) |
+| `fly-super8` | `Mellow/FLY-Super8/pinout.jpg` | Mellow FLY Super8 (named `.png` upstream, but it is a JPEG; the sheet says Super v1.3) |
+| `fly-super8-pro-h723` | `Mellow/FLY-Super8-Pro/schematic.pdf` | Mellow FLY Super8 Pro: a **schematic**, Mellow has no pinout sheet. **The schematic shows an STM32H743 and an 8 MHz crystal, the documentation says H723 and 25 MHz**: check the chip marking on the board before flashing |
+| `sht36-v2` | `Mellow/FLY-SHT36/v2_0/schematic.pdf`, `Mellow/FLY-SHT42/schematic.pdf` | Mellow FLY SHT36 v2 and SHT42: **schematics**, there is no pinout sheet |
 
 ## VOSTOK wiring diagrams
 

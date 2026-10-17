@@ -1,0 +1,34 @@
+# Описание платы для установщика VOSTOK (формат: KEY="значение", без кода; читает vostok/boards.py).
+# Поля: LABEL ROLE CHIP FAMILY MACH CLOCK APP_OFFSET USB CAN CAN_KIND INITIAL_PINS BRIDGE_INITIAL_PINS
+#       KATAPULT_INITIAL_PINS KATAPULT_LED KATAPULT_DOUBLE_RESET CFG ALIASES DFU_HINT DFU_HOW ELEC_PATTERN
+#       TEMPLATE HEAD_NAMES VERIFIED DOC PINOUT PINOUT_NOTE NOTE. Конфиги сборки создаёт tools/gen_configs.py.
+# PINOUT - необязательное поле: картинки распиновки платы, пути от installer/pinouts/ через пробел (список: pinouts/README.md);
+#          пусто - установщик показывает DOC.
+# PINOUT_NOTE - необязательное поле: предупреждение, которое печатается рядом с картинкой (например, пины не совпадают с листом).
+LABEL="LDO Leviathan v1.2"
+ROLE="main"
+CHIP="stm32f446xx"
+FAMILY="f4"
+MACH="STM32F446"
+CLOCK="12M"
+APP_OFFSET="8000"
+USB="PA11_PA12"
+CAN="PB5_PB6"
+CAN_KIND="cmenu"
+INITIAL_PINS=""
+BRIDGE_INITIAL_PINS=""
+KATAPULT_INITIAL_PINS=""
+KATAPULT_LED="PE1"
+KATAPULT_DOUBLE_RESET="y"
+CFG="ldo-leviathan-v1.2"
+ALIASES="leviathan leviathan-v1.2 ldo-leviathan"
+DFU_HINT="зажмите SW2 (BOOT), нажмите и отпустите SW1 (RESET), отпустите SW2"
+DFU_HOW="button"
+ELEC_PATTERN=""
+TEMPLATE=""
+HEAD_NAMES=""
+VERIFIED="no"
+DOC="klipper/config/generic-ldo-leviathan-v1.2.cfg; drklipper.de leviathan_v1.2_can_bridge; ldomotion.com/guides/voron-leviathan-v12"
+PINOUT="LDO/Leviathan/v1_2/pinout.jpg"
+PINOUT_NOTE="лист без указания ревизии: сверьте с вашей платой"
+NOTE="Не проверена на железе. Плата поставляется без загрузчика, первая прошивка Katapult - по USB в DFU. Обновления Klipper при работе моста возможны только по USB, не по CAN. Распиновка не добавлена (лицензия не указана): смотрите DOC. Терминатор CAN 120 Ом - джампер на плате. Драйверов на плате меньше 7 (точное число не подтверждено): без плат голов моторов и двух экструдеров VOSTOK может не хватить, для экструдеров рассчитывайте на платы голов (EBB)."

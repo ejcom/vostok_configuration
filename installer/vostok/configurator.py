@@ -34,8 +34,6 @@ from .state import DevicesFile
 from .system import Runner
 
 TODO_MARK = "ЗАПОЛНИТЕ"   # плата не прошита: Klipper сообщит об ошибке, пока заглушку не заменят
-HEADS_VALUES = ("none", "v1.3", "v2", "ebb42")
-HEAD_VERSIONS = ("v1.3", "v2", "ebb42")      # варианты плат голов в меню (id платы - через реестр)
 CONFIG_SOURCES = ("standard", "user", "generate", "skip")
 
 # Дополнительные модули: (файл, название). Файл лежит в корне vostok_configuration, подключается через [include].
@@ -63,7 +61,8 @@ USAGE = """Использование: configure_vostok.sh [опции]
 
   --main ПЛАТА          главная плата: id или алиас из реестра, список: install_vostok.sh --list-boards
                         (h723, f446 и др.; иначе определит по printer.cfg/железу или спросит)
-  --heads none|v1.3|v2|ebb42  платы голов по CAN (иначе определит по printer.cfg или спросит)
+  --heads none|v1.3|v2|ebb42  платы голов по CAN (иначе определит по printer.cfg или спросит);
+                        допустимы id и алиасы плат голов реестра, без шаблона электроники - отказ
   --alps 0|1|2          число датчиков ALPS (иначе определит или спросит)
   --config-source standard|user|generate|skip  источник конфига электроники: корень main, user_configs,
                         сгенерировать свой (шаблон без плат и драйверов) или пропустить редактирование
@@ -152,11 +151,14 @@ def rank_main_boards(reg: Registry, ids: Sequence[str]) -> List[str]:
     """ТОЧКА РАСШИРЕНИЯ: порядок предпочтения главных плат при выборе «по умолчанию» (первая - лучшая).
     Здесь одно правило, общее для кандидатов по железу (main_candidates) и для догадки по printer.cfg
     (guess_main_board): сначала плата гайда и проверенные на железе (Registry.rank: 0 - плата гайда, 1 -
-    VERIFIED=yes, 2 - остальные), при равенстве - по чипу в обратном порядке (H7 раньше F4), затем по id."""
+    VERIFIED=yes, 2 - остальные), при равенстве - по чипу в обратном порядке (H7 раньше F4), затем платы
+    Octopus Pro (Registry.guide_ids: по умолчанию в семействе остаётся она, а не новая плата с тем же чипом), затем по id."""
     def info(i: str) -> Tuple[int, str]:
         return reg.rank(i), reg.get(i).chip
 
-    res = sorted(ids)                                   # третий ключ: id по возрастанию
+    guide = reg.guide_ids()
+    res = sorted(ids)                                   # четвёртый ключ: id по возрастанию
+    res.sort(key=lambda i: i not in guide)              # третий ключ: Octopus Pro раньше остальных того же чипа
     res.sort(key=lambda i: info(i)[1], reverse=True)    # второй ключ: чип по убыванию (sort устойчив)
     res.sort(key=lambda i: info(i)[0])
     return res
@@ -371,11 +373,12 @@ class HardwareDetector:
         if self.opts.only_detect:
             return guess
         none_lbl = "нет (пассивная плата, например fly miniAB)"
-        labels = {hv: self.reg.get(hw.head_board_id(hv)).label for hv in HEAD_VERSIONS}
+        head_versions = self.reg.head_choices(True)      # варианты плат голов в меню: головы реестра с шаблоном электроники
+        labels = {hv: self.reg.get(hw.head_board_id(hv)).label for hv in head_versions}
         default = none_lbl if guess == "none" else labels[guess]
         ans = ui.ask_choice("Платы голов по CAN (при их наличии %s станет мостом USB-CAN):" % hw.main_short(),
-                            default, [none_lbl] + [labels[hv] for hv in HEAD_VERSIONS])
-        for hv in HEAD_VERSIONS:
+                            default, [none_lbl] + [labels[hv] for hv in head_versions])
+        for hv in head_versions:
             if ans == labels[hv]:
                 return hv
         return "none"
@@ -781,7 +784,8 @@ class Configurator:
         gen_opts = GenOptions(
             templates=str(self.env.templates_dir), board_name=board_name, board_file=board_file,
             ref_cfg=self.ref_cfg, main_cfg=main_std, octopus_extruders=octopus_extruders, octopus_heads=octopus_heads,
-            heads=hw.heads, head_names="%s,%s" % (hw.head_mcu[0], hw.head_mcu[1]), alps=hw.alps_count,
+            heads=hw.heads, head_template=hw.head_field("TEMPLATE") if hw.has_heads else "",
+            head_names="%s,%s" % (hw.head_mcu[0], hw.head_mcu[1]), alps=hw.alps_count,
             drivers=self.drivers_spec, template=template or "none", out_dir=str(outdir))
         try:
             self.gen = Generator(gen_opts).generate()
@@ -1269,8 +1273,8 @@ def parse_args(argv: Sequence[str], env: Env, reg: Registry, runner: Optional[Ru
         i += 1
     if opts.main:
         HardwareDetector(opts, env, reg, runner).board_from_opt(opts.main)
-    if opts.heads not in ("",) + HEADS_VALUES:
-        raise VostokError("--heads: none, v1.3, v2 или ebb42")
+    if opts.heads:
+        opts.heads = reg.head_value(opts.heads)      # допустимые головы - из реестра (ROLE=head), значение каноническое
     if opts.config_source not in ("",) + CONFIG_SOURCES:
         raise VostokError("--config-source: standard, user, generate или skip")
     if opts.alps not in ("", "0", "1", "2"):

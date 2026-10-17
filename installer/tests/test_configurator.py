@@ -119,13 +119,15 @@ class TestRank(Base):
         rest = ranked[len(verified):]
         chips = [REG.get(i).chip for i in rest]
         self.assertEqual(chips, sorted(chips, reverse=True))
-        for chip in set(chips):                      # внутри одного чипа - по id
+        guide = REG.guide_ids()
+        for chip in set(chips):                      # внутри одного чипа - сначала Octopus Pro, затем по id
             same = [i for i in rest if REG.get(i).chip == chip]
-            self.assertEqual(same, sorted(same))
+            self.assertEqual(same, sorted(same, key=lambda i: (i not in guide, i)))
 
     def test_guide_board_first_then_verified_then_rest(self):
         ranked = cf.rank_main_boards(REG, REG.for_chip("stm32h723xx", "main"))
-        self.assertEqual(ranked, ["octopus-pro-h723", "manta-m8p-v2.0", "spider-v3-h723"])
+        self.assertEqual(ranked, ["octopus-pro-h723", "manta-m8p-v2.0", "fly-super8-pro-h723", "kraken",
+                                  "octopus-max-ez", "spider-v3-h723"])
         # плата гайда первая, даже если стоит последней во входе
         self.assertEqual(cf.rank_main_boards(REG, ["spider-v3-h723", "manta-m8p-v2.0", "octopus-pro-h723"])[0], "octopus-pro-h723")
 
@@ -154,7 +156,8 @@ class TestRank(Base):
 class TestMainBoard(Base):
     def test_main_candidates_by_chip(self):
         self.touch_byid(H723)
-        self.assertEqual(self.detector().main_candidates(), ["octopus-pro-h723", "manta-m8p-v2.0", "spider-v3-h723"])
+        self.assertEqual(self.detector().main_candidates(), ["octopus-pro-h723", "manta-m8p-v2.0", "fly-super8-pro-h723", "kraken",
+                                                            "octopus-max-ez", "spider-v3-h723"])
         self.assertEqual(sorted(self.detector().main_candidates()), sorted(REG.for_chip("stm32h723xx", "main")))
 
     def test_main_candidates_by_dfu_family(self):
@@ -198,11 +201,11 @@ class TestMainBoard(Base):
         self.touch_byid(H723)
         with self.assertRaises(VostokError) as cm:
             self.detector().detect_main_board(hw)
-        self.assertIn("на найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 spider-v3-h723. Без вопросов (-y) выбрать нельзя", str(cm.exception))
+        self.assertIn("на найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 fly-super8-pro-h723 kraken octopus-max-ez spider-v3-h723. Без вопросов (-y) выбрать нельзя", str(cm.exception))
         ui.opts.dry_run = True
         _, out, _ = capture(self.detector().detect_main_board, hw)
         self.assertEqual(hw.main_board, "octopus-pro-h723")
-        self.assertIn("На найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 spider-v3-h723; выбрана octopus-pro-h723 (уточните: --main <id>)", out)
+        self.assertIn("На найденном чипе возможны платы: octopus-pro-h723 manta-m8p-v2.0 fly-super8-pro-h723 kraken octopus-max-ez spider-v3-h723; выбрана octopus-pro-h723 (уточните: --main <id>)", out)
         ui.opts.dry_run = False
         # прошлая плата из devices.tsv снимает вопрос
         self.write_devices([("X", "spider-v3-h723.config", "usb")])
@@ -226,7 +229,8 @@ class TestMainBoard(Base):
         self.assertEqual(seen["q"], "Главная плата:")
         self.assertEqual(seen["default"], "Octopus Pro v1.1 H723 (octopus-pro-h723)")
         self.assertEqual(seen["options"], ["Octopus Pro v1.1 H723 (octopus-pro-h723)", "BTT Manta M8P v2.0 (manta-m8p-v2.0)",
-                                           "Fysetc Spider v3.0 H723 (spider-v3-h723)"])
+                                           "Mellow FLY Super8 Pro H723 (fly-super8-pro-h723)", "BTT Kraken v1.0/v1.1 (kraken)",
+                                           "BTT Octopus Max EZ v1.0 (octopus-max-ez)", "Fysetc Spider v3.0 H723 (spider-v3-h723)"])
         self.assertEqual(out, "")      # вопрос был - подсказки «выбрана …» нет
 
     def test_only_detect_without_tty(self):
@@ -956,7 +960,7 @@ class TestCommandLine(Base):
     def test_errors(self):
         for args, msg in ((["--main"], "--main требует аргумент"), (["--heads"], "--heads требует аргумент"),
                           (["--printer-data"], "--printer-data требует аргумент"),
-                          (["--heads", "bogus"], "--heads: none, v1.3, v2 или ebb42"),
+                          (["--heads", "bogus"], "--heads: none, v1.3, v2, ebb42, ebb-gen2, ebb36-v1.0, sht36-v2"),
                           (["--config-source", "x"], "--config-source: standard, user, generate или skip"),
                           (["--alps", "9"], "--alps: 0, 1 или 2"),
                           (["--no-such"], "неизвестная опция: --no-such"),

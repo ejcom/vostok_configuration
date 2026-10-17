@@ -27,7 +27,16 @@
 | `h36-v1.3` | `Fysetc/H36/v1_3/schematic.pdf` | Fysetc H36 v1.3: **принципиальная схема**, а не картинка pinout (отдельного pinout для v1.3 нет) |
 | `fly-c8` | `Mellow/FLY-C8/pinout.jpg` | Mellow FLY-C8 (в репозитории файл назван `.png`, но это JPEG) |
 | `alps` | — | Официальной распиновки ALPS нет: установщик показывает `DOC` |
-| `octopus-f446`, `octopus-f429`, `octopus-max-ez`, `kraken`, `ldo-leviathan-v1.2`, `fly-super8-pro-h723`, `fly-super8`, `mks-monster8-v2`, `ebb36-v1.0`, `ebb-gen2`, `sht36-v2` | — | Платы версии 1.7: лицензия на картинки не указана, они не добавлены; установщик показывает `DOC` |
+| `octopus-f446`, `octopus-f429` | `BTT/Octopus/v1_0_v1_1/pinout.jpg` | BIGTREETECH Octopus (не Pro) v1.0/v1.1; ревизия листа в файле не указана |
+| `octopus-max-ez` | `BTT/Octopus_Max_EZ/v1_0/pinout.png` | BIGTREETECH Octopus Max EZ V1.0 |
+| `kraken` | `BTT/Kraken/v1_0/pinout.png` | BIGTREETECH Kraken V1.0 (v1.1 отличается только Rsense драйверов) |
+| `ebb36-v1.0` | `BTT/EBB/ebb36_v1_0/pinout.png`, `BTT/EBB/ebb42_v1_0/pinout.png` | BIGTREETECH EBB36 / EBB42 CAN V1.0 (F072) |
+| `ebb-gen2` | `BTT/EBB/ebb36_gen2/pinout.jpg`, `BTT/EBB/ebb42_gen2/pinout.jpg` | BIGTREETECH EBB36 / EBB42 Gen2, английская версия листа |
+| `mks-monster8-v2` | `MKS/Monster8/v2_0/pinout.pdf` | MKS Monster8 V2.0_003 (лицензия репозитория GPL-3.0) |
+| `ldo-leviathan-v1.2` | `LDO/Leviathan/v1_2/pinout.jpg` | LDO Leviathan: таблица назначения пинов, ревизия листа не указана (лицензия репозитория GPL-3.0) |
+| `fly-super8` | `Mellow/FLY-Super8/pinout.jpg` | Mellow FLY Super8 (в репозитории файл назван `.png`, но это JPEG; на листе надпись Super v1.3) |
+| `fly-super8-pro-h723` | `Mellow/FLY-Super8-Pro/schematic.pdf` | Mellow FLY Super8 Pro: **принципиальная схема**, листа pinout у Mellow нет. **На схеме МК STM32H743 и кварц 8 МГц, в документации H723 и 25 МГц**: сверьте маркировку чипа на плате до прошивки |
+| `sht36-v2` | `Mellow/FLY-SHT36/v2_0/schematic.pdf`, `Mellow/FLY-SHT42/schematic.pdf` | Mellow FLY SHT36 v2 и SHT42: **принципиальные схемы**, листа pinout нет |
 
 ## Схемы подключения VOSTOK
 

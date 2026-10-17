@@ -83,7 +83,7 @@ For boards without a template the registry provides build configs (`tools/gen_co
 
 ## Pinouts
 
-Board pinout images live in [`pinouts/`](../pinouts/README.en.md) (a board-to-files table; sources and licences are in `pinouts/SOURCES.tsv`). The installer prints the path and web link of your board's image in the install plan (for an unverified board), at DFU entry, in the configurator warnings (empty ЗАПОЛНИТЕ pins, pin conflicts) and in the final summary. The images are set by the `PINOUT` field in `boards/<id>.board`; if it is empty (ALPS, Spider v3.0 H723 and the 1.7 boards: image licence not stated), `DOC` is shown. The address can be overridden with `VOSTOK_PINOUT_URL`.
+Board pinout images live in [`pinouts/`](../pinouts/README.en.md) (a board-to-files table; sources and licences are in `pinouts/SOURCES.tsv`). The installer prints the path and web link of your board's image in the install plan (for an unverified board), at DFU entry, in the configurator warnings (empty ЗАПОЛНИТЕ pins, pin conflicts) and in the final summary. The images are set by the `PINOUT` field in `boards/<id>.board`; if it is empty (ALPS and Spider v3.0 H723), `DOC` is shown. FLY Super8 Pro and SHT36 v2 / SHT42 have schematics instead of a pinout (Mellow has no pinout sheet). The address can be overridden with `VOSTOK_PINOUT_URL`.
 
 ## Contents of `installer/`
 

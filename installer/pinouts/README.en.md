@@ -31,7 +31,8 @@ The web address comes from `VOSTOK_PINOUT_URL` (default `https://github.com/dmit
 | `octopus-max-ez` | `BTT/Octopus_Max_EZ/v1_0/pinout.png` | BIGTREETECH Octopus Max EZ V1.0 |
 | `kraken` | `BTT/Kraken/v1_0/pinout.png` | BIGTREETECH Kraken V1.0 (v1.1 differs only in driver Rsense) |
 | `ebb36-v1.0` | `BTT/EBB/ebb36_v1_0/pinout.png`, `BTT/EBB/ebb42_v1_0/pinout.png` | BIGTREETECH EBB36 / EBB42 CAN V1.0 (F072) |
-| `ebb-gen2` | `BTT/EBB/ebb36_gen2/pinout.jpg`, `BTT/EBB/ebb42_gen2/pinout.jpg` | BIGTREETECH EBB36 / EBB42 Gen2, English version of the sheet |
+| `ebb36-gen2` | `BTT/EBB/ebb36_gen2/pinout.jpg` | BIGTREETECH EBB36 Gen2, English version of the sheet |
+| `ebb42-gen2` | `BTT/EBB/ebb42_gen2/pinout.jpg` | BIGTREETECH EBB42 Gen2, English version of the sheet |
 | `mks-monster8-v2` | `MKS/Monster8/v2_0/pinout.pdf` | MKS Monster8 V2.0_003 (repository licence GPL-3.0) |
 | `ldo-leviathan-v1.2` | `LDO/Leviathan/v1_2/pinout.jpg` | LDO Leviathan: a pin assignment table, sheet revision not stated (repository licence GPL-3.0) |
 | `fly-super8` | `Mellow/FLY-Super8/pinout.jpg` | Mellow FLY Super8 (named `.png` upstream, but it is a JPEG; the sheet says Super v1.3) |

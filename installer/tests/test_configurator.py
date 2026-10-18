@@ -275,7 +275,7 @@ class TestHeadsAndAlps(Base):
         self.assertEqual(res, "ebb42")
         self.assertEqual(seen["q"], "Платы голов по CAN (при их наличии Octopus станет мостом USB-CAN):")
         self.assertEqual(seen["default"], "Fysetc H36 v2")
-        self.assertEqual(seen["options"], ["нет (пассивная плата, например fly miniAB)", "Fysetc H36 v1.3", "Fysetc H36 v2", "BTT EBB42/EBB36"])
+        self.assertEqual(seen["options"], ["нет (пассивная плата, например fly miniAB)", "Fysetc H36 v1.3", "Fysetc H36 v2", "BTT EBB36 Gen2 (G0B1)", "BTT EBB36/EBB42 CAN v1.0 (F072)", "BTT EBB42/EBB36", "BTT EBB42 Gen2 (G0B1)", "Mellow FLY SHT36 v2 / SHT42 (F072)"])
 
     def test_only_detect_heads_and_alps(self):
         self.touch_byid(ALPS1, ALPS2, "usb-Klipper_stm32f072xb_AAAA00000003-if00")
@@ -735,7 +735,7 @@ class TestStageConfig(Base):
         res, out, err = capture(c.stage_config)
         self.assertIsInstance(res, VostokError)
         self.assertEqual(str(res), "не удалось сгенерировать конфиг электроники")
-        self.assertIn("--drivers: драйвер '9999' не из 2130/2208/2209/2240/5160/5160plus", err)
+        self.assertIn("--drivers: драйвер '9999' не из 2130/2160/2208/2209/2240/5160/5160plus", err)
 
     def test_generate_clean_install_uses_stock_reference(self):
         c, out, err = self.run_stage(cf.Options(config_source="generate", drivers="all=5160", modules="none"))
@@ -960,7 +960,7 @@ class TestCommandLine(Base):
     def test_errors(self):
         for args, msg in ((["--main"], "--main требует аргумент"), (["--heads"], "--heads требует аргумент"),
                           (["--printer-data"], "--printer-data требует аргумент"),
-                          (["--heads", "bogus"], "--heads: none, v1.3, v2, ebb42, ebb-gen2, ebb36-v1.0, sht36-v2"),
+                          (["--heads", "bogus"], "--heads: none, v1.3, v2, ebb36-gen2, ebb36-v1.0, ebb42, ebb42-gen2, sht36-v2"),
                           (["--config-source", "x"], "--config-source: standard, user, generate или skip"),
                           (["--alps", "9"], "--alps: 0, 1 или 2"),
                           (["--no-such"], "неизвестная опция: --no-such"),

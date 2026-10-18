@@ -12,7 +12,7 @@
 
 ## Не проверено на железе
 
-Платы реестра: Octopus Pro F446 и F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8, а также добавленные в 1.7: Octopus F446 / F429 (не Pro), Octopus Max EZ, Kraken, LDO Leviathan v1.2, FLY Super8 / Super8 Pro H723, MKS Monster8 V2 и платы голов BTT EBB36/42 v1.0, BTT EBB Gen2, FLY SHT36 v2 / SHT42 (выбрать эти головы в `--heads` пока нельзя, у них нет шаблона электроники). Для них проверена только сборка конфигов Klipper и katapult (`tools/gen_configs.py --check --build`) и `--dry-run`; параметры взяты из документации производителей. Конкретно не проверено:
+Платы реестра: Octopus Pro F446 и F429, Manta M8P v1.0 / v1.1, Spider v3.0 H723 / F446, Spider v2.x, FLY-C8, а также добавленные в 1.7: Octopus F446 / F429 (не Pro), Octopus Max EZ, Kraken, LDO Leviathan v1.2, FLY Super8 / Super8 Pro H723, MKS Monster8 V2 и платы голов BTT EBB36/42 v1.0 (с 1.8 есть пресет, `--heads ebb36-v1.0`, пины концевика и зонда прочитаны с картинки), BTT EBB36 Gen2 / EBB42 Gen2 и FLY SHT36 v2 / SHT42 (с 1.8 у них есть пресеты голов, `--heads ebb36-gen2|ebb42-gen2|sht36-v2`; пины концевика и зонда взяты из закомментированных строк cfg, установщик просит сверить). Для них проверена только сборка конфигов Klipper и katapult (`tools/gen_configs.py --check --build`) и `--dry-run`; параметры взяты из документации производителей. Конкретно не проверено:
 
 - вход в DFU (кнопки BOOT/BT0, перемычка у Spider v2.x, `fly-flash` и DIP-переключатели FLY-C8) и вся прошивка katapult и Klipper;
 - определение семейства F4 по Option Bytes; платы на одном чипе (H723: Octopus, Manta v2.0, Spider v3.0) по DFU неразличимы, их различает только ваш выбор;

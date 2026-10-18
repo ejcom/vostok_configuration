@@ -4,6 +4,22 @@
 
 The current version is stored in the `VERSION` file (`-V`/`--version` in every script). Description: [README.en.md](README.en.md).
 
+## 1.8 — 2026-10-17
+
+Configurator pin presets for boards that had none (done: Spider v2.x, Kraken, Octopus Max EZ, MKS Monster8 V2, FLY-C8, FLY Super8, Spider v3.0 F446 and the EBB36/42 v1.0, EBB36 Gen2, EBB42 Gen2 and SHT36 v2 heads).
+
+- Spider v2.2 / v2.3 (`spider-v2-f446`, `templates/boards/main/spider_v2.cfg`): motor and UART/CS pins from Fysetc `printer.cfg`; extruder E1, thermistors, fans and connectors from the pinout sheets. M1..M5 = X, W, Y left, Y right, Z; M6/M7 (E2/E3) = extruders without heads. The board has no probe power output: `[output_pin probe_enable]` stays ЗАПОЛНИТЕ.
+- BTT Kraken (`kraken`, `templates/boards/main/kraken.cfg`): pins from BTT `generic-bigtreetech-kraken.cfg`; S1..S5 = X, W, Y left, Y right, Z, S6/S7 = extruders without heads. TMC2160 driver (`templates/drivers/tmc2160.cfg`, type `2160` in `--drivers`); the board fixes the drivers (`all=2160`, no questions). New preset section `@@SENSE@@` (motor: sense_resistor): 0.05 for S1..S4 (v1.1; v1.0 is 0.022, edit it).
+- Octopus Max EZ (`octopus-max-ez`, `templates/boards/main/octopus_max_ez.cfg`): Motor-1,2,3,5, heaters, thermistors, CS/UART from the BTT cfg; slots Motor-4, 6, 7, endstops MIN1..4 and fans FAN1..FAN3 read from the pinout picture (the preset header and `NOTE` ask to double-check). The sheet has no probe power pin: `probe_enable` stays ЗАПОЛНИТЕ.
+- BTT EBB36/EBB42 v1.0 head (`ebb36-v1.0`, `templates/boards/ebb36_v1.0.cfg`) is now selectable with `--heads`: extruder pins from the BTT sample cfg, endstop (PC13) and probe (PA4/PA5) from the picture. A head preset may carry a `# СВЕРЬТЕ: …` header line, which is appended to the configurator warning (`Generator.head_warn`); EBB v1.0 has one.
+- MKS Monster8 V2 (`mks-monster8-v2`, `templates/boards/main/mks_monster8_v2.cfg`): slots, CS/UART, heaters, fans and endstops from Klipper `generic-mks-monster8.cfg` and MKS `printer_v2.cfg`; SPI pins (PE12/PE14/PE13) derived from `spi_bus: spi4`. The MKS cfg shares enable PC15 between the X and Y slots: the generator no longer treats a shared `enable_pin` of two motors as a conflict. No probe power pin (ЗАПОЛНИТЕ).
+- FLY-C8 (`fly-c8`, `templates/boards/main/fly_c8.cfg`): DRIVER0..6, extruder, bed, fans and BLTouch from the Mellow cfg (`docs/board/fly_C8/cfg.md`); the DRIVER7 slot, heater HE1 (PD13) and thermistor T1 (PC3) read from the pinout picture (the preset header asks to double-check); software SPI on the spi3 pins (PB3/PB5/PB4).
+- FLY Super8 (`fly-super8`, `templates/boards/main/fly_super8.cfg`): Drive0..5, extruder, bed, fans from the Mellow cfg (`docs/board/fly_super8/cfg.md`); Drive6/Drive7, HEAT1, ADC_1 and BLTouch from the pinout picture (double-check). Driver SPI pins are given nowhere: with 5160/2130 drivers sclk/mosi/miso stay ЗАПОЛНИТЕ, with UART drivers (2208/2209) everything is filled.
+- Spider v3.0 F446 (`spider-v3-f446`) uses the same `spider_v2.cfg` preset: on the v3.0 sheet the motor, UART, heater, thermistor and endstop pins are the same as on v2.x. Spider v3.0 H723 has no preset: there is no separate sheet and the pin match with the F446 is unchecked.
+- BTT EBB36 Gen2, EBB42 Gen2 and FLY SHT36 v2 heads are selectable with `--heads` (`templates/boards/ebb36_gen2.cfg`, `ebb42_gen2.cfg`, `sht36_v2.cfg`): extruder, thermistor, UART and fan pins from the BTT sample cfgs (Gen2) and the Mellow cfg / pin table (SHT36 V2); the endstop and probe come from commented-out lines and the T1 `dir_pin` sign is mirrored; each preset carries a `# СВЕРЬТЕ:` line and the configurator prints the warning. The `ebb-gen2` entry is split into `ebb36-gen2` and `ebb42-gen2` (the EBB36 and EBB42 Gen2 pins differ), the build configs are renamed (`configs/ebb36-gen2-can.config`, `ebb42-gen2-can.config`, likewise in `configs/katapult/`); the shared `ebb-gen2` name and its aliases are gone, pictures and `SOURCES.tsv` use the new ids.
+- Still without presets: LDO Leviathan, Spider v3.0 H723 and Super8 Pro (schematic only).
+- Tests: golden references re-recorded for `help/*` (`--drivers`), `gen_matrix/*` and `install_matrix/*` of Kraken, Spider v2.x and Octopus Max EZ, `gen_matrix/err_bad_args`, `boards/bad_args` (the `--heads` list); new `test_new_presets_1_8`, `test_head_preset_warning`.
+
 ## 1.7 — 2026-10-17
 
 New boards in the registry (all `VERIFIED="no"`, documentation only) and `--heads` choices taken from the registry.

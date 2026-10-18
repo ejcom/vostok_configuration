@@ -179,6 +179,46 @@ class TestGeneratorState(unittest.TestCase):
         self.assertEqual(res.all_warnings()[0], res.table_warn)
         self.assertIn("ЗАПОЛНИТЕ", res.path.read_text(encoding="utf-8"))
 
+    def test_new_presets_1_8(self):
+        """Пресеты 1.8 (Spider v2.x, Kraken, Octopus Max EZ): пины подставлены, пересечений нет; probe_enable без пина - ЗАПОЛНИТЕ."""
+        for tmpl, name, drv in (("spider_v2", "Fysetc Spider v2", "all=2209"), ("kraken", "BTT Kraken", "all=2160"),
+                                ("octopus_max_ez", "BTT Octopus Max EZ", "all=2209"),
+                                ("mks_monster8_v2", "MKS Monster8 V2", "all=2130"), ("fly_c8", "Mellow FLY-C8", "all=2209"),
+                                ("fly_super8", "Mellow FLY Super8", "all=2209")):
+            _, res = self.gen(template=tmpl, board_name=name, board_file=tmpl, drivers=drv)
+            self.assertEqual([w for w in res.warns if "run_current" not in w], [], tmpl)   # пересечений пинов нет
+            text = res.path.read_text(encoding="utf-8")
+            self.assertEqual(text.count("ЗАПОЛНИТЕ") - 1, {"kraken": 0, "fly_c8": 0, "fly_super8": 0}.get(tmpl, 1), tmpl)   # шапка + probe_enable (у части плат пина питания зонда нет)
+        _, res = self.gen(template="kraken", board_name="BTT Kraken", board_file="kraken", drivers="all=2160")
+        text = res.path.read_text(encoding="utf-8")
+        self.assertIn("[tmc2160 stepper motor_x]", text)
+        self.assertRegex(text, r"\[tmc2160 stepper motor_x\][^\[]*sense_resistor: 0\.05")
+        self.assertRegex(text, r"\[tmc2160 stepper motor_z\][^\[]*sense_resistor: 0\.075")
+        self.assertEqual(res.empty, [])
+
+    def test_head_preset_warning(self):
+        """Пресет головы с «# СВЕРЬТЕ:» в шапке добавляет предупреждение к результату; у проверенных голов его нет."""
+        _, res = self.gen(template="octopus_max_ez", board_name="BTT Octopus Max EZ", board_file="octopus_max_ez",
+                          drivers="all=2209", heads="ebb36-v1.0", head_template="ebb36_v1.0", head_names="T0_EBB,T1_EBB")
+        self.assertIn("EBB v1.0", res.table_warn)
+        self.assertIn("T0_EBB:PC13", res.path.read_text(encoding="utf-8"))
+        _, res = self.gen(template="octopus_max_ez", board_name="BTT Octopus Max EZ", board_file="octopus_max_ez",
+                          drivers="all=2209", heads="ebb42", head_template="ebb42", head_names="T0_EBB,T1_EBB")
+        self.assertNotIn("EBB v1.0", res.table_warn)
+
+    def test_new_head_presets_1_8(self):
+        """Головы 1.8 (EBB36/EBB42 Gen2, SHT36 v2): пресеты есть, пины головы подставлены, предупреждение о сверке добавлено."""
+        for head, tmpl, pins in (("ebb36-gen2", "ebb36_gen2", ("PB14", "PA15")), ("ebb42-gen2", "ebb42_gen2", ("PD3", "PA2")),
+                                 ("sht36-v2", "sht36_v2", ("PB4", "PA2"))):
+            _, res = self.gen(template="octopus_max_ez", board_name="BTT Octopus Max EZ", board_file="octopus_max_ez",
+                              drivers="all=2209", heads=head, head_template=tmpl, head_names="T0_EBB,T1_EBB")
+            text = res.path.read_text(encoding="utf-8")
+            self.assertIn("СВЕРЬТЕ", (INSTALLER / "templates/boards" / (tmpl + ".cfg")).read_text(encoding="utf-8"), head)
+            self.assertIn("плат", res.table_warn, head)
+            for pin in pins:
+                self.assertIn("T0_EBB:" + pin, text, (head, pin))
+            self.assertIn("dir_pin: !T1_EBB:", text, head)           # T1 - зеркальный знак, T0 - как в cfg производителя
+
     def test_out_file_name_override(self):
         d = tempfile.mkdtemp()
         self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))
@@ -245,7 +285,7 @@ class TestHelpers(unittest.TestCase):
         self.assertIn("gen_electronics.py: error: для платы 'nope' нужны --board-name и --board-file", err)
         rc, out, err = run_new(base + ["--drivers", "all=9999"])
         self.assertEqual((rc, out), (1, ""))
-        self.assertEqual(err, "--drivers: драйвер '9999' не из 2130/2208/2209/2240/5160/5160plus\n")
+        self.assertEqual(err, "--drivers: драйвер '9999' не из 2130/2160/2208/2209/2240/5160/5160plus\n")
 
 
 if __name__ == "__main__":

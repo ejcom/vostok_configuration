@@ -131,7 +131,7 @@ class BoardsTest(unittest.TestCase):
     def test_head_values_from_registry(self):
         """--heads: значения берутся из реестра (ROLE=head); старые значения прежние, голова без шаблона - отказ."""
         r = boards.registry()
-        self.assertEqual(r.head_choices(True), ["v1.3", "v2", "ebb42"])
+        self.assertEqual(r.head_choices(True), ["v1.3", "v2", "ebb36-gen2", "ebb36-v1.0", "ebb42", "ebb42-gen2", "sht36-v2"])
         for old in ("v1.3", "v2", "ebb42", "none", "V2"):
             self.assertEqual(r.head_value(old), old.lower())
         self.assertEqual(r.head_value("ebb36"), "ebb42")                  # алиас ebb42 (v1.1/v1.2, G0B1)
@@ -139,11 +139,19 @@ class BoardsTest(unittest.TestCase):
         for bad in ("alps", "octopus-pro-h723", "bogus"):
             with self.assertRaises(VostokError, msg=bad) as cm:
                 r.head_value(bad)
-            self.assertIn("--heads: none, v1.3, v2, ebb42", str(cm.exception))
-        for name in ("ebb36-v1.0", "ebb-gen2", "sht36-v2", "sht42", "ebb42-gen2"):
-            with self.assertRaises(VostokError, msg=name) as cm:
-                r.head_value(name)
-            self.assertIn("нет шаблона электроники", str(cm.exception))
+            self.assertIn("--heads: none, v1.3, v2, ebb36-gen2, ebb36-v1.0, ebb42, ebb42-gen2, sht36-v2", str(cm.exception))
+        for name, want in (("sht42", "sht36-v2"), ("ebb36-gen2", "ebb36-gen2"), ("ebb42-gen2", "ebb42-gen2")):
+            self.assertEqual(r.head_value(name), want, name)            # с 1.8 у всех голов реестра есть пресет
+        # голова без шаблона электроники (запись реестра с пустым TEMPLATE) по-прежнему отклоняется
+        import shutil, tempfile
+        d = tempfile.mkdtemp()
+        self.addCleanup(lambda: shutil.rmtree(d, ignore_errors=True))
+        shutil.copytree(boards.INSTALL_DIR / "boards", d + "/boards")
+        f = Path(d) / "boards/sht36-v2.board"
+        f.write_text(f.read_text(encoding="utf-8").replace('TEMPLATE="sht36_v2"', 'TEMPLATE=""'), encoding="utf-8")
+        with self.assertRaises(VostokError) as cm:
+            boards.Registry(Path(d) / "boards").head_value("sht36-v2")
+        self.assertIn("нет шаблона электроники", str(cm.exception))
         for i in r.head_ids(True):                                         # у голов с шаблоном файл пресета существует
             self.assertTrue((boards.INSTALL_DIR / "templates/boards" / (r.get(i).template + ".cfg")).is_file(), i)
 

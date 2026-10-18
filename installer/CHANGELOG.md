@@ -6,7 +6,7 @@
 
 ## 1.8 — 2026-10-17
 
-Пресеты пинов конфигуратора для плат, у которых их не было (сделаны Spider v2.x, Kraken, Octopus Max EZ, MKS Monster8 V2, FLY-C8, FLY Super8, Spider v3.0 F446 и голова EBB36/42 v1.0).
+Пресеты пинов конфигуратора для плат, у которых их не было (сделаны Spider v2.x, Kraken, Octopus Max EZ, MKS Monster8 V2, FLY-C8, FLY Super8, Spider v3.0 F446 и головы EBB36/42 v1.0, EBB36 Gen2, EBB42 Gen2 и SHT36 v2).
 
 - Spider v2.2 / v2.3 (`spider-v2-f446`, `templates/boards/main/spider_v2.cfg`): пины моторов и UART/CS из `printer.cfg` Fysetc, экструдер E1, терморезисторы, вентиляторы и разъёмы - с листов pinout. M1..M5 = X, W, Y левый, Y правый, Z; M6/M7 (E2/E3) = экструдеры без голов. У платы нет выхода питания зонда: `[output_pin probe_enable]` остаётся ЗАПОЛНИТЕ.
 - BTT Kraken (`kraken`, `templates/boards/main/kraken.cfg`): пины из `generic-bigtreetech-kraken.cfg` BTT; S1..S5 = X, W, Y левый, Y правый, Z, S6/S7 = экструдеры без голов. Драйвер TMC2160 (`templates/drivers/tmc2160.cfg`, тип `2160` в `--drivers`); для Kraken драйверы заданы платой (`all=2160`, вопросов нет). Новая секция пресета `@@SENSE@@` (мотор: sense_resistor): для S1..S4 0.05 (v1.1; у v1.0 - 0.022, исправьте).
@@ -16,7 +16,8 @@
 - FLY-C8 (`fly-c8`, `templates/boards/main/fly_c8.cfg`): DRIVER0..6, экструдер, стол, вентиляторы и BLTouch - по cfg Mellow (`docs/board/fly_C8/cfg.md`); слот DRIVER7, нагреватель HE1 (PD13) и термистор T1 (PC3) прочитаны с картинки pinout (шапка пресета просит сверить); SPI программный на пинах spi3 (PB3/PB5/PB4).
 - FLY Super8 (`fly-super8`, `templates/boards/main/fly_super8.cfg`): Drive0..5, экструдер, стол, вентиляторы - по cfg Mellow (`docs/board/fly_super8/cfg.md`); Drive6/Drive7, HEAT1, ADC_1 и BLTouch - с листа pinout (сверьте). Пины SPI драйверов нигде не указаны: при драйверах 5160/2130 sclk/mosi/miso остаются ЗАПОЛНИТЕ, у UART-драйверов (2208/2209) всё заполнено.
 - Spider v3.0 F446 (`spider-v3-f446`) использует тот же пресет `spider_v2.cfg`: на листе v3.0 пины моторов, UART, нагревателей, термисторов и концевиков те же, что у v2.x. Spider v3.0 H723 без пресета: отдельного листа нет, совпадение пинов с F446 не проверено.
-- Без пресета остались LDO Leviathan, Spider v3.0 H723, Super8 Pro (только принципиальная схема) и головы EBB Gen2 / SHT36 v2 (в `--heads` по-прежнему недоступны; у Gen2 пины EBB36 и EBB42 различаются).
+- Головы BTT EBB36 Gen2, EBB42 Gen2 и FLY SHT36 v2 доступны в `--heads` (`templates/boards/ebb36_gen2.cfg`, `ebb42_gen2.cfg`, `sht36_v2.cfg`): пины экструдера, термистора, UART и вентиляторов по sample-конфигам BTT (Gen2) и cfg/таблице пинов Mellow (SHT36 V2), концевик и зонд взяты из закомментированных строк, знак `dir_pin` T1 принят зеркальным; пресет несёт строку `# СВЕРЬТЕ:`, предупреждение выводится конфигуратором. Запись `ebb-gen2` разделена на `ebb36-gen2` и `ebb42-gen2` (пины EBB36 и EBB42 Gen2 различаются), конфиги сборки переименованы (`configs/ebb36-gen2-can.config`, `ebb42-gen2-can.config`, то же в `configs/katapult/`); общее имя `ebb-gen2` и его алиасы больше не используются, картинки и `SOURCES.tsv` привязаны к новым id.
+- Без пресета остались LDO Leviathan, Spider v3.0 H723 и Super8 Pro (только принципиальная схема).
 - Тесты: golden переснятые для `help/*` (`--drivers`), `gen_matrix/*` и `install_matrix/*` по Kraken, Spider v2.x и Octopus Max EZ, `gen_matrix/err_bad_args`, `boards/bad_args` (список `--heads`); новые `test_new_presets_1_8`, `test_head_preset_warning`.
 
 ## 1.7 — 2026-10-17

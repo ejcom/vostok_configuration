@@ -72,7 +72,7 @@ class TestParseArgs(Base):
     def test_errors(self):
         cases = [(["--main"], "--main требует аргумент"), (["--h36"], "--h36 требует аргумент"),
                  (["--skip-board"], "--skip-board требует аргумент"), (["--main", "bogus"], "--main: неизвестная плата 'bogus'"),
-                 (["--heads", "x"], "--heads: none, v1.3, v2, ebb36-v1.0, ebb42, ebb-gen2, sht36-v2"),
+                 (["--heads", "x"], "--heads: none, v1.3, v2, ebb36-gen2, ebb36-v1.0, ebb42, ebb42-gen2, sht36-v2"),
                  (["--config-source", "x"], "--config-source: standard, user, generate или skip"),
                  (["--main-flash", "x"], "--main-flash: dfu или katapult"), (["--heads-flash", "x"], "--heads-flash: dfu или can"),
                  (["--alps", "3"], "--alps: 0, 1 или 2"), (["--skip-board", "x"], "--skip-board: alps, alps0, alps1, main или heads"),
@@ -88,11 +88,9 @@ class TestParseArgs(Base):
         for args, want in ((["--heads", "v2"], "v2"), (["--h36", "v1.3"], "v1.3"), (["--heads", "ebb42"], "ebb42"),
                            (["--heads", "ebb36"], "ebb42"), (["--heads", "ebb36-v1.0"], "ebb36-v1.0"), (["--heads", "none"], "none"), ([], "")):
             self.assertEqual(self.parse(*args).conf.heads, want, args)
-        for name in ("ebb-gen2", "sht36-v2", "sht42"):
+        for name, want in (("ebb36-gen2", "ebb36-gen2"), ("ebb42-gen2", "ebb42-gen2"), ("sht36-v2", "sht36-v2"), ("sht42", "sht36-v2")):
             for opt in ("--heads", "--h36"):
-                with self.assertRaises(VostokError) as cm:
-                    self.parse(opt, name)
-                self.assertIn("нет шаблона электроники", str(cm.exception))
+                self.assertEqual(self.parse(opt, name).conf.heads, want, (opt, name))
         with self.assertRaises(VostokError):
             self.parse("--heads", "alps")          # ALPS - не плата головы
 

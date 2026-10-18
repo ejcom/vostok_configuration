@@ -206,6 +206,19 @@ class TestGeneratorState(unittest.TestCase):
                           drivers="all=2209", heads="ebb42", head_template="ebb42", head_names="T0_EBB,T1_EBB")
         self.assertNotIn("EBB v1.0", res.table_warn)
 
+    def test_new_head_presets_1_8(self):
+        """Головы 1.8 (EBB36/EBB42 Gen2, SHT36 v2): пресеты есть, пины головы подставлены, предупреждение о сверке добавлено."""
+        for head, tmpl, pins in (("ebb36-gen2", "ebb36_gen2", ("PB14", "PA15")), ("ebb42-gen2", "ebb42_gen2", ("PD3", "PA2")),
+                                 ("sht36-v2", "sht36_v2", ("PB4", "PA2"))):
+            _, res = self.gen(template="octopus_max_ez", board_name="BTT Octopus Max EZ", board_file="octopus_max_ez",
+                              drivers="all=2209", heads=head, head_template=tmpl, head_names="T0_EBB,T1_EBB")
+            text = res.path.read_text(encoding="utf-8")
+            self.assertIn("СВЕРЬТЕ", (INSTALLER / "templates/boards" / (tmpl + ".cfg")).read_text(encoding="utf-8"), head)
+            self.assertIn("плат", res.table_warn, head)
+            for pin in pins:
+                self.assertIn("T0_EBB:" + pin, text, (head, pin))
+            self.assertIn("dir_pin: !T1_EBB:", text, head)           # T1 - зеркальный знак, T0 - как в cfg производителя
+
     def test_out_file_name_override(self):
         d = tempfile.mkdtemp()
         self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))

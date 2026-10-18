@@ -4,7 +4,7 @@ $ install_vostok.sh --main bogus --only-detect
 ОШИБКА: --main: неизвестная плата 'bogus'. Доступные: fly-c8 (flyc8), fly-super8 (super8, flysuper8), fly-super8-pro-h723 (super8pro, super8-pro, flysuper8pro), kraken (kraken-v1.0, kraken-v1.1, btt-kraken), ldo-leviathan-v1.2 (leviathan, leviathan-v1.2, ldo-leviathan), manta-m8p-v1.0 (m8p-v1.0), manta-m8p-v1.1 (m8p-v1.1), manta-m8p-v2.0 (m8p-v2.0), mks-monster8-v2 (monster8, monster8-v2), octopus-f429 (octopus-v1.1-f429, octopus-v1.0-f429), octopus-f446 (octopus-v1.1-f446, octopus-v1.0-f446), octopus-max-ez (max-ez, octopus-maxez), octopus-pro-f429 (f429), octopus-pro-f446 (f446), octopus-pro-h723 (h723), spider-v2-f446 (spider-v2, spider-v2.x), spider-v3-f446 (spider-f446), spider-v3-h723 (spider-h723, spider-h7, spider-v3-h7). Список с описанием: install_vostok.sh --list-boards
 $ install_vostok.sh --heads bogus --only-detect
 # rc=1
-ОШИБКА: --heads: none, v1.3, v2, ebb36-v1.0, ebb42, ebb-gen2, sht36-v2
+ОШИБКА: --heads: none, v1.3, v2, ebb36-gen2, ebb36-v1.0, ebb42, ebb42-gen2, sht36-v2
 $ install_vostok.sh --heads
 # rc=1
 ОШИБКА: --heads требует аргумент
@@ -25,7 +25,7 @@ $ configure_vostok.sh --main bogus
 ОШИБКА: --main: неизвестная плата 'bogus'. Доступные: fly-c8 (flyc8), fly-super8 (super8, flysuper8), fly-super8-pro-h723 (super8pro, super8-pro, flysuper8pro), kraken (kraken-v1.0, kraken-v1.1, btt-kraken), ldo-leviathan-v1.2 (leviathan, leviathan-v1.2, ldo-leviathan), manta-m8p-v1.0 (m8p-v1.0), manta-m8p-v1.1 (m8p-v1.1), manta-m8p-v2.0 (m8p-v2.0), mks-monster8-v2 (monster8, monster8-v2), octopus-f429 (octopus-v1.1-f429, octopus-v1.0-f429), octopus-f446 (octopus-v1.1-f446, octopus-v1.0-f446), octopus-max-ez (max-ez, octopus-maxez), octopus-pro-f429 (f429), octopus-pro-f446 (f446), octopus-pro-h723 (h723), spider-v2-f446 (spider-v2, spider-v2.x), spider-v3-f446 (spider-f446), spider-v3-h723 (spider-h723, spider-h7, spider-v3-h7). Список с описанием: install_vostok.sh --list-boards
 $ configure_vostok.sh --heads bogus
 # rc=1
-ОШИБКА: --heads: none, v1.3, v2, ebb36-v1.0, ebb42, ebb-gen2, sht36-v2
+ОШИБКА: --heads: none, v1.3, v2, ebb36-gen2, ebb36-v1.0, ebb42, ebb42-gen2, sht36-v2
 $ configure_vostok.sh --alps 9
 # rc=1
 ОШИБКА: --alps: 0, 1 или 2
@@ -37,9 +37,10 @@ $ install_vostok.sh --list-boards
 # rc=0
 id                   chip         can  ok   название [роль] (алиасы)
 alps                 stm32f072xb  -    yes  ALPS [alps]
-ebb-gen2             stm32g0b1xx  -    no   BTT EBB36/EBB42 Gen2 (G0B1) [head] (ebb36-gen2 ebb42-gen2)
+ebb36-gen2           stm32g0b1xx  -    no   BTT EBB36 Gen2 (G0B1) [head]
 ebb36-v1.0           stm32f072xb  -    no   BTT EBB36/EBB42 CAN v1.0 (F072) [head] (ebb42-v1.0)
 ebb42                stm32g0b1xx  -    yes  BTT EBB42/EBB36 [head] (ebb36)
+ebb42-gen2           stm32g0b1xx  -    no   BTT EBB42 Gen2 (G0B1) [head]
 fly-c8               stm32f407xx  bus  no   Mellow FLY-C8 [main] (flyc8)
 fly-super8           stm32f407xx  bus  no   Mellow FLY Super8 (F407) [main] (super8 flysuper8)
 fly-super8-pro-h723  stm32h723xx  bus  no   Mellow FLY Super8 Pro H723 [main] (super8pro super8-pro flysuper8pro)

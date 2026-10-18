@@ -9,7 +9,7 @@
 | Part | Options |
 |---|---|
 | Mainboard | BTT Octopus Pro v1.1 **H723** (as in the guide) or Octopus Pro **F446**; also the boards from the `boards/` registry (table below) |
-| Toolhead boards (CAN) | Fysetc **H36** v1.3 / v2 or BTT **EBB42/EBB36** v1.1/v1.2; other registry heads are build-only for now (see "Toolhead boards" below); or none |
+| Toolhead boards (CAN) | Fysetc **H36** v1.3 / v2 or BTT **EBB42/EBB36** v1.1/v1.2; since 1.8 also EBB36/EBB42 v1.0, EBB36 Gen2, EBB42 Gen2 and FLY SHT36 v2, all unverified on hardware (see "Toolhead boards" below); or none |
 | ALPS sensors (USB) | 0, 1 or 2 |
 
 - **With toolhead boards** the Octopus is flashed as a **USB→CAN bridge**, as in the guide, and the toolhead boards run over CAN (`can0`, 1 Mbit). They can be flashed in two ways:
@@ -71,13 +71,14 @@ Toolhead boards are in the registry too (`ROLE=head`), and `--heads` accepts `no
 | `h36-v2` (`v2`) | STM32G431 | 12 MHz | PB0/PB1 | **yes**, `v2` | **yes** |
 | `ebb42` (`ebb36`) | STM32G0B1 | 8 MHz | PB0/PB1 | **yes**, `ebb42` (`ebb36` selects the same) | **yes** (EBB36) |
 | `ebb36-v1.0` (`ebb42-v1.0`) | STM32F072 | 8 MHz | PB8/PB9 | yes (since 1.8, `--heads ebb36-v1.0`; endstop and probe pins read from the picture, the installer asks to double-check) | no |
-| `ebb-gen2` (`ebb36-gen2`, `ebb42-gen2`) | STM32G0B1 | 8 MHz | PB12/PB13 | no: no electronics template (Gen2 pins not confirmed) | no |
-| `sht36-v2` (`sht42`, `sht36v2`) | STM32F072 | 8 MHz | PB8/PB9 | no: no electronics template | no |
+| `ebb36-gen2` | STM32G0B1 | 8 MHz | PB12/PB13 | yes (since 1.8; endstop and probe from the commented lines of the BTT sample cfg, the installer asks to double-check) | no |
+| `ebb42-gen2` | STM32G0B1 | 8 MHz | PB12/PB13 | yes (since 1.8, EBB42 Gen2 pins differ from EBB36 Gen2) | no |
+| `sht36-v2` (`sht42`, `sht36v2`) | STM32F072 | 8 MHz | PB8/PB9 | yes (since 1.8, from the Mellow SHT36 V2 cfg and pin table; SHT42 not checked, the installer asks to double-check) | no |
 
 For boards without a template the registry provides build configs (`tools/gen_configs.py --board <id>`), but not yet the selection in the installer. To enable such a board: add `templates/boards/<name>.cfg` with `@@T0@@`/`@@T1@@` blocks (extruder, thermistor, endstop and probe pins from the board documentation, checked against its schematic) and put the name in the `TEMPLATE` field of its `.board`; no code changes are needed.
 
 > ⚠️ **Toolhead warnings.**
-> - **`ebb36` is an ambiguous alias:** it points to `ebb42` (EBB36/EBB42 **v1.1 and v1.2**, G0B1). EBB36/EBB42 **v1.0** (F072) is `ebb36-v1.0` and **Gen2** is `ebb-gen2`: they have a different chip or CAN pins, the firmware is not interchangeable.
+> - **`ebb36` is an ambiguous alias:** it points to `ebb42` (EBB36/EBB42 **v1.1 and v1.2**, G0B1). EBB36/EBB42 **v1.0** (F072) is `ebb36-v1.0` and **Gen2** is `ebb36-gen2` and `ebb42-gen2` (two boards: the pins differ): they have a different chip or CAN pins, the firmware is not interchangeable.
 > - **FLY SHT36 v2** comes with three MCU variants: STM32F072, APM32F072 (after 2022-10-28) and GD32F103 (earlier). The config targets F072/APM32F072; if the board was bought before 2022-10-28 (GD32F103), do not use this build. The APM32F072 shows up in DFU as `314b:0106` while the installer looks for `0483:df11`, so it cannot be flashed over DFU through the installer, only over CAN into the factory Katapult.
 > - **Not supported: FLY SHT36 v3 / SHT36 Max v3 and MKS THR36 / THR42**: they are RP2040. This needs separate code work: an `rp2040` family in `vostok/boards.py` and `tools/gen_configs.py` (Kconfig `MACH_RP2040`, `RPXXXX_CANBUS`, `RPXXXX_CANBUS_GPIO_RX/TX`, 16 KiB offset), BOOTSEL detection (`2e8a:0003`) instead of DFU `0483:df11` in `vostok/hardware.py`, UF2 flashing (the `RPI-RP2` drive or `picotool`) instead of `dfu-util` in `vostok/flashing.py`, and another way to get the UID for `canbus_uuid` (the RP2040 has no DFU UID address like the STM32). Per-board details (16 KiB offset, CAN GPIO 1/0 on the SHT36 v3) are in the branch commit history.
 

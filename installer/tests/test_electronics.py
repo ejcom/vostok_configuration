@@ -182,11 +182,12 @@ class TestGeneratorState(unittest.TestCase):
     def test_new_presets_1_8(self):
         """Пресеты 1.8 (Spider v2.x, Kraken, Octopus Max EZ): пины подставлены, пересечений нет; probe_enable без пина - ЗАПОЛНИТЕ."""
         for tmpl, name, drv in (("spider_v2", "Fysetc Spider v2", "all=2209"), ("kraken", "BTT Kraken", "all=2160"),
-                                ("octopus_max_ez", "BTT Octopus Max EZ", "all=2209")):
+                                ("octopus_max_ez", "BTT Octopus Max EZ", "all=2209"),
+                                ("mks_monster8_v2", "MKS Monster8 V2", "all=2130"), ("fly_c8", "Mellow FLY-C8", "all=2209")):
             _, res = self.gen(template=tmpl, board_name=name, board_file=tmpl, drivers=drv)
             self.assertEqual([w for w in res.warns if "run_current" not in w], [], tmpl)   # пересечений пинов нет
             text = res.path.read_text(encoding="utf-8")
-            self.assertEqual(text.count("ЗАПОЛНИТЕ") - 1, 0 if tmpl == "kraken" else 1, tmpl)   # шапка + probe_enable
+            self.assertEqual(text.count("ЗАПОЛНИТЕ") - 1, {"kraken": 0, "fly_c8": 0}.get(tmpl, 1), tmpl)   # шапка + probe_enable (у части плат пина питания зонда нет)
         _, res = self.gen(template="kraken", board_name="BTT Kraken", board_file="kraken", drivers="all=2160")
         text = res.path.read_text(encoding="utf-8")
         self.assertIn("[tmc2160 stepper motor_x]", text)

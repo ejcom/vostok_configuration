@@ -660,6 +660,9 @@ class Generator:
                 continue
             pid = pin_id(clean_value(b.lines[i]))
             others = [(bb, kk) for bb, kk in uses.get(pid, []) if bb.name != b.name]
+            if key == "enable_pin":
+                # общий enable у двух моторов допустим (Klipper разделяет такой пин, например X и Y у MKS Monster8)
+                others = [(bb, kk) for bb, kk in others if kk != "enable_pin"]
             if pid and others:
                 b.set(key, ["%s:" % key])
                 warns.append("[%s] %s: пин %s из таблицы разъёмов %s уже занят (%s), оставлен пустым - впишите свободный пин"
